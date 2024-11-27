@@ -25,7 +25,7 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 
 	l.Info("Storage init")
 
-	services, err := service.InitService()
+	services, err := service.InitService(conf, l, st)
 	if err != nil {
 		l.Fatal("error start DI service", err)
 	}
