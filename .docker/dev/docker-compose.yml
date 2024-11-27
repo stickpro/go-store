@@ -1,0 +1,56 @@
+# DV-Backend
+
+services:
+  go-store:
+    image: go-store
+    container_name: go-store
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_SERVER__PORT}:${APP_SERVER__PORT}"
+    environment:
+      - DB_DSN=${APP_DB__ENGINE}://${APP_DB__USERNAME}:${APP_DB__PASSWORD}@${APP_DB__HOST}:${APP_DB__PORT}/${APP_DB__DATABASE_NAME}
+    depends_on:
+      - postgres-db
+      - redis-db
+    env_file: ./.env
+    volumes:
+      - app_data:/logs
+
+  postgres-db:
+    image: "postgres:latest"
+    container_name: postgres-database
+    restart: always
+    environment:
+      - POSTGRES_USER=${APP_DB__USERNAME}
+      - POSTGRES_PASSWORD=${APP_DB__PASSWORD}
+      - POSTGRES_DB=${APP_DB__DATABASE_NAME}
+      - POSTGRES_HOST=${APP_DB__HOST}
+    ports:
+      - "${APP_DB__PORT}:${APP_DB__PORT}"
+
+  redis-db:
+    image: "redis:latest"
+    container_name: redis-database
+    restart: always
+    environment:
+      - REDIS_USER=${APP_REDIS__USERNAME}
+      - REDIS_PASSWORD=${APP_REDIS__PASSWORD}
+      - REDIS_DB=${APP_REDIS__DATABASE_NAME}
+    ports:
+      - "${APP_REDIS__PORT}:${APP_REDIS__PORT}"
+
+  maildev:
+    image: "maildev/maildev"
+    restart: always
+    environment:
+      - MAILDEV_INCOMING_USER=${APP_EMAIL__USERNAME}
+      - MAILDEV_INCOMING_PASS=${APP_EMAIL__PASSWORD}
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+volumes:
+  app_data:
+    external: false
