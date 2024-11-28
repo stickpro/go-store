@@ -32,6 +32,8 @@ func (h *Handler) register(c fiber.Ctx) error {
 	user, err := h.services.AuthService.RegisterUser(c.Context(), auth.RegisterDTO{
 		Email:    request.Email,
 		Password: request.Password,
+		Location: request.Location,
+		Language: request.Language,
 	})
 
 	if err != nil {
@@ -40,7 +42,7 @@ func (h *Handler) register(c fiber.Ctx) error {
 
 	token, err := h.services.AuthService.AuthByUser(c.Context(), user)
 	if err != nil {
-		return apierror.New(errs.ErrNoMatchesFound).AddError(err).SetHttpCode(fiber.StatusBadRequest)
+		return apierror.New(errs.ErrNoMatchesFound).SetHttpCode(fiber.StatusBadRequest)
 	}
 
 	return c.JSON(response.OkByData(auth_response.RegisterUserResponse{
@@ -73,7 +75,7 @@ func (h *Handler) login(c fiber.Ctx) error {
 	})
 
 	if token == nil || err != nil {
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+		return apierror.New(errs.ErrNoMatchesFound).SetHttpCode(fiber.StatusBadRequest)
 	}
 
 	return c.JSON(response.OkByData(auth_response.AuthResponse{

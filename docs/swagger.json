@@ -1,8 +1,15 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "This is an API for go-store",
+        "title": "GO-store",
+        "contact": {
+            "name": "Vladislav B",
+            "email": "go-store@stick.sh"
+        },
+        "version": "1.0"
     },
+    "basePath": "/api",
     "paths": {
         "/v1/auth/login": {
             "post": {
@@ -216,6 +223,13 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

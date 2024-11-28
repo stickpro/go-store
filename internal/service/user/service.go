@@ -11,7 +11,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_users"
-	"github.com/stickpro/go-store/internal/tools/hash"
+	"github.com/stickpro/go-store/internal/tools"
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
@@ -45,8 +45,11 @@ func (s Service) GetUserByEmail(ctx context.Context, email string) (*models.User
 
 func (s Service) StoreUser(ctx context.Context, params repository_users.CreateParams) (*models.User, error) {
 	// Hash the password
-	params.Password = hash.SHA256(params.Password)
-
+	hashPassword, err := tools.HashPassword(params.Password)
+	if err != nil {
+		return nil, err
+	}
+	params.Password = hashPassword
 	// Validate parameters
 	if err := params.Validate(); err != nil {
 		return nil, fmt.Errorf("validate params error: %w", err)

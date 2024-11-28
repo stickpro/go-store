@@ -14,6 +14,17 @@ var (
 	commitHash = "unknown"
 )
 
+//	@title			GO-store
+//	@version		1.0
+//	@description	This is an API for go-store
+
+//	@contact.name	Vladislav B
+//	@contact.email	go-store@stick.sh
+
+// @BasePath					/api
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	app := &cli.App{
 		Name:                 appName,

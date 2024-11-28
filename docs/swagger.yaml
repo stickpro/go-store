@@ -1,3 +1,4 @@
+basePath: /api
 definitions:
   APIError:
     properties:
@@ -76,7 +77,12 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: go-store@stick.sh
+    name: Vladislav B
+  description: This is an API for go-store
+  title: GO-store
+  version: "1.0"
 paths:
   /v1/auth/login:
     post:
@@ -142,4 +148,9 @@ paths:
       summary: Register user
       tags:
       - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
