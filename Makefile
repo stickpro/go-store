@@ -30,19 +30,14 @@ ifneq ($(filter arm%,$(UNAME_P)),)
 	BUILD_ENV += GOARCH=arm64
 endif
 
+#build
 build:
 	go mod download && $(BUILD_ENV) && go build $(GO_OPT_BASE) -o $(OUT_BIN) ./cmd/app
 
 run: build
 	$(OUT_BIN) $(filter-out $@,$(MAKECMDGOALS))
 
-genenvs:
-	go run ./cmd/app config genenvs
-
-gensql:
-	cd sql && pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml crud
-	cd sql && pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml sqlc generate
-
+#database
 migrate:
 	migrate -path "$(MIGRATIONS_DIR)" -database "$(DATABASE_URL)" $(filter-out $@,$(MAKECMDGOALS))
 
@@ -52,8 +47,20 @@ db-create-migration:
 db-create-seed:
 	migrate create -ext sql -dir "$(SEEDS_DIR)" $(filter-out $@,$(MAKECMDGOALS))
 
+#liner
 lint:
 	golangci-lint run --show-stats
 
 fmt:
 	gofumpt -l -w .
+#gewnerator
+gen-envs:
+	go run ./cmd/app config genenvs
+
+gen-sql:
+	cd sql && pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml crud
+	cd sql && pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml sqlc generate
+
+gen-swag:
+	swag fmt
+	swag init --parseDependency --parseInternal -g ./cmd/app/main.go

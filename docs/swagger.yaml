@@ -1,0 +1,145 @@
+definitions:
+  APIError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+  APIErrors:
+    properties:
+      code:
+        type: integer
+      errors:
+        items:
+          $ref: '#/definitions/APIError'
+        type: array
+    type: object
+  AuthRequest:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  AuthResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  JSONResponse-AuthResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/AuthResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-RegisterUserResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/RegisterUserResponse'
+      message:
+        type: string
+    type: object
+  RegisterRequest:
+    properties:
+      email:
+        type: string
+      language:
+        maxLength: 2
+        minLength: 2
+        type: string
+      location:
+        type: string
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+    required:
+    - email
+    - language
+    - location
+    - password
+    type: object
+  RegisterUserResponse:
+    properties:
+      token:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Auth a user
+      parameters:
+      - description: Register account
+        in: body
+        name: register
+        required: true
+        schema:
+          $ref: '#/definitions/AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Auth user
+      tags:
+      - Auth
+  /v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: Register account
+        in: body
+        name: register
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-RegisterUserResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Register user
+      tags:
+      - Auth
+swagger: "2.0"
