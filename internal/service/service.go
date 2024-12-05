@@ -3,14 +3,16 @@ package service
 import (
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/service/auth"
+	"github.com/stickpro/go-store/internal/service/category"
 	"github.com/stickpro/go-store/internal/service/user"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
 type Services struct {
-	UserService user.IUser
-	AuthService auth.IAuth
+	UserService     user.IUser
+	AuthService     auth.IAuth
+	CategoryService category.ICategory
 }
 
 func InitService(
@@ -21,8 +23,11 @@ func InitService(
 	userService := user.New(conf, logger, storage)
 	authService := auth.New(conf, logger, storage, userService)
 
+	categoryService := category.New(conf, logger, storage)
+
 	return &Services{
-		UserService: userService,
-		AuthService: authService,
+		UserService:     userService,
+		AuthService:     authService,
+		CategoryService: categoryService,
 	}, nil
 }

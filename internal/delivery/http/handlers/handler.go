@@ -27,6 +27,7 @@ func (h *Handler) InitHandler(api *fiber.App) {
 	v1 := api.Group("api/v1")
 
 	h.initAuthRoutes(v1)
+	h.initCategoryRoutes(v1)
 }
 
 func (h *Handler) configureBinders() {

@@ -37,7 +37,7 @@ func (h *Handler) register(c fiber.Ctx) error {
 	})
 
 	if err != nil {
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+		return apierror.New(errs.ErrNoMatchesFound).SetHttpCode(fiber.StatusBadRequest)
 	}
 
 	token, err := h.services.AuthService.AuthByUser(c.Context(), user)

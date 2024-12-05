@@ -57,3 +57,13 @@ sqlc:
                 - updated_at
                 - last_used_at
               returning: "*"
+        # Categories
+        categories:
+          output_dir: postgres/queries/categories
+          primary_column: id
+          methods:
+            create:
+              skip_columns:
+                - id
+                - updated_at
+              returning: "*"
