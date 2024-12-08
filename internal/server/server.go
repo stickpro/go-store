@@ -44,17 +44,30 @@ func (s *Server) Stop() error {
 
 func errorHandler(c fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
-	var e *fiber.Error
-	if errors.As(err, &e) {
-		code = e.Code
+
+	var fiberErr *fiber.Error
+	if errors.As(err, &fiberErr) {
+		code = fiberErr.Code
+		return c.Status(code).JSON(apierror.New(apierror.Error{
+			Message: fiberErr.Message,
+		}).SetHttpCode(code))
 	}
-	var ae *apierror.Errors
-	if errors.As(err, &ae) && ae.HttpCode != 0 {
-		c.Status(ae.HttpCode)
-		return c.JSON(ae)
+
+	var apiErr *apierror.Errors
+	if errors.As(err, &apiErr) && apiErr.HttpCode != 0 {
+		return c.Status(apiErr.HttpCode).JSON(apiErr)
+	}
+
+	var jsonUnmarshalTypeError *fiber.UnmarshalTypeError
+	if errors.As(err, &jsonUnmarshalTypeError) {
+		return c.Status(fiber.StatusBadRequest).JSON(apierror.New(apierror.Error{
+			Message: jsonUnmarshalTypeError.Error(),
+			Field:   jsonUnmarshalTypeError.Field,
+		}).SetHttpCode(fiber.StatusBadRequest))
 	}
 
 	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-
-	return c.Status(code).SendString(err.Error())
+	return c.Status(code).JSON(apierror.New(apierror.Error{
+		Message: "Internal Server Error",
+	}).SetHttpCode(code))
 }

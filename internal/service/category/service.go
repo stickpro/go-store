@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_categories"
+	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 	"github.com/stickpro/go-store/pkg/logger"
 )
@@ -17,6 +18,7 @@ type ICategory interface {
 	GetCategoryWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error)
 	GetCategoryById(ctx context.Context, id uuid.UUID) (*models.Category, error)
 	GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error)
+	UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error)
 }
 
 type Service struct {
@@ -76,6 +78,29 @@ func (s *Service) GetCategoryWithPagination(ctx context.Context, dto GetDTO) (*b
 		return nil, err
 	}
 	return cats, nil
+}
+
+func (s *Service) UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error) {
+	params := repository_categories.UpdateParams{
+		Name:            dto.Name,
+		ParentID:        dto.ParentID,
+		Slug:            dto.Slug,
+		Description:     pgtypeutils.EncodeText(dto.Description),
+		MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
+		MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
+		MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
+		MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
+		IsEnable:        dto.IsEnable,
+		ID:              dto.ID,
+	}
+
+	cat, err := s.storage.Categories().Update(ctx, params)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to update category", "error", parsedErr)
+		return nil, parsedErr
+	}
+	return cat, nil
 }
 
 func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Service {

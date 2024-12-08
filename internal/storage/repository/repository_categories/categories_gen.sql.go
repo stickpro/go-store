@@ -60,3 +60,55 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Categor
 	)
 	return &i, err
 }
+
+const update = `-- name: Update :one
+UPDATE categories
+	SET parent_id=$1, name=$2, slug=$3, description=$4, meta_title=$5, meta_h1=$6, 
+		meta_description=$7, meta_keyword=$8, is_enable=$9, updated_at=now()
+	WHERE id=$10
+	RETURNING id, parent_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at
+`
+
+type UpdateParams struct {
+	ParentID        uuid.NullUUID `db:"parent_id" json:"parent_id"`
+	Name            string        `db:"name" json:"name"`
+	Slug            string        `db:"slug" json:"slug"`
+	Description     pgtype.Text   `db:"description" json:"description"`
+	MetaTitle       pgtype.Text   `db:"meta_title" json:"meta_title"`
+	MetaH1          pgtype.Text   `db:"meta_h1" json:"meta_h1"`
+	MetaDescription pgtype.Text   `db:"meta_description" json:"meta_description"`
+	MetaKeyword     pgtype.Text   `db:"meta_keyword" json:"meta_keyword"`
+	IsEnable        bool          `db:"is_enable" json:"is_enable"`
+	ID              uuid.UUID     `db:"id" json:"id"`
+}
+
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Category, error) {
+	row := q.db.QueryRow(ctx, update,
+		arg.ParentID,
+		arg.Name,
+		arg.Slug,
+		arg.Description,
+		arg.MetaTitle,
+		arg.MetaH1,
+		arg.MetaDescription,
+		arg.MetaKeyword,
+		arg.IsEnable,
+		arg.ID,
+	)
+	var i models.Category
+	err := row.Scan(
+		&i.ID,
+		&i.ParentID,
+		&i.Name,
+		&i.Slug,
+		&i.Description,
+		&i.MetaTitle,
+		&i.MetaH1,
+		&i.MetaDescription,
+		&i.MetaKeyword,
+		&i.IsEnable,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
+}

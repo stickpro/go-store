@@ -69,3 +69,11 @@ sqlc:
               returning: "*"
               column_values:
                 created_at: now()
+            update:
+              name: Update
+              skip_columns:
+                - id
+                - created_at
+              column_values:
+                updated_at: now()
+              returning: "*"

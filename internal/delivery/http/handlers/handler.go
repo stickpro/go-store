@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/binder"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/service"
+	"github.com/stickpro/go-store/internal/tools/apierror"
 	"github.com/stickpro/go-store/pkg/logger"
 	"reflect"
 )
@@ -47,4 +50,11 @@ func (h *Handler) configureBinders() {
 		},
 		ZeroEmpty: true,
 	})
+}
+
+func (h Handler) handleError(c fiber.Ctx, err error, notFoundMessage string) error {
+	if errors.Is(err, pgx.ErrNoRows) {
+		return apierror.New().AddError(errors.New(notFoundMessage)).SetHttpCode(fiber.StatusNotFound)
+	}
+	return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 }

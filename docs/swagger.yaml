@@ -144,6 +144,36 @@ definitions:
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
+  UpdateCategoryRequest:
+    properties:
+      description:
+        minLength: 1
+        type: string
+      is_enabled:
+        type: boolean
+      meta_description:
+        minLength: 1
+        type: string
+      meta_h1:
+        minLength: 1
+        type: string
+      meta_keyword:
+        minLength: 1
+        type: string
+      meta_title:
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      parent_id:
+        type: string
+      slug:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
   github_com_stickpro_go-store_internal_delivery_http_response_category_response.CategoryResponse:
     properties:
       created_at:
@@ -367,7 +397,41 @@ paths:
             $ref: '#/definitions/APIErrors'
       summary: Category
       tags:
-      - Auth
+      - Category
+  /v1/category/:id:
+    put:
+      consumes:
+      - application/json
+      description: Update category
+      parameters:
+      - description: Update category
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_category_response_CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Category
+      tags:
+      - Category
   /v1/category/:slug/:
     get:
       consumes:

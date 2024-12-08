@@ -1,16 +1,13 @@
 package handlers
 
 import (
-	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/delivery/http/request/category_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/category_response"
 	"github.com/stickpro/go-store/internal/service/category"
 	_ "github.com/stickpro/go-store/internal/storage/base"
-	_ "github.com/stickpro/go-store/internal/storage/repository/repository_categories"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 )
 
@@ -31,11 +28,7 @@ func (h Handler) getCategoryBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	cat, err := h.services.CategoryService.GetCategoryBySlug(c.Context(), slug)
 	if err != nil {
-		preparedErr := apierror.New().AddError(err)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return preparedErr.SetHttpCode(fiber.StatusNotFound)
-		}
-		return preparedErr.SetHttpCode(fiber.StatusBadRequest)
+		return h.handleError(c, err, "category not found")
 	}
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
 }
@@ -60,11 +53,7 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 	}
 	cat, err := h.services.CategoryService.GetCategoryById(c.Context(), id)
 	if err != nil {
-		preparedErr := apierror.New().AddError(err)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return preparedErr.SetHttpCode(fiber.StatusNotFound)
-		}
-		return preparedErr.SetHttpCode(fiber.StatusBadRequest)
+		return h.handleError(c, err, "category not found")
 	}
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
 }
