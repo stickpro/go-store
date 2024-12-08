@@ -33,6 +33,47 @@ definitions:
       token:
         type: string
     type: object
+  CreateCategoryRequest:
+    properties:
+      description:
+        minLength: 1
+        type: string
+      is_enabled:
+        type: boolean
+      meta_description:
+        minLength: 1
+        type: string
+      meta_h1:
+        minLength: 1
+        type: string
+      meta_keyword:
+        minLength: 1
+        type: string
+      meta_title:
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      parent_id:
+        type: string
+      slug:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  FullPagingData:
+    properties:
+      last_page:
+        type: integer
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
   JSONResponse-AuthResponse:
     properties:
       code:
@@ -48,6 +89,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/RegisterUserResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow'
       message:
         type: string
     type: object
@@ -85,6 +135,15 @@ definitions:
       token:
         type: string
     type: object
+  ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_storage_repository_repository_categories.FindRow'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
   github_com_stickpro_go-store_internal_delivery_http_response_category_response.CategoryResponse:
     properties:
       created_at:
@@ -109,6 +168,68 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  github_com_stickpro_go-store_internal_storage_repository_repository_categories.FindRow:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      id:
+        type: string
+      is_enable:
+        type: boolean
+      meta_description:
+        $ref: '#/definitions/pgtype.Text'
+      meta_h1:
+        $ref: '#/definitions/pgtype.Text'
+      meta_keyword:
+        $ref: '#/definitions/pgtype.Text'
+      meta_title:
+        $ref: '#/definitions/pgtype.Text'
+      name:
+        type: string
+      parent_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      slug:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+    type: object
+  pgtype.InfinityModifier:
+    enum:
+    - 1
+    - 0
+    - -1
+    type: integer
+    x-enum-varnames:
+    - Infinity
+    - Finite
+    - NegativeInfinity
+  pgtype.Text:
+    properties:
+      string:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  pgtype.Timestamp:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        description: Time zone will be ignored when encoding to PostgreSQL.
+        type: string
+      valid:
+        type: boolean
+    type: object
+  uuid.NullUUID:
+    properties:
+      uuid:
+        type: string
+      valid:
+        description: Valid is true if UUID is not NULL
+        type: boolean
     type: object
 info:
   contact:
@@ -182,11 +303,82 @@ paths:
       summary: Register user
       tags:
       - Auth
-  /v1/category/:id/:
+  /v1/category/:
     get:
       consumes:
       - application/json
-      description: Get category by id
+      description: Get categories
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get categories
+      tags:
+      - Category
+    post:
+      consumes:
+      - application/json
+      description: Create category
+      parameters:
+      - description: Create category
+        in: body
+        name: create
+        required: true
+        schema:
+          $ref: '#/definitions/CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_category_response_CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Category
+      tags:
+      - Auth
+  /v1/category/:slug/:
+    get:
+      consumes:
+      - application/json
+      description: Get category by slug
+      parameters:
+      - description: Category Slug
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -209,17 +401,11 @@ paths:
       summary: Category
       tags:
       - Auth
-  /v1/category/:slug/:
+  /v1/category/id/:id/:
     get:
       consumes:
       - application/json
-      description: Get category by slug
-      parameters:
-      - description: Category Slug
-        in: path
-        name: id
-        required: true
-        type: string
+      description: Get category by id
       produces:
       - application/json
       responses:

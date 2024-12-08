@@ -15,21 +15,20 @@ import (
 
 const create = `-- name: Create :one
 INSERT INTO categories (parent_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
 	RETURNING id, parent_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at
 `
 
 type CreateParams struct {
-	ParentID        uuid.NullUUID    `db:"parent_id" json:"parent_id"`
-	Name            string           `db:"name" json:"name"`
-	Slug            string           `db:"slug" json:"slug"`
-	Description     pgtype.Text      `db:"description" json:"description"`
-	MetaTitle       pgtype.Text      `db:"meta_title" json:"meta_title"`
-	MetaH1          pgtype.Text      `db:"meta_h1" json:"meta_h1"`
-	MetaDescription pgtype.Text      `db:"meta_description" json:"meta_description"`
-	MetaKeyword     pgtype.Text      `db:"meta_keyword" json:"meta_keyword"`
-	IsEnable        bool             `db:"is_enable" json:"is_enable"`
-	CreatedAt       pgtype.Timestamp `db:"created_at" json:"created_at"`
+	ParentID        uuid.NullUUID `db:"parent_id" json:"parent_id"`
+	Name            string        `db:"name" json:"name"`
+	Slug            string        `db:"slug" json:"slug"`
+	Description     pgtype.Text   `db:"description" json:"description"`
+	MetaTitle       pgtype.Text   `db:"meta_title" json:"meta_title"`
+	MetaH1          pgtype.Text   `db:"meta_h1" json:"meta_h1"`
+	MetaDescription pgtype.Text   `db:"meta_description" json:"meta_description"`
+	MetaKeyword     pgtype.Text   `db:"meta_keyword" json:"meta_keyword"`
+	IsEnable        bool          `db:"is_enable" json:"is_enable"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Category, error) {
@@ -43,7 +42,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Categor
 		arg.MetaDescription,
 		arg.MetaKeyword,
 		arg.IsEnable,
-		arg.CreatedAt,
 	)
 	var i models.Category
 	err := row.Scan(

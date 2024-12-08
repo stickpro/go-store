@@ -6,6 +6,7 @@ import (
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
+	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_categories"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 	"github.com/stickpro/go-store/pkg/logger"
@@ -13,6 +14,7 @@ import (
 
 type ICategory interface {
 	CreateCategory(ctx context.Context, dto CreateDTO) (*models.Category, error)
+	GetCategoryWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error)
 	GetCategoryById(ctx context.Context, id uuid.UUID) (*models.Category, error)
 	GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error)
 }
@@ -56,6 +58,24 @@ func (s *Service) GetCategoryBySlug(ctx context.Context, slug string) (*models.C
 		return nil, err
 	}
 	return cat, nil
+}
+
+func (s *Service) GetCategoryWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error) {
+	commonParams := base.NewCommonFindParams()
+	if dto.PageSize != nil {
+		commonParams.PageSize = dto.PageSize
+	}
+	if dto.Page != nil {
+		commonParams.Page = dto.Page
+	}
+	cats, err := s.storage.Categories().GetWithPaginate(ctx, repository_categories.CategoryWithPaginationParams{
+		CommonFindParams: *commonParams,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return cats, nil
 }
 
 func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Service {

@@ -1,6 +1,9 @@
 package category
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/delivery/http/request/category_request"
+)
 
 type CreateDTO struct {
 	Name            string        `json:"name"`
@@ -12,4 +15,30 @@ type CreateDTO struct {
 	MetaDescription *string       `json:"meta_description"`
 	MetaKeyword     *string       `json:"meta_keyword"`
 	IsEnable        bool          `json:"is_enable"`
+}
+
+type GetDTO struct {
+	Page     *uint32 `json:"page" query:"page"`
+	PageSize *uint32 `json:"page_size" query:"page_size"`
+}
+
+func RequestToDTO(req *category_request.CreateCategoryRequest) CreateDTO {
+	var parentID uuid.NullUUID
+	if req.ParentID != nil {
+		parentID = uuid.NullUUID{UUID: *req.ParentID, Valid: true}
+	} else {
+		parentID = uuid.NullUUID{Valid: false}
+	}
+
+	return CreateDTO{
+		Name:            req.Name,
+		ParentID:        parentID,
+		Slug:            req.Slug,
+		Description:     req.Description,
+		MetaTitle:       req.MetaTitle,
+		MetaH1:          req.MetaH1,
+		MetaDescription: req.MetaDescription,
+		MetaKeyword:     req.MetaKeyword,
+		IsEnable:        req.IsEnabled,
+	}
 }

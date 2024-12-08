@@ -67,3 +67,5 @@ sqlc:
                 - id
                 - updated_at
               returning: "*"
+              column_values:
+                created_at: now()
