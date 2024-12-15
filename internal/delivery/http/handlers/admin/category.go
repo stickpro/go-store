@@ -34,9 +34,12 @@ func (h Handler) createCategory(c fiber.Ctx) error {
 
 	cat, err := h.services.CategoryService.CreateCategory(c.Context(), dto)
 	if err != nil {
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+		var uniqueErr *pgerror.UniqueConstraintError
+		if errors.As(err, &uniqueErr) {
+			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
+		}
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
 	}
-
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
 }
 

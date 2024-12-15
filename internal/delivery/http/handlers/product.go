@@ -1,0 +1,95 @@
+package handlers
+
+import (
+	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
+	"github.com/stickpro/go-store/internal/delivery/http/response"
+	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
+	"github.com/stickpro/go-store/internal/service/product"
+	"github.com/stickpro/go-store/internal/tools/apierror"
+	// swag-gen import
+	_ "github.com/stickpro/go-store/internal/storage/base"
+	_ "github.com/stickpro/go-store/internal/storage/repository/repository_products"
+)
+
+// getProductBySlug is a function get user by slug
+//
+//	@Summary		Product
+//	@Description	Get product by slug
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Product Slug"
+//	@Success		200	{object}	response.Result[product_response.ProductResponse]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		404	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
+//	@Router			/v1/product/:slug/ [get]
+func (h Handler) getProductBySlug(c fiber.Ctx) error {
+	slug := c.Params("slug")
+	prd, err := h.services.ProductService.GetProductBySlug(c.Context(), slug)
+	if err != nil {
+		return h.handleError(err, "product")
+	}
+
+	return c.JSON(response.OkByData(product_response.NewFromModel(prd)))
+}
+
+// getProductByID is a function get user by id
+//
+//	@Summary		Product
+//	@Description	Get product by id
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		uuid.UUID	true	"Product ID"
+//	@Success		200	{object}	response.Result[product_response.ProductResponse]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		404	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
+//	@Router			/v1/product/id/:id/ [get]
+func (h Handler) getProductByID(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	prd, err := h.services.ProductService.GetProductById(c.Context(), id)
+	if err != nil {
+		return h.handleError(err, "category")
+	}
+	return c.JSON(response.OkByData(product_response.NewFromModel(prd)))
+}
+
+// getProducts is a function to Load categories
+//
+//	@Summary		Get products
+//	@Description	Get products
+//	@Tags			Category
+//	@Accept			json
+//	@Produce		json
+//	@Param			string	query		product_request.GetProductWithPagination	true	"GetProductWithPagination"
+//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[repository_products.FindRow]]
+//	@Failure		401		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Router			/v1/category/ [get]
+//	@Security		BearerAuth
+func (h Handler) getProducts(c fiber.Ctx) error {
+	req := &product_request.GetProductWithPagination{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	prds, err := h.services.ProductService.GetProductWithPagination(c.Context(), product.GetDTO{Page: req.Page, PageSize: req.PageSize})
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	return c.JSON(response.OkByData(prds))
+}
+
+func (h *Handler) initProductRoutes(v1 fiber.Router) {
+	p := v1.Group("/product")
+	p.Get("/", h.getProducts)
+	p.Get("/:slug", h.getProductBySlug)
+	p.Get("/id/:id", h.getProductByID)
+}

@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -21,35 +22,35 @@ INSERT INTO products (name, model, slug, description, meta_title, meta_h1, meta_
 `
 
 type CreateParams struct {
-	Name            string          `db:"name" json:"name"`
-	Model           string          `db:"model" json:"model"`
-	Slug            string          `db:"slug" json:"slug"`
-	Description     pgtype.Text     `db:"description" json:"description"`
-	MetaTitle       pgtype.Text     `db:"meta_title" json:"meta_title"`
-	MetaH1          pgtype.Text     `db:"meta_h1" json:"meta_h1"`
-	MetaDescription pgtype.Text     `db:"meta_description" json:"meta_description"`
-	MetaKeyword     pgtype.Text     `db:"meta_keyword" json:"meta_keyword"`
-	Sku             pgtype.Text     `db:"sku" json:"sku"`
-	Upc             pgtype.Text     `db:"upc" json:"upc"`
-	Ean             pgtype.Text     `db:"ean" json:"ean"`
-	Jan             pgtype.Text     `db:"jan" json:"jan"`
-	Isbn            pgtype.Text     `db:"isbn" json:"isbn"`
-	Mpn             pgtype.Text     `db:"mpn" json:"mpn"`
-	Location        pgtype.Text     `db:"location" json:"location"`
-	Quantity        int64           `db:"quantity" json:"quantity"`
-	StockStatus     pgtype.Text     `db:"stock_status" json:"stock_status"`
-	Image           pgtype.Text     `db:"image" json:"image"`
-	ManufacturerID  uuid.NullUUID   `db:"manufacturer_id" json:"manufacturer_id"`
-	Price           decimal.Decimal `db:"price" json:"price"`
-	Weight          decimal.Decimal `db:"weight" json:"weight"`
-	Length          decimal.Decimal `db:"length" json:"length"`
-	Width           decimal.Decimal `db:"width" json:"width"`
-	Height          decimal.Decimal `db:"height" json:"height"`
-	Subtract        bool            `db:"subtract" json:"subtract"`
-	Minimum         int64           `db:"minimum" json:"minimum"`
-	SortOrder       int32           `db:"sort_order" json:"sort_order"`
-	IsEnable        bool            `db:"is_enable" json:"is_enable"`
-	Viewed          int64           `db:"viewed" json:"viewed"`
+	Name            string               `db:"name" json:"name"`
+	Model           string               `db:"model" json:"model"`
+	Slug            string               `db:"slug" json:"slug"`
+	Description     pgtype.Text          `db:"description" json:"description"`
+	MetaTitle       pgtype.Text          `db:"meta_title" json:"meta_title"`
+	MetaH1          pgtype.Text          `db:"meta_h1" json:"meta_h1"`
+	MetaDescription pgtype.Text          `db:"meta_description" json:"meta_description"`
+	MetaKeyword     pgtype.Text          `db:"meta_keyword" json:"meta_keyword"`
+	Sku             pgtype.Text          `db:"sku" json:"sku"`
+	Upc             pgtype.Text          `db:"upc" json:"upc"`
+	Ean             pgtype.Text          `db:"ean" json:"ean"`
+	Jan             pgtype.Text          `db:"jan" json:"jan"`
+	Isbn            pgtype.Text          `db:"isbn" json:"isbn"`
+	Mpn             pgtype.Text          `db:"mpn" json:"mpn"`
+	Location        pgtype.Text          `db:"location" json:"location"`
+	Quantity        int64                `db:"quantity" json:"quantity"`
+	StockStatus     constant.StockStatus `db:"stock_status" json:"stock_status"`
+	Image           pgtype.Text          `db:"image" json:"image"`
+	ManufacturerID  uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
+	Price           decimal.Decimal      `db:"price" json:"price"`
+	Weight          decimal.Decimal      `db:"weight" json:"weight"`
+	Length          decimal.Decimal      `db:"length" json:"length"`
+	Width           decimal.Decimal      `db:"width" json:"width"`
+	Height          decimal.Decimal      `db:"height" json:"height"`
+	Subtract        bool                 `db:"subtract" json:"subtract"`
+	Minimum         int64                `db:"minimum" json:"minimum"`
+	SortOrder       int32                `db:"sort_order" json:"sort_order"`
+	IsEnable        bool                 `db:"is_enable" json:"is_enable"`
+	Viewed          int64                `db:"viewed" json:"viewed"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product, error) {
@@ -134,36 +135,36 @@ UPDATE products
 `
 
 type UpdateParams struct {
-	Name            string          `db:"name" json:"name"`
-	Model           string          `db:"model" json:"model"`
-	Slug            string          `db:"slug" json:"slug"`
-	Description     pgtype.Text     `db:"description" json:"description"`
-	MetaTitle       pgtype.Text     `db:"meta_title" json:"meta_title"`
-	MetaH1          pgtype.Text     `db:"meta_h1" json:"meta_h1"`
-	MetaDescription pgtype.Text     `db:"meta_description" json:"meta_description"`
-	MetaKeyword     pgtype.Text     `db:"meta_keyword" json:"meta_keyword"`
-	Sku             pgtype.Text     `db:"sku" json:"sku"`
-	Upc             pgtype.Text     `db:"upc" json:"upc"`
-	Ean             pgtype.Text     `db:"ean" json:"ean"`
-	Jan             pgtype.Text     `db:"jan" json:"jan"`
-	Isbn            pgtype.Text     `db:"isbn" json:"isbn"`
-	Mpn             pgtype.Text     `db:"mpn" json:"mpn"`
-	Location        pgtype.Text     `db:"location" json:"location"`
-	Quantity        int64           `db:"quantity" json:"quantity"`
-	StockStatus     pgtype.Text     `db:"stock_status" json:"stock_status"`
-	Image           pgtype.Text     `db:"image" json:"image"`
-	ManufacturerID  uuid.NullUUID   `db:"manufacturer_id" json:"manufacturer_id"`
-	Price           decimal.Decimal `db:"price" json:"price"`
-	Weight          decimal.Decimal `db:"weight" json:"weight"`
-	Length          decimal.Decimal `db:"length" json:"length"`
-	Width           decimal.Decimal `db:"width" json:"width"`
-	Height          decimal.Decimal `db:"height" json:"height"`
-	Subtract        bool            `db:"subtract" json:"subtract"`
-	Minimum         int64           `db:"minimum" json:"minimum"`
-	SortOrder       int32           `db:"sort_order" json:"sort_order"`
-	IsEnable        bool            `db:"is_enable" json:"is_enable"`
-	Viewed          int64           `db:"viewed" json:"viewed"`
-	ID              uuid.UUID       `db:"id" json:"id"`
+	Name            string               `db:"name" json:"name"`
+	Model           string               `db:"model" json:"model"`
+	Slug            string               `db:"slug" json:"slug"`
+	Description     pgtype.Text          `db:"description" json:"description"`
+	MetaTitle       pgtype.Text          `db:"meta_title" json:"meta_title"`
+	MetaH1          pgtype.Text          `db:"meta_h1" json:"meta_h1"`
+	MetaDescription pgtype.Text          `db:"meta_description" json:"meta_description"`
+	MetaKeyword     pgtype.Text          `db:"meta_keyword" json:"meta_keyword"`
+	Sku             pgtype.Text          `db:"sku" json:"sku"`
+	Upc             pgtype.Text          `db:"upc" json:"upc"`
+	Ean             pgtype.Text          `db:"ean" json:"ean"`
+	Jan             pgtype.Text          `db:"jan" json:"jan"`
+	Isbn            pgtype.Text          `db:"isbn" json:"isbn"`
+	Mpn             pgtype.Text          `db:"mpn" json:"mpn"`
+	Location        pgtype.Text          `db:"location" json:"location"`
+	Quantity        int64                `db:"quantity" json:"quantity"`
+	StockStatus     constant.StockStatus `db:"stock_status" json:"stock_status"`
+	Image           pgtype.Text          `db:"image" json:"image"`
+	ManufacturerID  uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
+	Price           decimal.Decimal      `db:"price" json:"price"`
+	Weight          decimal.Decimal      `db:"weight" json:"weight"`
+	Length          decimal.Decimal      `db:"length" json:"length"`
+	Width           decimal.Decimal      `db:"width" json:"width"`
+	Height          decimal.Decimal      `db:"height" json:"height"`
+	Subtract        bool                 `db:"subtract" json:"subtract"`
+	Minimum         int64                `db:"minimum" json:"minimum"`
+	SortOrder       int32                `db:"sort_order" json:"sort_order"`
+	IsEnable        bool                 `db:"is_enable" json:"is_enable"`
+	Viewed          int64                `db:"viewed" json:"viewed"`
+	ID              uuid.UUID            `db:"id" json:"id"`
 }
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product, error) {

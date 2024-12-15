@@ -31,6 +31,7 @@ func (h *Handler) InitHandler(api *fiber.App) {
 
 	h.initAuthRoutes(v1)
 	h.initCategoryRoutes(v1)
+	h.initProductRoutes(v1)
 }
 
 func (h *Handler) configureBinders() {
@@ -52,9 +53,9 @@ func (h *Handler) configureBinders() {
 	})
 }
 
-func (h Handler) handleError(c fiber.Ctx, err error, notFoundMessage string) error {
+func (h Handler) handleError(err error, modelName string) error {
 	if errors.Is(err, pgx.ErrNoRows) {
-		return apierror.New().AddError(errors.New(notFoundMessage)).SetHttpCode(fiber.StatusNotFound)
+		return apierror.New().AddError(errors.New(modelName + " not found")).SetHttpCode(fiber.StatusNotFound)
 	}
 	return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 }

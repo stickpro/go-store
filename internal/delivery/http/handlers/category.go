@@ -7,8 +7,10 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/category_response"
 	"github.com/stickpro/go-store/internal/service/category"
-	_ "github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/tools/apierror"
+	// swag-gen import
+	_ "github.com/stickpro/go-store/internal/storage/base"
+	_ "github.com/stickpro/go-store/internal/storage/repository/repository_categories"
 )
 
 // getCategoryBySlug is a function get user by slug
@@ -28,7 +30,7 @@ func (h Handler) getCategoryBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	cat, err := h.services.CategoryService.GetCategoryBySlug(c.Context(), slug)
 	if err != nil {
-		return h.handleError(c, err, "category not found")
+		return h.handleError(err, "category")
 	}
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
 }
@@ -53,7 +55,7 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 	}
 	cat, err := h.services.CategoryService.GetCategoryById(c.Context(), id)
 	if err != nil {
-		return h.handleError(c, err, "category not found")
+		return h.handleError(err, "category")
 	}
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
 }

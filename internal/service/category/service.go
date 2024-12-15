@@ -41,7 +41,9 @@ func (s *Service) CreateCategory(ctx context.Context, dto CreateDTO) (*models.Ca
 	}
 	cat, err := s.storage.Categories().Create(ctx, params)
 	if err != nil {
-		return nil, err
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to update category", "error", parsedErr)
+		return nil, parsedErr
 	}
 	return cat, nil
 }

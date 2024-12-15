@@ -25,14 +25,13 @@ overrides:
         go_type:
           type: string
         go_struct_tag: validate:"required,timezone"
-      - column: users.exchange_slug
-        go_type:
-          type: "*ExchangeSlug"
       # PersonalAccessToke
       - column: personal_access_tokens.expires_at
         go_type:
           type: "*time.Time"
-
+      # Products
+      - column: products.stock_status
+        go_type: "github.com/stickpro/go-store/internal/constant.StockStatus"
 sql:
   # users
   - schema: postgres/migrations
@@ -91,6 +90,7 @@ sql:
         emit_params_struct_pointers: false
         emit_enum_valid_method: true
         emit_all_enum_values: true
+
   # products
   - schema: postgres/migrations
     queries: postgres/queries/products
