@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 type Category struct {
@@ -38,6 +39,41 @@ type PersonalAccessToken struct {
 	UpdatedAt     pgtype.Timestamp `db:"updated_at" json:"updated_at"`
 }
 
+type Product struct {
+	ID              uuid.UUID        `db:"id" json:"id"`
+	Name            string           `db:"name" json:"name"`
+	Model           string           `db:"model" json:"model"`
+	Slug            string           `db:"slug" json:"slug"`
+	Description     pgtype.Text      `db:"description" json:"description"`
+	MetaTitle       pgtype.Text      `db:"meta_title" json:"meta_title"`
+	MetaH1          pgtype.Text      `db:"meta_h1" json:"meta_h1"`
+	MetaDescription pgtype.Text      `db:"meta_description" json:"meta_description"`
+	MetaKeyword     pgtype.Text      `db:"meta_keyword" json:"meta_keyword"`
+	Sku             pgtype.Text      `db:"sku" json:"sku"`
+	Upc             pgtype.Text      `db:"upc" json:"upc"`
+	Ean             pgtype.Text      `db:"ean" json:"ean"`
+	Jan             pgtype.Text      `db:"jan" json:"jan"`
+	Isbn            pgtype.Text      `db:"isbn" json:"isbn"`
+	Mpn             pgtype.Text      `db:"mpn" json:"mpn"`
+	Location        pgtype.Text      `db:"location" json:"location"`
+	Quantity        int64            `db:"quantity" json:"quantity"`
+	StockStatus     pgtype.Text      `db:"stock_status" json:"stock_status"`
+	Image           pgtype.Text      `db:"image" json:"image"`
+	ManufacturerID  uuid.NullUUID    `db:"manufacturer_id" json:"manufacturer_id"`
+	Price           decimal.Decimal  `db:"price" json:"price"`
+	Weight          decimal.Decimal  `db:"weight" json:"weight"`
+	Length          decimal.Decimal  `db:"length" json:"length"`
+	Width           decimal.Decimal  `db:"width" json:"width"`
+	Height          decimal.Decimal  `db:"height" json:"height"`
+	Subtract        bool             `db:"subtract" json:"subtract"`
+	Minimum         int64            `db:"minimum" json:"minimum"`
+	SortOrder       int32            `db:"sort_order" json:"sort_order"`
+	IsEnable        bool             `db:"is_enable" json:"is_enable"`
+	Viewed          int64            `db:"viewed" json:"viewed"`
+	CreatedAt       pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+}
+
 type User struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
 	Email           string           `db:"email" json:"email" validate:"required,email"`
@@ -49,5 +85,6 @@ type User struct {
 	CreatedAt       pgtype.Timestamp `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
 	DeletedAt       pgtype.Timestamp `db:"deleted_at" json:"deleted_at"`
+	IsAdmin         pgtype.Bool      `db:"is_admin" json:"is_admin"`
 	Banned          pgtype.Bool      `db:"banned" json:"banned"`
 }

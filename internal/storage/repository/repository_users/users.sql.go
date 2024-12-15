@@ -13,7 +13,7 @@ import (
 )
 
 const getByEmail = `-- name: GetByEmail :one
-SELECT id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, banned
+SELECT id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, is_admin, banned
 FROM users
 WHERE email = $1
 LIMIT 1
@@ -33,13 +33,14 @@ func (q *Queries) GetByEmail(ctx context.Context, email string) (*models.User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.IsAdmin,
 		&i.Banned,
 	)
 	return &i, err
 }
 
 const getByID = `-- name: GetByID :one
-SELECT id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, banned
+SELECT id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, is_admin, banned
 FROM users
 WHERE id = $1
 LIMIT 1
@@ -59,6 +60,7 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.User, erro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.IsAdmin,
 		&i.Banned,
 	)
 	return &i, err

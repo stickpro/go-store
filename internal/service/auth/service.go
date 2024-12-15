@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/models"
@@ -26,6 +27,7 @@ type IAuth interface {
 	RegisterUser(ctx context.Context, dto RegisterDTO) (*models.User, error)
 	Auth(ctx context.Context, dto AuthDTO) (*Token, error)
 	AuthByUser(ctx context.Context, user *models.User) (*Token, error)
+	GetUserByToken(ctx context.Context, hashedToken string) (*models.User, error)
 }
 
 type Service struct {
@@ -110,6 +112,18 @@ func (s Service) AuthByUser(ctx context.Context, user *models.User) (*Token, err
 		return nil, err
 	}
 	return token, nil
+}
+
+func (s Service) GetUserByToken(ctx context.Context, hashedToken string) (*models.User, error) {
+	token, err := s.storage.PersonalAccessToken().GetByToken(ctx, hashedToken)
+	if err != nil {
+		return nil, errors.New("token expired")
+	}
+	u, err := s.userService.GetUserByID(ctx, token.TokenableID)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+	return u, nil
 }
 
 func generateTokenString() (*Token, error) {

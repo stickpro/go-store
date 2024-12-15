@@ -13,6 +13,7 @@ create table if not exists users
     created_at        timestamp,
     updated_at        timestamp,
     deleted_at        timestamp,
+    is_admin          boolean    default false,
     banned            boolean    default false
 );
 

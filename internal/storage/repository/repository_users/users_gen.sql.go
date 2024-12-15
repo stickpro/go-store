@@ -14,9 +14,9 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO users (email, email_verified_at, password, remember_token, location, language, created_at, deleted_at, banned)
-	VALUES ($1, $2, $3, $4, $5, $6, now(), $7, $8)
-	RETURNING id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, banned
+INSERT INTO users (email, email_verified_at, password, remember_token, location, language, created_at, deleted_at, is_admin, banned)
+	VALUES ($1, $2, $3, $4, $5, $6, now(), $7, $8, $9)
+	RETURNING id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, is_admin, banned
 `
 
 type CreateParams struct {
@@ -27,6 +27,7 @@ type CreateParams struct {
 	Location        string           `db:"location" json:"location" validate:"required,timezone"`
 	Language        string           `db:"language" json:"language"`
 	DeletedAt       pgtype.Timestamp `db:"deleted_at" json:"deleted_at"`
+	IsAdmin         pgtype.Bool      `db:"is_admin" json:"is_admin"`
 	Banned          pgtype.Bool      `db:"banned" json:"banned"`
 }
 
@@ -39,6 +40,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.User, e
 		arg.Location,
 		arg.Language,
 		arg.DeletedAt,
+		arg.IsAdmin,
 		arg.Banned,
 	)
 	var i models.User
@@ -53,6 +55,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.IsAdmin,
 		&i.Banned,
 	)
 	return &i, err
@@ -68,7 +71,7 @@ func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAll = `-- name: GetAll :many
-SELECT id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, banned FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2
+SELECT id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, is_admin, banned FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2
 `
 
 type GetAllParams struct {
@@ -96,6 +99,7 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.User,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.IsAdmin,
 			&i.Banned,
 		); err != nil {
 			return nil, err
@@ -110,15 +114,16 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.User,
 
 const update = `-- name: Update :one
 UPDATE users
-	SET location=$1, language=$2, updated_at=$3, banned=$4
-	WHERE id=$5
-	RETURNING id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, banned
+	SET location=$1, language=$2, updated_at=$3, is_admin=$4, banned=$5
+	WHERE id=$6
+	RETURNING id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, is_admin, banned
 `
 
 type UpdateParams struct {
 	Location  string           `db:"location" json:"location" validate:"required,timezone"`
 	Language  string           `db:"language" json:"language"`
 	UpdatedAt pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+	IsAdmin   pgtype.Bool      `db:"is_admin" json:"is_admin"`
 	Banned    pgtype.Bool      `db:"banned" json:"banned"`
 	ID        uuid.UUID        `db:"id" json:"id"`
 }
@@ -128,6 +133,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.User, e
 		arg.Location,
 		arg.Language,
 		arg.UpdatedAt,
+		arg.IsAdmin,
 		arg.Banned,
 		arg.ID,
 	)
@@ -143,6 +149,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.IsAdmin,
 		&i.Banned,
 	)
 	return &i, err

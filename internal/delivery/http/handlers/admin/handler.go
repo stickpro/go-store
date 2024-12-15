@@ -2,6 +2,7 @@ package admin
 
 import (
 	"github.com/gofiber/fiber/v3"
+	"github.com/stickpro/go-store/internal/delivery/middleware"
 	"github.com/stickpro/go-store/internal/service"
 )
 
@@ -18,5 +19,11 @@ func NewAdminHandler(services *service.Services) *Handler {
 func (h *Handler) InitAdminHandler(api *fiber.App) {
 	v1 := api.Group("api/v1")
 
-	h.initCategoryRoutes(v1)
+	secured := v1.Group(
+		"/",
+		middleware.AuthMiddleware(h.services.AuthService),
+		middleware.AdminMiddleware(),
+	)
+
+	h.initCategoryRoutes(secured)
 }

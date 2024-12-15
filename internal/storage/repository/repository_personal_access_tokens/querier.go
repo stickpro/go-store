@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.PersonalAccessToken, error)
+	GetByToken(ctx context.Context, token string) (*models.PersonalAccessToken, error)
 }
 
 var _ Querier = (*Queries)(nil)
