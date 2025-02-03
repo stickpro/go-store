@@ -8,3 +8,4 @@ vendor
 configs/config.yaml
 .netrc
 .tmp
+/tmp
