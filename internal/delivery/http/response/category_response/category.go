@@ -19,7 +19,7 @@ type CategoryResponse struct {
 	IsEnabled       bool      `json:"is_enabled"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
-}
+} // @name CategoryResponse
 
 func NewFromModel(category *models.Category) CategoryResponse {
 	return CategoryResponse{

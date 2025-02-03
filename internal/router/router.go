@@ -55,6 +55,10 @@ func (r *Router) Init(app *fiber.App) {
 	})
 
 	r.initAPI(app)
+	// todo all static one one method
+	app.Get("/swagger.yaml", func(c fiber.Ctx) error {
+		return c.SendFile("docs/swagger.yaml")
+	})
 }
 
 func (r *Router) initAPI(app *fiber.App) {

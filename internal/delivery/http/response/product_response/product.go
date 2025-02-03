@@ -37,7 +37,7 @@ type ProductResponse struct {
 	Minimum         int64           `json:"minimum"`
 	SortOrder       int32           `json:"sort_order"`
 	IsEnable        bool            `json:"is_enable"`
-}
+} // @name ProductResponse
 
 func NewFromModel(product *models.Product) ProductResponse {
 	return ProductResponse{

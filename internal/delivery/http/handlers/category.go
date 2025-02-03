@@ -75,7 +75,7 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 //	@Security		BearerAuth
 func (h Handler) getCategories(c fiber.Ctx) error {
 	req := &category_request.GetCategoryWithPagination{}
-	if err := c.Bind().Body(req); err != nil {
+	if err := c.Bind().Query(req); err != nil {
 		return err
 	}
 

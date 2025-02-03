@@ -14,7 +14,7 @@ import (
 
 // createCategory is a function create category
 //
-//	@Summary		Category
+//	@Summary		Create Category
 //	@Description	Create category
 //	@Tags			Category
 //	@Accept			json
@@ -25,7 +25,7 @@ import (
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/category/ [POST]
-func (h Handler) createCategory(c fiber.Ctx) error {
+func (h *Handler) createCategory(c fiber.Ctx) error {
 	req := &category_request.CreateCategoryRequest{}
 	if err := c.Bind().Body(req); err != nil {
 		return err
@@ -45,7 +45,7 @@ func (h Handler) createCategory(c fiber.Ctx) error {
 
 // updateCategory is a function update category
 //
-//	@Summary		Category
+//	@Summary		Update Category
 //	@Description	Update category
 //	@Tags			Category
 //	@Accept			json
@@ -57,7 +57,7 @@ func (h Handler) createCategory(c fiber.Ctx) error {
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/category/:id [PUT]
-func (h Handler) updateCategory(c fiber.Ctx) error {
+func (h *Handler) updateCategory(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)

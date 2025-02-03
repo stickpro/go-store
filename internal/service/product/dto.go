@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/constant"
+	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
 )
 
 type CreateDTO struct {
@@ -72,4 +73,82 @@ type UpdateDTO struct {
 type GetDTO struct {
 	Page     *uint32 `json:"page" query:"page"`
 	PageSize *uint32 `json:"page_size" query:"page_size"`
+}
+
+func RequestToCreateDTO(req *product_request.CreateProductRequest) CreateDTO {
+	var manufacturerID uuid.NullUUID
+	if req.ManufacturerID != nil {
+		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
+	} else {
+		manufacturerID = uuid.NullUUID{Valid: true}
+	}
+	return CreateDTO{
+		Name:            req.Name,
+		Model:           req.Model,
+		Slug:            req.Slug,
+		Description:     req.Description,
+		MetaTitle:       req.MetaTitle,
+		MetaH1:          req.MetaH1,
+		MetaDescription: req.MetaDescription,
+		MetaKeyword:     req.MetaKeyword,
+		Sku:             req.Sku,
+		Upc:             req.Upc,
+		Ean:             req.Ean,
+		Jan:             req.Jan,
+		Isbn:            req.Isbn,
+		Mpn:             req.Mpn,
+		Location:        req.Location,
+		Quantity:        req.Quantity,
+		StockStatus:     constant.StockStatus(req.StockStatus),
+		Image:           req.Image,
+		ManufacturerID:  manufacturerID,
+		Price:           req.Price,
+		Weight:          req.Weight,
+		Length:          req.Length,
+		Height:          req.Height,
+		Width:           req.Width,
+		Subtract:        req.Subtract,
+		Minimum:         req.Minimum,
+		SortOrder:       req.SortOrder,
+		IsEnable:        req.IsEnable,
+	}
+}
+
+func RequestToUpdateDTO(req *product_request.UpdateProductRequest) UpdateDTO {
+	var manufacturerID uuid.NullUUID
+	if req.ManufacturerID != nil {
+		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
+	} else {
+		manufacturerID = uuid.NullUUID{Valid: true}
+	}
+	return UpdateDTO{
+		Name:            req.Name,
+		Model:           req.Model,
+		Slug:            req.Slug,
+		Description:     req.Description,
+		MetaTitle:       req.MetaTitle,
+		MetaH1:          req.MetaH1,
+		MetaDescription: req.MetaDescription,
+		MetaKeyword:     req.MetaKeyword,
+		Sku:             req.Sku,
+		Upc:             req.Upc,
+		Ean:             req.Ean,
+		Jan:             req.Jan,
+		Isbn:            req.Isbn,
+		Mpn:             req.Mpn,
+		Location:        req.Location,
+		Quantity:        req.Quantity,
+		StockStatus:     constant.StockStatus(req.StockStatus),
+		Image:           req.Image,
+		ManufacturerID:  manufacturerID,
+		Price:           req.Price,
+		Weight:          req.Weight,
+		Length:          req.Length,
+		Height:          req.Height,
+		Width:           req.Width,
+		Subtract:        req.Subtract,
+		Minimum:         req.Minimum,
+		SortOrder:       req.SortOrder,
+		IsEnable:        req.IsEnable,
+	}
 }

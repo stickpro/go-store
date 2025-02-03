@@ -33,6 +33,31 @@ definitions:
       token:
         type: string
     type: object
+  CategoryResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_enabled:
+        type: boolean
+      meta_description:
+        type: string
+      meta_h1:
+        type: string
+      meta_keywords:
+        type: string
+      meta_title:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        type: string
+    type: object
   CreateCategoryRequest:
     properties:
       description:
@@ -62,6 +87,80 @@ definitions:
         maxLength: 255
         minLength: 1
         type: string
+    required:
+    - name
+    - slug
+    type: object
+  CreateProductRequest:
+    properties:
+      description:
+        type: string
+      ean:
+        type: string
+      height:
+        type: number
+      image:
+        type: string
+      is_enable:
+        type: boolean
+      isbn:
+        type: string
+      jan:
+        type: string
+      length:
+        type: number
+      location:
+        type: string
+      manufacturer_id:
+        type: string
+      meta_description:
+        type: string
+      meta_h1:
+        type: string
+      meta_keyword:
+        type: string
+      meta_title:
+        type: string
+      minimum:
+        type: integer
+      model:
+        type: string
+      mpn:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+      sku:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        type: integer
+      stock_status:
+        type: string
+      subtract:
+        type: boolean
+      upc:
+        type: string
+      weight:
+        type: number
+      width:
+        type: number
+    required:
+    - height
+    - is_enable
+    - length
+    - minimum
+    - model
+    - name
+    - price
+    - slug
+    - sort_order
+    - weight
+    - width
     type: object
   FullPagingData:
     properties:
@@ -80,6 +179,24 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/AuthResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-CategoryResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/CategoryResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-ProductResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ProductResponse'
       message:
         type: string
     type: object
@@ -110,23 +227,75 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_category_response_CategoryResponse:
+  JSONResponse-UserInfoResponse:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_category_response.CategoryResponse'
+        $ref: '#/definitions/UserInfoResponse'
       message:
         type: string
     type: object
-  JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_product_response_ProductResponse:
+  ProductResponse:
     properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_product_response.ProductResponse'
-      message:
+      description:
         type: string
+      ean:
+        type: string
+      height:
+        type: number
+      id:
+        type: string
+      image:
+        type: string
+      is_enable:
+        type: boolean
+      isbn:
+        type: string
+      jan:
+        type: string
+      length:
+        type: number
+      location:
+        type: string
+      manufacturer_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      meta_description:
+        type: string
+      meta_h1:
+        type: string
+      meta_keyword:
+        type: string
+      meta_title:
+        type: string
+      minimum:
+        type: integer
+      model:
+        type: string
+      mpn:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+      sku:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        type: integer
+      stock_status:
+        type: string
+      subtract:
+        type: boolean
+      upc:
+        type: string
+      weight:
+        type: number
+      width:
+        type: number
     type: object
   RegisterRequest:
     properties:
@@ -201,32 +370,7 @@ definitions:
         minLength: 1
         type: string
     type: object
-  github_com_stickpro_go-store_internal_delivery_http_response_category_response.CategoryResponse:
-    properties:
-      created_at:
-        type: string
-      description:
-        type: string
-      id:
-        type: string
-      is_enabled:
-        type: boolean
-      meta_description:
-        type: string
-      meta_h1:
-        type: string
-      meta_keywords:
-        type: string
-      meta_title:
-        type: string
-      name:
-        type: string
-      slug:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  github_com_stickpro_go-store_internal_delivery_http_response_product_response.ProductResponse:
+  UpdateProductRequest:
     properties:
       description:
         type: string
@@ -234,8 +378,6 @@ definitions:
         type: string
       height:
         type: number
-      id:
-        type: string
       image:
         type: string
       is_enable:
@@ -249,7 +391,7 @@ definitions:
       location:
         type: string
       manufacturer_id:
-        $ref: '#/definitions/uuid.NullUUID'
+        type: string
       meta_description:
         type: string
       meta_h1:
@@ -287,6 +429,43 @@ definitions:
       width:
         type: number
     type: object
+  UserInfoResponse:
+    properties:
+      created_at:
+        format: date-time
+        type: string
+      email:
+        format: email
+        type: string
+      email_verified_at:
+        format: date-time
+        type: string
+      id:
+        format: uuid
+        type: string
+      is_admin:
+        type: boolean
+      language:
+        type: string
+      location:
+        type: string
+      updated_at:
+        format: date-time
+        type: string
+    required:
+    - email
+    - location
+    type: object
+  github_com_stickpro_go-store_internal_constant.StockStatus:
+    enum:
+    - IN_STOCK
+    - PRE_ORDER
+    - OUT_OF_STOCK
+    type: string
+    x-enum-varnames:
+    - InStock
+    - PreOrder
+    - OutOfStock
   github_com_stickpro_go-store_internal_storage_repository_repository_categories.FindRow:
     properties:
       created_at:
@@ -367,7 +546,7 @@ definitions:
       sort_order:
         type: integer
       stock_status:
-        $ref: '#/definitions/pgtype.Text'
+        $ref: '#/definitions/github_com_stickpro_go-store_internal_constant.StockStatus'
       subtract:
         type: boolean
       upc:
@@ -492,6 +671,165 @@ paths:
     get:
       consumes:
       - application/json
+      description: Get categories
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get categories
+      tags:
+      - Category
+    post:
+      consumes:
+      - application/json
+      description: Create category
+      parameters:
+      - description: Create category
+        in: body
+        name: create
+        required: true
+        schema:
+          $ref: '#/definitions/CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Create Category
+      tags:
+      - Category
+  /v1/category/:id:
+    put:
+      consumes:
+      - application/json
+      description: Update category
+      parameters:
+      - description: Update category
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Update Category
+      tags:
+      - Category
+  /v1/category/:slug/:
+    get:
+      consumes:
+      - application/json
+      description: Get category by slug
+      parameters:
+      - description: Category Slug
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Category
+      tags:
+      - Auth
+  /v1/category/id/:id/:
+    get:
+      consumes:
+      - application/json
+      description: Get category by id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Category
+      tags:
+      - Auth
+  /v1/product/:
+    get:
+      consumes:
+      - application/json
       description: Get products
       parameters:
       - in: query
@@ -523,21 +861,21 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create category
+      description: Create product
       parameters:
-      - description: Create category
+      - description: Create product
         in: body
         name: create
         required: true
         schema:
-          $ref: '#/definitions/CreateCategoryRequest'
+          $ref: '#/definitions/CreateProductRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_category_response_CategoryResponse'
+            $ref: '#/definitions/JSONResponse-ProductResponse'
         "400":
           description: Bad Request
           schema:
@@ -550,28 +888,28 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/APIErrors'
-      summary: Category
+      summary: Create Product
       tags:
       - Category
-  /v1/category/:id:
+  /v1/product/:id:
     put:
       consumes:
       - application/json
-      description: Update category
+      description: Update product
       parameters:
-      - description: Update category
+      - description: Update product
         in: body
         name: update
         required: true
         schema:
-          $ref: '#/definitions/UpdateCategoryRequest'
+          $ref: '#/definitions/UpdateProductRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_category_response_CategoryResponse'
+            $ref: '#/definitions/JSONResponse-ProductResponse'
         "400":
           description: Bad Request
           schema:
@@ -584,69 +922,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/APIErrors'
-      summary: Category
+      summary: Update Product
       tags:
       - Category
-  /v1/category/:slug/:
-    get:
-      consumes:
-      - application/json
-      description: Get category by slug
-      parameters:
-      - description: Category Slug
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_category_response_CategoryResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Category
-      tags:
-      - Auth
-  /v1/category/id/:id/:
-    get:
-      consumes:
-      - application/json
-      description: Get category by id
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_category_response_CategoryResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Category
-      tags:
-      - Auth
   /v1/product/:slug/:
     get:
       consumes:
@@ -664,7 +942,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_product_response_ProductResponse'
+            $ref: '#/definitions/JSONResponse-ProductResponse'
         "400":
           description: Bad Request
           schema:
@@ -691,7 +969,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_product_response_ProductResponse'
+            $ref: '#/definitions/JSONResponse-ProductResponse'
         "400":
           description: Bad Request
           schema:
@@ -707,6 +985,39 @@ paths:
       summary: Product
       tags:
       - Auth
+  /v1/user:
+    get:
+      consumes:
+      - application/json
+      description: Auth a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-UserInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Auth user
+      tags:
+      - User
 securityDefinitions:
   BearerAuth:
     in: header

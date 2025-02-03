@@ -26,7 +26,6 @@ func InitServer(cfg config.HTTPConfig, services *service.Services, logger logger
 	})
 
 	router.NewRouter(cfg, services, logger).Init(app)
-
 	return &Server{
 		app:    app,
 		cfg:    cfg,
