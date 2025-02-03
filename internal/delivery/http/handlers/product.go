@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
 	"github.com/stickpro/go-store/internal/service/product"
 	"github.com/stickpro/go-store/internal/tools/apierror"
+
 	// swag-gen import
 	_ "github.com/stickpro/go-store/internal/storage/base"
 	_ "github.com/stickpro/go-store/internal/storage/repository/repository_products"
@@ -72,11 +73,11 @@ func (h Handler) getProductByID(c fiber.Ctx) error {
 //	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[repository_products.FindRow]]
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
-//	@Router			/v1/category/ [get]
+//	@Router			/v1/product/ [get]
 //	@Security		BearerAuth
 func (h Handler) getProducts(c fiber.Ctx) error {
 	req := &product_request.GetProductWithPagination{}
-	if err := c.Bind().Body(req); err != nil {
+	if err := c.Bind().Query(req); err != nil {
 		return err
 	}
 

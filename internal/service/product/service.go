@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
+	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 	"github.com/stickpro/go-store/pkg/logger"
 )
@@ -61,7 +62,9 @@ func (s Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Prod
 
 	prd, err := s.storage.Products().Create(ctx, params)
 	if err != nil {
-		return nil, err
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to create product", "error", parsedErr)
+		return nil, parsedErr
 	}
 	return prd, nil
 
