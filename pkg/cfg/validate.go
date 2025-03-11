@@ -63,7 +63,7 @@ func (c *config) validateEnvs(cfg any, loader *aconfig.Loader) error {
 	// init validator
 	validate := validator.New()
 	for _, item := range c.options.validateFuncs {
-		validate.RegisterValidation(item.Tag, item.Fn, item.CallValidationEvenIfNull...)
+		_ = validate.RegisterValidation(item.Tag, item.Fn, item.CallValidationEvenIfNull...)
 	}
 
 	// validate struct

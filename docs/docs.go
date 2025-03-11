@@ -740,6 +740,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "parent_id": {
+                    "type": "string"
+                },
                 "slug": {
                     "type": "string"
                 },

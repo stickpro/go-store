@@ -1,6 +1,10 @@
 package category_request
 
-import "github.com/google/uuid"
+import (
+	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/tools/apierror"
+)
 
 type UpdateCategoryRequest struct {
 	ParentID        *uuid.UUID `json:"parent_id" validate:"omitempty,uuid"`
@@ -13,3 +17,14 @@ type UpdateCategoryRequest struct {
 	MetaKeyword     *string    `json:"meta_keyword" validate:"omitempty,min=1"`
 	IsEnabled       bool       `json:"is_enabled"`
 } // @name UpdateCategoryRequest
+
+// Manual validate
+func (req *UpdateCategoryRequest) Validate(id uuid.UUID) error {
+	if req.ParentID != nil && *req.ParentID == id {
+		return apierror.New(apierror.Error{
+			Message: "category cannot be its own parent",
+			Field:   "ParentID",
+		}).SetHttpCode(fiber.StatusUnprocessableEntity)
+	}
+	return nil
+}
