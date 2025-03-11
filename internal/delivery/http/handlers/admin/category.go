@@ -68,6 +68,10 @@ func (h *Handler) updateCategory(c fiber.Ctx) error {
 		return err
 	}
 
+	if err = req.Validate(id); err != nil {
+		return err
+	}
+
 	dto := category.RequestToUpdateDTO(req, id)
 	cat, err := h.services.CategoryService.UpdateCategory(c.Context(), dto)
 	if err != nil {

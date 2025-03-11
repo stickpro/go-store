@@ -1,8 +1,6 @@
 package pgtypeutils
 
-import (
-	"github.com/jackc/pgx/v5/pgtype"
-)
+import "github.com/jackc/pgx/v5/pgtype"
 
 func EncodeText(value *string) pgtype.Text {
 	v := ""
@@ -18,7 +16,7 @@ func EncodeText(value *string) pgtype.Text {
 }
 
 func DecodeText(value pgtype.Text) *string {
-	if !value.Valid && value.String == "" {
+	if !value.Valid && value.String != "" {
 		return nil
 	}
 	return &value.String
