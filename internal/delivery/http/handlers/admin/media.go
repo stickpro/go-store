@@ -2,12 +2,17 @@ package admin
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/service/media"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 	"io"
 	"net/http"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
 )
 
 var allowedTypes = map[string]bool{
@@ -61,9 +66,15 @@ func (h *Handler) storeFile(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	re := regexp.MustCompile(`[^a-zA-Z0-9_.-]`)
+	cleanName := re.ReplaceAllString(file.Filename, "_")
+	ext := filepath.Ext(cleanName)
+	name := strings.TrimSuffix(cleanName, ext)
+	uniqueName := fmt.Sprintf("%s_%d%s", name, time.Now().Unix(), ext)
+
 	dto := media.SaveMediumDTO{
 		Name:     file.Filename,
-		Path:     "public/images/" + file.Filename,
+		Path:     "public/images/" + uniqueName,
 		FileType: fileType,
 		Size:     file.Size,
 		Data:     content,
