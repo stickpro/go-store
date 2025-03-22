@@ -1,14 +1,13 @@
 package handlers
 
 import (
+	"github.com/gofiber/fiber/v3"
 	errs "github.com/stickpro/go-store/internal/delivery/http/errors"
 	"github.com/stickpro/go-store/internal/delivery/http/request/auth_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/auth_response"
 	"github.com/stickpro/go-store/internal/service/auth"
 	"github.com/stickpro/go-store/internal/tools/apierror"
-
-	"github.com/gofiber/fiber/v3"
 )
 
 // register is a function to register a new user

@@ -238,6 +238,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-string:
+    properties:
+      code:
+        type: integer
+      data:
+        type: string
+      message:
+        type: string
+    type: object
   ProductResponse:
     properties:
       description:
@@ -828,6 +837,35 @@ paths:
       summary: Category
       tags:
       - Auth
+  /v1/media/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Allows users to upload files of specific types (JPEG, PDF, WEBP)
+      parameters:
+      - description: File to upload
+        in: formData
+        name: document
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-string'
+        "400":
+          description: Unsupported file type
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Upload file
+      tags:
+      - Files
   /v1/product/:
     get:
       consumes:

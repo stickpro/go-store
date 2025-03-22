@@ -361,6 +361,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/media/upload": {
+            "post": {
+                "description": "Allows users to upload files of specific types (JPEG, PDF, WEBP)",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Upload file",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "document",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-string"
+                        }
+                    },
+                    "400": {
+                        "description": "Unsupported file type",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/product/": {
             "get": {
                 "security": [
@@ -1007,6 +1051,20 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/UserInfoResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-string": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "string"
                 },
                 "message": {
                     "type": "string"

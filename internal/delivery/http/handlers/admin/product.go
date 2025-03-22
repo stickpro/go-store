@@ -56,7 +56,7 @@ func (h *Handler) createProduct(c fiber.Ctx) error {
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/product/:id [PUT]
-func (h Handler) updateProduct(c fiber.Ctx) error {
+func (h *Handler) updateProduct(c fiber.Ctx) error {
 	req := &product_request.UpdateProductRequest{}
 	if err := c.Bind().Body(req); err != nil {
 		return err
@@ -74,7 +74,7 @@ func (h Handler) updateProduct(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(product_response.NewFromModel(prd)))
 }
 
-func (h Handler) initProductRoutes(v1 fiber.Router) {
+func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Post("/", h.createProduct)
 	p.Put("/:id", h.updateProduct)
