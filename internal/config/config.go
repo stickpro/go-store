@@ -41,7 +41,7 @@ type (
 
 	FileStorage struct {
 		Type   string `yaml:"type" default:"local" example:"local / s3"`
-		Path   string `yaml:"path" default:"./storage"`
+		Path   string `yaml:"path" default:"storage"`
 		Bucket string `yaml:"bucket" default:""`
 	}
 )

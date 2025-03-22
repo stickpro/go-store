@@ -13,14 +13,14 @@ import (
 
 type Server struct {
 	app    *fiber.App
-	cfg    config.HTTPConfig
+	cfg    *config.Config
 	logger logger.Logger
 }
 
-func InitServer(cfg config.HTTPConfig, services *service.Services, logger logger.Logger) *Server {
+func InitServer(cfg *config.Config, services *service.Services, logger logger.Logger) *Server {
 	app := fiber.New(fiber.Config{
-		ReadTimeout:     cfg.ReadTimeout,
-		WriteTimeout:    cfg.WriteTimeout,
+		ReadTimeout:     cfg.HTTP.ReadTimeout,
+		WriteTimeout:    cfg.HTTP.WriteTimeout,
 		StructValidator: tools.DefaultStructValidator(),
 		ErrorHandler:    errorHandler,
 	})
@@ -34,7 +34,7 @@ func InitServer(cfg config.HTTPConfig, services *service.Services, logger logger
 }
 
 func (s *Server) Run() error {
-	return s.app.Listen(":" + s.cfg.Port)
+	return s.app.Listen(":" + s.cfg.HTTP.Port)
 }
 
 func (s *Server) Stop() error {

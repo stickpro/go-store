@@ -13,12 +13,12 @@ import (
 )
 
 type Router struct {
-	config   config.HTTPConfig
+	config   *config.Config
 	services *service.Services
 	logger   logger.Logger
 }
 
-func NewRouter(conf config.HTTPConfig, services *service.Services, logger logger.Logger) *Router {
+func NewRouter(conf *config.Config, services *service.Services, logger logger.Logger) *Router {
 	return &Router{
 		config:   conf,
 		services: services,
@@ -29,7 +29,7 @@ func NewRouter(conf config.HTTPConfig, services *service.Services, logger logger
 func (r *Router) Init(app *fiber.App) {
 	app.Use(etag.New())
 
-	if r.config.Cors.Enabled {
+	if r.config.HTTP.Cors.Enabled {
 		corsConfig := cors.ConfigDefault
 		corsConfig.AllowMethods = []string{
 			fiber.MethodGet,
@@ -41,8 +41,8 @@ func (r *Router) Init(app *fiber.App) {
 			fiber.MethodOptions,
 		}
 
-		if len(r.config.Cors.AllowedOrigins) > 0 {
-			corsConfig.AllowOrigins = r.config.Cors.AllowedOrigins
+		if len(r.config.HTTP.Cors.AllowedOrigins) > 0 {
+			corsConfig.AllowOrigins = r.config.HTTP.Cors.AllowedOrigins
 		}
 
 		app.Use(cors.New(corsConfig))
