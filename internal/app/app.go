@@ -31,7 +31,7 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 	}
 	l.Info("Start DI service")
 
-	srv := server.InitServer(conf.HTTP, services, l)
+	srv := server.InitServer(conf, services, l)
 
 	go func() {
 		if err := srv.Run(); !errors.Is(err, http.ErrServerClosed) {

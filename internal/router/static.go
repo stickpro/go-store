@@ -14,7 +14,7 @@ func (r *Router) initStaticFiles(app *fiber.App) {
 	})
 
 	app.Get("/storage/public*", static.New("", static.Config{
-		FS:     os.DirFS("storage/public"),
+		FS:     os.DirFS(r.config.FileStorage.Path + "/public"),
 		Browse: true,
 	}))
 
