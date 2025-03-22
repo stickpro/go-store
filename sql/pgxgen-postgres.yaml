@@ -97,3 +97,15 @@ sqlc:
               column_values:
                 updated_at: now()
               returning: "*"
+        # files
+        media:
+          output_dir: postgres/queries/media
+          primary_column: id
+          methods:
+            create:
+              skip_columns:
+                - id
+              returning: "*"
+              column_values:
+                created_at: now()
+            delete:

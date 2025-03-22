@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.28.0
 
-package repository_users
+package repository_media
 
 import (
 	"context"

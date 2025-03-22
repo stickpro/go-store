@@ -7,12 +7,13 @@ import (
 
 type (
 	Config struct {
-		App      AppConfig  `yaml:"app"`
-		HTTP     HTTPConfig `yaml:"http"`
-		Postgres PostgresDB `yaml:"postgres"`
-		Redis    RedisDB    `yaml:"redis"`
-		Log      logger.Config
-		KeyValue KeyValue `yaml:"key_value"`
+		App         AppConfig  `yaml:"app"`
+		HTTP        HTTPConfig `yaml:"http"`
+		Postgres    PostgresDB `yaml:"postgres"`
+		Redis       RedisDB    `yaml:"redis"`
+		Log         logger.Config
+		KeyValue    KeyValue    `yaml:"key_value"`
+		FileStorage FileStorage `yaml:"file_storage"`
 	}
 
 	AppConfig struct {
@@ -36,6 +37,12 @@ type (
 
 	KeyValue struct {
 		Engine KeyValueEngine `yaml:"engine" required:"true" validate:"oneof=redis in_memory" example:"redis / in_memory" default:"redis"`
+	}
+
+	FileStorage struct {
+		Type   string `yaml:"type" default:"local" example:"local / s3"`
+		Path   string `yaml:"path" default:"./storage"`
+		Bucket string `yaml:"bucket" default:""`
 	}
 )
 

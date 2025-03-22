@@ -27,4 +27,5 @@ func (h *Handler) InitAdminHandler(api *fiber.App) {
 
 	h.initCategoryRoutes(secured)
 	h.initProductRoutes(secured)
+	h.initMediaRoutes(secured)
 }

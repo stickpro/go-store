@@ -1,19 +1,19 @@
-CREATE TABLE categories
+create table categories
 (
-    id               UUID                  DEFAULT gen_random_uuid() NOT NULL
-        PRIMARY KEY,
-    parent_id        UUID REFERENCES categories (id) ON DELETE CASCADE,
-    name             VARCHAR(255) NOT NULL,
-    slug             VARCHAR(255) NOT NULL UNIQUE,
-    description      TEXT,
-    meta_title       VARCHAR(255),
-    meta_h1          VARCHAR(255),
-    meta_description VARCHAR(400),
+    id               uuid                  default gen_random_uuid() not null
+        primary key,
+    parent_id        uuid references categories (id) on delete cascade,
+    name             varchar(255) not null,
+    slug             varchar(255) not null unique,
+    description      text,
+    meta_title       varchar(255),
+    meta_h1          varchar(255),
+    meta_description varchar(400),
     meta_keyword     varchar(255),
-    is_enable        BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP    NULL     DEFAULT CURRENT_TIMESTAMP
+    is_enable        boolean      not null default true,
+    created_at       timestamp    not null default current_timestamp,
+    updated_at       timestamp    null     default current_timestamp
 );
 
-CREATE INDEX idx_categories_parent_id ON categories (parent_id);
-CREATE INDEX idx_categories_slug ON categories (slug);
+create index idx_categories_parent_id on categories (parent_id);
+create index idx_categories_slug on categories (slug);
