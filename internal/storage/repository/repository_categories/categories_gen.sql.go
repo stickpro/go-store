@@ -14,9 +14,9 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO categories (parent_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
-	RETURNING id, parent_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at
+INSERT INTO categories (parent_id, name, slug, description, image_path, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())
+	RETURNING id, parent_id, name, slug, description, image_path, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at
 `
 
 type CreateParams struct {
@@ -24,6 +24,7 @@ type CreateParams struct {
 	Name            string        `db:"name" json:"name"`
 	Slug            string        `db:"slug" json:"slug"`
 	Description     pgtype.Text   `db:"description" json:"description"`
+	ImagePath       pgtype.Text   `db:"image_path" json:"image_path"`
 	MetaTitle       pgtype.Text   `db:"meta_title" json:"meta_title"`
 	MetaH1          pgtype.Text   `db:"meta_h1" json:"meta_h1"`
 	MetaDescription pgtype.Text   `db:"meta_description" json:"meta_description"`
@@ -37,6 +38,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Categor
 		arg.Name,
 		arg.Slug,
 		arg.Description,
+		arg.ImagePath,
 		arg.MetaTitle,
 		arg.MetaH1,
 		arg.MetaDescription,
@@ -50,6 +52,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Categor
 		&i.Name,
 		&i.Slug,
 		&i.Description,
+		&i.ImagePath,
 		&i.MetaTitle,
 		&i.MetaH1,
 		&i.MetaDescription,
@@ -63,10 +66,10 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Categor
 
 const update = `-- name: Update :one
 UPDATE categories
-	SET parent_id=$1, name=$2, slug=$3, description=$4, meta_title=$5, meta_h1=$6, 
-		meta_description=$7, meta_keyword=$8, is_enable=$9, updated_at=now()
-	WHERE id=$10
-	RETURNING id, parent_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at
+	SET parent_id=$1, name=$2, slug=$3, description=$4, image_path=$5, meta_title=$6, 
+		meta_h1=$7, meta_description=$8, meta_keyword=$9, is_enable=$10, updated_at=now()
+	WHERE id=$11
+	RETURNING id, parent_id, name, slug, description, image_path, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at
 `
 
 type UpdateParams struct {
@@ -74,6 +77,7 @@ type UpdateParams struct {
 	Name            string        `db:"name" json:"name"`
 	Slug            string        `db:"slug" json:"slug"`
 	Description     pgtype.Text   `db:"description" json:"description"`
+	ImagePath       pgtype.Text   `db:"image_path" json:"image_path"`
 	MetaTitle       pgtype.Text   `db:"meta_title" json:"meta_title"`
 	MetaH1          pgtype.Text   `db:"meta_h1" json:"meta_h1"`
 	MetaDescription pgtype.Text   `db:"meta_description" json:"meta_description"`
@@ -88,6 +92,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Categor
 		arg.Name,
 		arg.Slug,
 		arg.Description,
+		arg.ImagePath,
 		arg.MetaTitle,
 		arg.MetaH1,
 		arg.MetaDescription,
@@ -102,6 +107,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Categor
 		&i.Name,
 		&i.Slug,
 		&i.Description,
+		&i.ImagePath,
 		&i.MetaTitle,
 		&i.MetaH1,
 		&i.MetaDescription,

@@ -13,7 +13,7 @@ import (
 )
 
 const getByID = `-- name: GetByID :one
-SELECT id, parent_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at FROM categories WHERE id = $1 LIMIT 1
+SELECT id, parent_id, name, slug, description, image_path, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at FROM categories WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Category, error) {
@@ -25,6 +25,7 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Category, 
 		&i.Name,
 		&i.Slug,
 		&i.Description,
+		&i.ImagePath,
 		&i.MetaTitle,
 		&i.MetaH1,
 		&i.MetaDescription,
@@ -37,7 +38,7 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Category, 
 }
 
 const getBySlug = `-- name: GetBySlug :one
-SELECT id, parent_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at FROM categories WHERE slug = $1 LIMIT 1
+SELECT id, parent_id, name, slug, description, image_path, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at FROM categories WHERE slug = $1 LIMIT 1
 `
 
 func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Category, error) {
@@ -49,6 +50,7 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Category,
 		&i.Name,
 		&i.Slug,
 		&i.Description,
+		&i.ImagePath,
 		&i.MetaTitle,
 		&i.MetaH1,
 		&i.MetaDescription,

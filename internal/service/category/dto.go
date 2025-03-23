@@ -10,6 +10,7 @@ type CreateDTO struct {
 	ParentID        uuid.NullUUID `json:"parent_id"`
 	Slug            string        `json:"slug"`
 	Description     *string       `json:"description"`
+	ImagePath       *string       `json:"image_path"`
 	MetaTitle       *string       `json:"meta_title"`
 	MetaH1          *string       `json:"meta_h1"`
 	MetaDescription *string       `json:"meta_description"`
@@ -23,6 +24,7 @@ type UpdateDTO struct {
 	ParentID        uuid.NullUUID `json:"parent_id"`
 	Slug            string        `json:"slug"`
 	Description     *string       `json:"description"`
+	ImagePath       *string       `json:"image_path"`
 	MetaTitle       *string       `json:"meta_title"`
 	MetaH1          *string       `json:"meta_h1"`
 	MetaDescription *string       `json:"meta_description"`
@@ -48,6 +50,7 @@ func RequestToCreateDTO(req *category_request.CreateCategoryRequest) CreateDTO {
 		ParentID:        parentID,
 		Slug:            req.Slug,
 		Description:     req.Description,
+		ImagePath:       req.ImagePath,
 		MetaTitle:       req.MetaTitle,
 		MetaH1:          req.MetaH1,
 		MetaDescription: req.MetaDescription,
@@ -70,6 +73,7 @@ func RequestToUpdateDTO(req *category_request.UpdateCategoryRequest, id uuid.UUI
 		ParentID:        parentID,
 		Slug:            req.Slug,
 		Description:     req.Description,
+		ImagePath:       req.ImagePath,
 		MetaTitle:       req.MetaTitle,
 		MetaH1:          req.MetaH1,
 		MetaDescription: req.MetaDescription,
