@@ -280,7 +280,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Category"
                 ],
                 "summary": "Category",
                 "parameters": [
@@ -330,7 +330,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Category"
                 ],
                 "summary": "Category",
                 "responses": {
@@ -387,7 +387,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-string"
+                            "$ref": "#/definitions/JSONResponse-MediumResponse"
                         }
                     },
                     "400": {
@@ -420,7 +420,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Category"
+                    "Product"
                 ],
                 "summary": "Get products",
                 "parameters": [
@@ -465,7 +465,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Category"
+                    "Product"
                 ],
                 "summary": "Create Product",
                 "parameters": [
@@ -517,7 +517,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Category"
+                    "Product"
                 ],
                 "summary": "Update Product",
                 "parameters": [
@@ -569,7 +569,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Product"
                 ],
                 "summary": "Product",
                 "parameters": [
@@ -619,7 +619,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Product"
                 ],
                 "summary": "Product",
                 "responses": {
@@ -987,6 +987,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-MediumResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/MediumResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-ProductResponse": {
             "type": "object",
             "properties": {
@@ -1057,17 +1071,32 @@ const docTemplate = `{
                 }
             }
         },
-        "JSONResponse-string": {
+        "MediumResponse": {
             "type": "object",
             "properties": {
-                "code": {
+                "created_at": {
+                    "type": "string"
+                },
+                "disk_type": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "size": {
                     "type": "integer"
-                },
-                "data": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
                 }
             }
         },

@@ -15,7 +15,7 @@ import (
 //
 //	@Summary		Create Product
 //	@Description	Create product
-//	@Tags			Category
+//	@Tags			Product
 //	@Accept			json
 //	@Produce		json
 //	@Param			create	body		product_request.CreateProductRequest	true	"Create product"
@@ -46,7 +46,7 @@ func (h *Handler) createProduct(c fiber.Ctx) error {
 //
 //	@Summary		Update Product
 //	@Description	Update product
-//	@Tags			Category
+//	@Tags			Product
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		uuid.UUID								true	"Product ID"

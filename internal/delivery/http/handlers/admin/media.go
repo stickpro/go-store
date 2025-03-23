@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
+	"github.com/stickpro/go-store/internal/delivery/http/response/medium_response"
 	"github.com/stickpro/go-store/internal/service/media"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 	"io"
@@ -29,12 +30,12 @@ var allowedTypes = map[string]bool{
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Param			document	formData	file	true	"File to upload"
-//	@Success		200			{object}	response.Result[string]
+//	@Success		200			{object}	response.Result[medium_response.MediumResponse]
 //	@Failure		400			{object}	apierror.Errors "Unsupported file type"
 //	@Failure		500			{object}	apierror.Errors "Internal server error"
 //	@Router			/v1/media/upload [post]
 func (h *Handler) storeFile(c fiber.Ctx) error {
-	file, err := c.FormFile("document")
+	file, err := c.FormFile("file")
 	if err != nil {
 		return err
 	}
@@ -83,8 +84,8 @@ func (h *Handler) storeFile(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-
-	return c.JSON(response.OkByData(medium))
+	mediumResponse := medium_response.NewFromModel(medium)
+	return c.JSON(response.OkByData(mediumResponse))
 }
 
 func (h *Handler) initMediaRoutes(v1 fiber.Router) {
