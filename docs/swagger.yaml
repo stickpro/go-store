@@ -193,6 +193,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-MediumResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/MediumResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-ProductResponse:
     properties:
       code:
@@ -238,14 +247,24 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-string:
+  MediumResponse:
     properties:
-      code:
+      created_at:
+        type: string
+      disk_type:
+        type: string
+      file_name:
+        type: string
+      id:
+        type: string
+      mime_type:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      size:
         type: integer
-      data:
-        type: string
-      message:
-        type: string
     type: object
   ProductResponse:
     properties:
@@ -809,7 +828,7 @@ paths:
             $ref: '#/definitions/APIErrors'
       summary: Category
       tags:
-      - Auth
+      - Category
   /v1/category/id/:id/:
     get:
       consumes:
@@ -836,7 +855,7 @@ paths:
             $ref: '#/definitions/APIErrors'
       summary: Category
       tags:
-      - Auth
+      - Category
   /v1/media/upload:
     post:
       consumes:
@@ -854,7 +873,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-string'
+            $ref: '#/definitions/JSONResponse-MediumResponse'
         "400":
           description: Unsupported file type
           schema:
@@ -897,7 +916,7 @@ paths:
       - BearerAuth: []
       summary: Get products
       tags:
-      - Category
+      - Product
     post:
       consumes:
       - application/json
@@ -930,7 +949,7 @@ paths:
             $ref: '#/definitions/APIErrors'
       summary: Create Product
       tags:
-      - Category
+      - Product
   /v1/product/:id:
     put:
       consumes:
@@ -964,7 +983,7 @@ paths:
             $ref: '#/definitions/APIErrors'
       summary: Update Product
       tags:
-      - Category
+      - Product
   /v1/product/:slug/:
     get:
       consumes:
@@ -997,7 +1016,7 @@ paths:
             $ref: '#/definitions/APIErrors'
       summary: Product
       tags:
-      - Auth
+      - Product
   /v1/product/id/:id/:
     get:
       consumes:
@@ -1024,7 +1043,7 @@ paths:
             $ref: '#/definitions/APIErrors'
       summary: Product
       tags:
-      - Auth
+      - Product
   /v1/user:
     get:
       consumes:

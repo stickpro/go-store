@@ -273,7 +273,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Category"
                 ],
                 "summary": "Category",
                 "parameters": [
@@ -323,7 +323,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Category"
                 ],
                 "summary": "Category",
                 "responses": {
@@ -380,7 +380,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-string"
+                            "$ref": "#/definitions/JSONResponse-MediumResponse"
                         }
                     },
                     "400": {
@@ -413,7 +413,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Category"
+                    "Product"
                 ],
                 "summary": "Get products",
                 "parameters": [
@@ -458,7 +458,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Category"
+                    "Product"
                 ],
                 "summary": "Create Product",
                 "parameters": [
@@ -510,7 +510,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Category"
+                    "Product"
                 ],
                 "summary": "Update Product",
                 "parameters": [
@@ -562,7 +562,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Product"
                 ],
                 "summary": "Product",
                 "parameters": [
@@ -612,7 +612,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Product"
                 ],
                 "summary": "Product",
                 "responses": {
@@ -980,6 +980,20 @@
                 }
             }
         },
+        "JSONResponse-MediumResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/MediumResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-ProductResponse": {
             "type": "object",
             "properties": {
@@ -1050,17 +1064,32 @@
                 }
             }
         },
-        "JSONResponse-string": {
+        "MediumResponse": {
             "type": "object",
             "properties": {
-                "code": {
+                "created_at": {
+                    "type": "string"
+                },
+                "disk_type": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "size": {
                     "type": "integer"
-                },
-                "data": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
                 }
             }
         },

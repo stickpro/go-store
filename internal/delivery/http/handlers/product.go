@@ -18,7 +18,7 @@ import (
 //
 //	@Summary		Product
 //	@Description	Get product by slug
-//	@Tags			Auth
+//	@Tags			Product
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Product Slug"
@@ -41,7 +41,7 @@ func (h Handler) getProductBySlug(c fiber.Ctx) error {
 //
 //	@Summary		Product
 //	@Description	Get product by id
-//	@Tags			Auth
+//	@Tags			Product
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		uuid.UUID	true	"Product ID"
@@ -66,7 +66,7 @@ func (h Handler) getProductByID(c fiber.Ctx) error {
 //
 //	@Summary		Get products
 //	@Description	Get products
-//	@Tags			Category
+//	@Tags			Product
 //	@Accept			json
 //	@Produce		json
 //	@Param			string	query		product_request.GetProductWithPagination	true	"GetProductWithPagination"

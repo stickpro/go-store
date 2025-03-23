@@ -17,7 +17,7 @@ import (
 //
 //	@Summary		Category
 //	@Description	Get category by slug
-//	@Tags			Auth
+//	@Tags			Category
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Category Slug"
@@ -39,7 +39,7 @@ func (h Handler) getCategoryBySlug(c fiber.Ctx) error {
 //
 //	@Summary		Category
 //	@Description	Get category by id
-//	@Tags			Auth
+//	@Tags			Category
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		uuid.UUID	true	"Category ID"

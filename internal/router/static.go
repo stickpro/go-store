@@ -6,8 +6,6 @@ import (
 	"os"
 )
 
-var StaticDir = os.DirFS("./storage/")
-
 func (r *Router) initStaticFiles(app *fiber.App) {
 	app.Get("/swagger.yaml", func(c fiber.Ctx) error {
 		return c.SendFile("docs/swagger.yaml")
