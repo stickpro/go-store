@@ -759,6 +759,9 @@
                 "id": {
                     "type": "string"
                 },
+                "image_path": {
+                    "type": "string"
+                },
                 "is_enabled": {
                     "type": "boolean"
                 },
@@ -796,6 +799,10 @@
             ],
             "properties": {
                 "description": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "image_path": {
                     "type": "string",
                     "minLength": 1
                 },
@@ -1255,6 +1262,10 @@
                     "type": "string",
                     "minLength": 1
                 },
+                "image_path": {
+                    "type": "string",
+                    "minLength": 1
+                },
                 "is_enabled": {
                     "type": "boolean"
                 },
@@ -1440,6 +1451,9 @@
                 },
                 "id": {
                     "type": "string"
+                },
+                "image_path": {
+                    "$ref": "#/definitions/pgtype.Text"
                 },
                 "is_enable": {
                     "type": "boolean"

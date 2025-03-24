@@ -766,6 +766,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "image_path": {
+                    "type": "string"
+                },
                 "is_enabled": {
                     "type": "boolean"
                 },
@@ -803,6 +806,10 @@ const docTemplate = `{
             ],
             "properties": {
                 "description": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "image_path": {
                     "type": "string",
                     "minLength": 1
                 },
@@ -1262,6 +1269,10 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 1
                 },
+                "image_path": {
+                    "type": "string",
+                    "minLength": 1
+                },
                 "is_enabled": {
                     "type": "boolean"
                 },
@@ -1447,6 +1458,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "image_path": {
+                    "$ref": "#/definitions/pgtype.Text"
                 },
                 "is_enable": {
                     "type": "boolean"

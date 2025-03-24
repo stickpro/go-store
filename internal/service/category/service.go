@@ -33,6 +33,7 @@ func (s *Service) CreateCategory(ctx context.Context, dto CreateDTO) (*models.Ca
 		Name:            dto.Name,
 		Slug:            dto.Slug,
 		Description:     pgtypeutils.EncodeText(dto.Description),
+		ImagePath:       pgtypeutils.EncodeText(dto.ImagePath),
 		MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
 		MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
 		MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),

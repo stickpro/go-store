@@ -57,7 +57,6 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "category")
 	}
-
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
 }
 
