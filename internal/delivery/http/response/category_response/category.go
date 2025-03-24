@@ -12,6 +12,7 @@ type CategoryResponse struct {
 	Name            string     `json:"name"`
 	Slug            string     `json:"slug"`
 	Description     *string    `json:"description,omitempty"`
+	ImagePath       *string    `json:"image_path"`
 	MetaTitle       *string    `json:"meta_title,omitempty"`
 	MetaH1          *string    `json:"meta_h1"`
 	MetaDescription *string    `json:"meta_description"`
@@ -27,11 +28,17 @@ func NewFromModel(category *models.Category) CategoryResponse {
 	if category.ParentID.Valid {
 		parentID = &category.ParentID.UUID
 	}
+	var imagePath *string
+	if category.ImagePath.Valid {
+		str := pgtypeutils.DecodeText(category.ImagePath)
+		imagePath = str
+	}
 	return CategoryResponse{
 		ID:              category.ID,
 		Name:            category.Name,
 		Slug:            category.Slug,
 		Description:     pgtypeutils.DecodeText(category.Description),
+		ImagePath:       imagePath,
 		MetaTitle:       pgtypeutils.DecodeText(category.MetaTitle),
 		MetaH1:          pgtypeutils.DecodeText(category.MetaH1),
 		MetaDescription: pgtypeutils.DecodeText(category.MetaDescription),
