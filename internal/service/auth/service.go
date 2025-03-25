@@ -23,7 +23,7 @@ type Token struct {
 	FullToken    string
 }
 
-type IAuth interface {
+type IAuthService interface {
 	RegisterUser(ctx context.Context, dto RegisterDTO) (*models.User, error)
 	Auth(ctx context.Context, dto AuthDTO) (*Token, error)
 	AuthByUser(ctx context.Context, user *models.User) (*Token, error)
@@ -33,11 +33,11 @@ type IAuth interface {
 type Service struct {
 	cfg         *config.Config
 	logger      logger.Logger
-	userService user.IUser
+	userService user.IUserService
 	storage     storage.IStorage
 }
 
-func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, userService user.IUser) *Service {
+func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, userService user.IUserService) *Service {
 	return &Service{
 		cfg:         cfg,
 		logger:      logger,

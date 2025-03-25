@@ -3,7 +3,6 @@ app:
 http:
   host: localhost
   port: "80"
-  fetch_interval: 30s
   connect_timeout: 5s
   read_timeout: 10s
   write_timeout: 10s
@@ -32,3 +31,13 @@ log:
   trace: fatal
   with_caller: false
   with_stack_trace: false
+key_value:
+  engine: redis
+file_storage:
+  type: local
+  path: storage
+  bucket: ""
+search_engine:
+  type: meili_search
+  host: http://localhost:7700
+  api_key: ""

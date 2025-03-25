@@ -15,7 +15,7 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
-type IUser interface {
+type IUserService interface {
 	GetUserByID(ctx context.Context, ID uuid.UUID) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	StoreUser(ctx context.Context, params repository_users.CreateParams) (*models.User, error)

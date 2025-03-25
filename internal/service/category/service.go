@@ -13,7 +13,7 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
-type ICategory interface {
+type ICategoryService interface {
 	CreateCategory(ctx context.Context, dto CreateDTO) (*models.Category, error)
 	GetCategoryWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error)
 	GetCategoryById(ctx context.Context, id uuid.UUID) (*models.Category, error)
