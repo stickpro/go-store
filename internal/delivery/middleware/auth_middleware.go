@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func AuthMiddleware(auth auth.IAuth) fiber.Handler {
+func AuthMiddleware(auth auth.IAuthService) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {

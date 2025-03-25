@@ -7,13 +7,14 @@ import (
 
 type (
 	Config struct {
-		App         AppConfig  `yaml:"app"`
-		HTTP        HTTPConfig `yaml:"http"`
-		Postgres    PostgresDB `yaml:"postgres"`
-		Redis       RedisDB    `yaml:"redis"`
-		Log         logger.Config
-		KeyValue    KeyValue    `yaml:"key_value"`
-		FileStorage FileStorage `yaml:"file_storage"`
+		App          AppConfig  `yaml:"app"`
+		HTTP         HTTPConfig `yaml:"http"`
+		Postgres     PostgresDB `yaml:"postgres"`
+		Redis        RedisDB    `yaml:"redis"`
+		Log          logger.Config
+		KeyValue     KeyValue     `yaml:"key_value"`
+		FileStorage  FileStorage  `yaml:"file_storage"`
+		SearchEngine SearchEngine `yaml:"search_engine"`
 	}
 
 	AppConfig struct {

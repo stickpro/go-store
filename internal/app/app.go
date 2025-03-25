@@ -33,6 +33,7 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 
 	srv := server.InitServer(conf, services, l)
 
+	initIndexer(ctx, services, l)
 	go func() {
 		if err := srv.Run(); !errors.Is(err, http.ErrServerClosed) {
 			l.Error("error occurred while running http server", err)

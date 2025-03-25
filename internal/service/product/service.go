@@ -13,7 +13,7 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
-type IProduct interface {
+type IProductService interface {
 	CreateProduct(ctx context.Context, dto CreateDTO) (*models.Product, error)
 	GetProductWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 	GetProductById(ctx context.Context, id uuid.UUID) (*models.Product, error)
