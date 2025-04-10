@@ -64,3 +64,7 @@ gen-sql:
 gen-swag:
 	swag fmt
 	swag init --parseDependency --parseInternal -g ./cmd/app/main.go
+
+# Empty goals trap
+%:
+	@:

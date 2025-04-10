@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_categories"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_personal_access_tokens"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
@@ -16,6 +17,7 @@ type IRepository interface {
 	Categories(opts ...Option) repository_categories.ICustomQueries
 	Products(opts ...Option) repository_products.ICustomQueries
 	Media(opts ...Option) repository_media.Querier
+	Manufacturers(opts ...Option) repository_manufacturers.ICustomQueries
 }
 
 type repository struct {
@@ -23,6 +25,7 @@ type repository struct {
 	personalAccessToken *repository_personal_access_tokens.Queries
 	categories          *repository_categories.CustomQueries
 	products            *repository_products.CustomQueries
+	manufacturer        *repository_manufacturers.CustomQueries
 	media               *repository_media.Queries
 }
 
@@ -32,6 +35,7 @@ func InitRepository(psql *database.PostgresClient, keyValue key_value.IKeyValue)
 		personalAccessToken: repository_personal_access_tokens.New(psql.DB),
 		categories:          repository_categories.NewCustom(psql.DB),
 		products:            repository_products.NewCustom(psql.DB),
+		manufacturer:        repository_manufacturers.NewCustom(psql.DB),
 		media:               repository_media.New(psql.DB),
 	}
 }
@@ -66,6 +70,14 @@ func (r *repository) Products(opts ...Option) repository_products.ICustomQueries
 		return r.products.WithTx(options.Tx)
 	}
 	return r.products
+}
+
+func (r *repository) Manufacturers(opts ...Option) repository_manufacturers.ICustomQueries {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.manufacturer.WithTx(options.Tx)
+	}
+	return r.manufacturer
 }
 
 func (r *repository) Media(opts ...Option) repository_media.Querier {

@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/service/category"
@@ -12,14 +11,14 @@ import (
 
 func initIndexer(ctx context.Context, service *service.Services, l logger.Logger) {
 	if service.SearchService != nil {
-		cat, err := service.CategoryService.GetCategoryWithPagination(ctx, category.GetDTO{
+		cat, err := service.CategoryService.GetCategoriesWithPagination(ctx, category.GetDTO{
 			Page:     utils.Pointer(uint32(1)),
 			PageSize: utils.Pointer(uint32(100)),
 		})
 		if err != nil {
 			l.Error("failed to get category", err)
 		}
-		fmt.Println(cat.Items)
+
 		data, err := structToMap(cat.Items)
 
 		err = service.SearchService.CreateIndex("category", data)

@@ -15,8 +15,8 @@ import (
 
 type ICategoryService interface {
 	CreateCategory(ctx context.Context, dto CreateDTO) (*models.Category, error)
-	GetCategoryWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error)
-	GetCategoryById(ctx context.Context, id uuid.UUID) (*models.Category, error)
+	GetCategoriesWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error)
+	GetCategoryByID(ctx context.Context, id uuid.UUID) (*models.Category, error)
 	GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error)
 	UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error)
 }
@@ -25,6 +25,14 @@ type Service struct {
 	cfg     *config.Config
 	logger  logger.Logger
 	storage storage.IStorage
+}
+
+func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Service {
+	return &Service{
+		cfg:     cfg,
+		logger:  logger,
+		storage: storage,
+	}
 }
 
 func (s *Service) CreateCategory(ctx context.Context, dto CreateDTO) (*models.Category, error) {
@@ -49,7 +57,7 @@ func (s *Service) CreateCategory(ctx context.Context, dto CreateDTO) (*models.Ca
 	return cat, nil
 }
 
-func (s *Service) GetCategoryById(ctx context.Context, id uuid.UUID) (*models.Category, error) {
+func (s *Service) GetCategoryByID(ctx context.Context, id uuid.UUID) (*models.Category, error) {
 	cat, err := s.storage.Categories().GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -65,7 +73,7 @@ func (s *Service) GetCategoryBySlug(ctx context.Context, slug string) (*models.C
 	return cat, nil
 }
 
-func (s *Service) GetCategoryWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error) {
+func (s *Service) GetCategoriesWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error) {
 	commonParams := base.NewCommonFindParams()
 	if dto.PageSize != nil {
 		commonParams.PageSize = dto.PageSize
@@ -104,12 +112,4 @@ func (s *Service) UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Ca
 		return nil, parsedErr
 	}
 	return cat, nil
-}
-
-func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Service {
-	return &Service{
-		cfg:     cfg,
-		logger:  logger,
-		storage: storage,
-	}
 }

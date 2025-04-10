@@ -29,6 +29,21 @@ type Category struct {
 	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
 }
 
+type Manufacturer struct {
+	ID              uuid.UUID        `db:"id" json:"id"`
+	Name            string           `db:"name" json:"name"`
+	Slug            string           `db:"slug" json:"slug"`
+	Description     pgtype.Text      `db:"description" json:"description"`
+	ImagePath       pgtype.Text      `db:"image_path" json:"image_path"`
+	MetaTitle       pgtype.Text      `db:"meta_title" json:"meta_title"`
+	MetaH1          pgtype.Text      `db:"meta_h1" json:"meta_h1"`
+	MetaDescription pgtype.Text      `db:"meta_description" json:"meta_description"`
+	MetaKeyword     pgtype.Text      `db:"meta_keyword" json:"meta_keyword"`
+	IsEnable        bool             `db:"is_enable" json:"is_enable"`
+	CreatedAt       pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+}
+
 type Medium struct {
 	ID        uuid.UUID        `db:"id" json:"id"`
 	Name      string           `db:"name" json:"name"`
