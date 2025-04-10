@@ -4,6 +4,7 @@ import (
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/service/auth"
 	"github.com/stickpro/go-store/internal/service/category"
+	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/service/media"
 	"github.com/stickpro/go-store/internal/service/product"
 	"github.com/stickpro/go-store/internal/service/search"
@@ -14,12 +15,13 @@ import (
 )
 
 type Services struct {
-	UserService     user.IUserService
-	AuthService     auth.IAuthService
-	CategoryService category.ICategoryService
-	ProductService  product.IProductService
-	MediaService    media.IMediaService
-	SearchService   searchtypes.ISearchService
+	UserService         user.IUserService
+	AuthService         auth.IAuthService
+	CategoryService     category.ICategoryService
+	ProductService      product.IProductService
+	MediaService        media.IMediaService
+	SearchService       searchtypes.ISearchService
+	ManufacturerService manufacturer.IManufacturerService
 }
 
 func InitService(
@@ -33,13 +35,17 @@ func InitService(
 	categoryService := category.New(conf, logger, storage)
 	productService := product.New(conf, logger, storage)
 	mediaService := media.New(conf, logger, storage)
+	manufacturerService := manufacturer.New(conf, logger, storage)
+
 	searchService, _ := search.New(conf)
+
 	return &Services{
-		UserService:     userService,
-		AuthService:     authService,
-		CategoryService: categoryService,
-		ProductService:  productService,
-		MediaService:    mediaService,
-		SearchService:   searchService,
+		UserService:         userService,
+		AuthService:         authService,
+		CategoryService:     categoryService,
+		ProductService:      productService,
+		MediaService:        mediaService,
+		SearchService:       searchService,
+		ManufacturerService: manufacturerService,
 	}, nil
 }

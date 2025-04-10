@@ -98,6 +98,40 @@ definitions:
     - name
     - slug
     type: object
+  CreateManufacturerRequest:
+    properties:
+      description:
+        minLength: 1
+        type: string
+      image_path:
+        minLength: 1
+        type: string
+      is_enabled:
+        type: boolean
+      meta_description:
+        minLength: 1
+        type: string
+      meta_h1:
+        minLength: 1
+        type: string
+      meta_keyword:
+        minLength: 1
+        type: string
+      meta_title:
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      slug:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    - slug
+    type: object
   CreateProductRequest:
     properties:
       description:
@@ -198,6 +232,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-ManufacturerResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ManufacturerResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-MediumResponse:
     properties:
       code:
@@ -250,6 +293,33 @@ definitions:
       data:
         $ref: '#/definitions/UserInfoResponse'
       message:
+        type: string
+    type: object
+  ManufacturerResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      image_path:
+        type: string
+      is_enabled:
+        type: boolean
+      meta_description:
+        type: string
+      meta_h1:
+        type: string
+      meta_keywords:
+        type: string
+      meta_title:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
         type: string
     type: object
   MediumResponse:
@@ -402,6 +472,37 @@ definitions:
         minLength: 1
         type: string
       parent_id:
+        type: string
+      slug:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  UpdateManufacturerRequest:
+    properties:
+      description:
+        minLength: 1
+        type: string
+      image_path:
+        minLength: 1
+        type: string
+      is_enabled:
+        type: boolean
+      meta_description:
+        minLength: 1
+        type: string
+      meta_h1:
+        minLength: 1
+        type: string
+      meta_keyword:
+        minLength: 1
+        type: string
+      meta_title:
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
         type: string
       slug:
         maxLength: 255
@@ -866,6 +967,140 @@ paths:
       summary: Category
       tags:
       - Category
+  /v1/manufacturer/:
+    post:
+      consumes:
+      - application/json
+      description: Create Manufacturer
+      parameters:
+      - description: Create manufacturer
+        in: body
+        name: create
+        required: true
+        schema:
+          $ref: '#/definitions/CreateManufacturerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ManufacturerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Create Manufacturer
+      tags:
+      - Manufacturer
+  /v1/manufacturer/:id:
+    put:
+      consumes:
+      - application/json
+      description: Update Manufacturer
+      parameters:
+      - description: Update manufacturer
+        in: body
+        name: create
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateManufacturerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ManufacturerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Update Manufacturer
+      tags:
+      - Manufacturer
+  /v1/manufacturer/:slug/:
+    get:
+      consumes:
+      - application/json
+      description: Get Manufacturer by slug
+      parameters:
+      - description: Manufacturer Slug
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ManufacturerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Manufacturer
+      tags:
+      - Manufacturer
+  /v1/manufacturer/id/:id/:
+    get:
+      consumes:
+      - application/json
+      description: Get Manufacturer by ID
+      parameters:
+      - description: Manufacturer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ManufacturerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Manufacturer
+      tags:
+      - Manufacturer
   /v1/media/upload:
     post:
       consumes:

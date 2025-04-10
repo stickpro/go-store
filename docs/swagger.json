@@ -354,6 +354,210 @@
                 }
             }
         },
+        "/v1/manufacturer/": {
+            "post": {
+                "description": "Create Manufacturer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Manufacturer"
+                ],
+                "summary": "Create Manufacturer",
+                "parameters": [
+                    {
+                        "description": "Create manufacturer",
+                        "name": "create",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateManufacturerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ManufacturerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/manufacturer/:id": {
+            "put": {
+                "description": "Update Manufacturer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Manufacturer"
+                ],
+                "summary": "Update Manufacturer",
+                "parameters": [
+                    {
+                        "description": "Update manufacturer",
+                        "name": "create",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateManufacturerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ManufacturerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/manufacturer/:slug/": {
+            "get": {
+                "description": "Get Manufacturer by slug",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Manufacturer"
+                ],
+                "summary": "Manufacturer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Manufacturer Slug",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ManufacturerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/manufacturer/id/:id/": {
+            "get": {
+                "description": "Get Manufacturer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Manufacturer"
+                ],
+                "summary": "Manufacturer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Manufacturer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ManufacturerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/media/upload": {
             "post": {
                 "description": "Allows users to upload files of specific types (JPEG, PDF, WEBP)",
@@ -840,6 +1044,52 @@
                 }
             }
         },
+        "CreateManufacturerRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "slug"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "image_path": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "meta_description": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "meta_h1": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "meta_keyword": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "meta_title": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
         "CreateProductRequest": {
             "type": "object",
             "required": [
@@ -987,6 +1237,20 @@
                 }
             }
         },
+        "JSONResponse-ManufacturerResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ManufacturerResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-MediumResponse": {
             "type": "object",
             "properties": {
@@ -1067,6 +1331,47 @@
                     "$ref": "#/definitions/UserInfoResponse"
                 },
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "ManufacturerResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image_path": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "meta_description": {
+                    "type": "string"
+                },
+                "meta_h1": {
+                    "type": "string"
+                },
+                "meta_keywords": {
+                    "type": "string"
+                },
+                "meta_title": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -1292,6 +1597,48 @@
                 },
                 "parent_id": {
                     "type": "string"
+                },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "UpdateManufacturerRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "image_path": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "meta_description": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "meta_h1": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "meta_keyword": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "meta_title": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
                 },
                 "slug": {
                     "type": "string",

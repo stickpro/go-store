@@ -30,8 +30,8 @@ func (h *Handler) createCategory(c fiber.Ctx) error {
 	if err := c.Bind().Body(req); err != nil {
 		return err
 	}
-	dto := category.RequestToCreateDTO(req)
 
+	dto := category.RequestToCreateDTO(req)
 	cat, err := h.services.CategoryService.CreateCategory(c.Context(), dto)
 	if err != nil {
 		var uniqueErr *pgerror.UniqueConstraintError

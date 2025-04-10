@@ -13,7 +13,7 @@ import (
 	_ "github.com/stickpro/go-store/internal/storage/repository/repository_categories"
 )
 
-// getCategoryBySlug is a function get user by slug
+// getCategoryBySlug is a function get category by slug
 //
 //	@Summary		Category
 //	@Description	Get category by slug
@@ -35,7 +35,7 @@ func (h Handler) getCategoryBySlug(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
 }
 
-// getCategoryByID is a function get user by id
+// getCategoryByID is a function get category by id
 //
 //	@Summary		Category
 //	@Description	Get category by id
@@ -53,7 +53,7 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
-	cat, err := h.services.CategoryService.GetCategoryById(c.Context(), id)
+	cat, err := h.services.CategoryService.GetCategoryByID(c.Context(), id)
 	if err != nil {
 		return h.handleError(err, "category")
 	}
@@ -67,7 +67,7 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 //	@Tags			Category
 //	@Accept			json
 //	@Produce		json
-//	@Param			string	query		category_request.GetCategoryWithPagination	true	"GetCategoryWithPagination"
+//	@Param			string	query		category_request.GetCategoryWithPagination	true	"GetCategoriesWithPagination"
 //	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[repository_categories.FindRow]]
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
@@ -79,9 +79,9 @@ func (h Handler) getCategories(c fiber.Ctx) error {
 		return err
 	}
 
-	cats, err := h.services.CategoryService.GetCategoryWithPagination(c.Context(), category.GetDTO{Page: req.Page, PageSize: req.PageSize})
+	cats, err := h.services.CategoryService.GetCategoriesWithPagination(c.Context(), category.GetDTO{Page: req.Page, PageSize: req.PageSize})
 	if err != nil {
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+		return h.handleError(err, "category")
 	}
 	return c.JSON(response.OkByData(cats))
 }
