@@ -1,9 +1,10 @@
 package base
 
 type CommonFindParams struct {
+	Page          *uint32
+	PageSize      *uint32
 	IsAscOrdering bool   `json:"is_asc_ordering"`
 	OrderBy       string `json:"order_by"`
-	PageParams
 } // @name CommonFindParams
 
 func NewCommonFindParams() *CommonFindParams {
@@ -29,11 +30,6 @@ func (s *CommonFindParams) SetPageSize(v *uint32) *CommonFindParams {
 	s.PageSize = v
 	return s
 }
-
-type PageParams struct {
-	Page     *uint32
-	PageSize *uint32
-} // @name PageParams
 
 type FindResponseWithPagingFlag[T any] struct {
 	Items            []T  `json:"items"`

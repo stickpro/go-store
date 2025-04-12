@@ -1,4 +1,4 @@
-package repository_categories
+package repository_attribute_groups
 
 import (
 	"context"
@@ -6,20 +6,20 @@ import (
 	"github.com/stickpro/go-store/internal/storage/base"
 )
 
-type CategoryWithPaginationParams struct {
+type AttributeGroupsWithPaginationParams struct {
 	base.CommonFindParams
 }
 
 type FindRow struct {
-	*models.Category
+	*models.AttributeGroup
 }
 
 func (s *CustomQueries) GetWithPaginate(
 	ctx context.Context,
-	params CategoryWithPaginationParams,
+	params base.CommonFindParams,
 ) (*base.FindResponseWithFullPagination[*FindRow], error) {
-	return base.Paginate[models.Category, *FindRow](ctx, s.db, params.CommonFindParams, base.PaginationConfig[models.Category, *FindRow]{
-		TableName:    "categories",
+	return base.Paginate[models.AttributeGroup, *FindRow](ctx, s.db, params, base.PaginationConfig[models.AttributeGroup, *FindRow]{
+		TableName:    "attribute_groups",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,
 		AllowedFieldOrder: map[string]bool{

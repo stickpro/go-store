@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"github.com/stickpro/go-store/internal/storage/repository/repository_attribute_groups"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_attributes"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_categories"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
@@ -18,6 +20,8 @@ type IRepository interface {
 	Products(opts ...Option) repository_products.ICustomQueries
 	Media(opts ...Option) repository_media.Querier
 	Manufacturers(opts ...Option) repository_manufacturers.ICustomQueries
+	AttributeGroups(opts ...Option) repository_attribute_groups.ICustomQueries
+	Attributes(opts ...Option) repository_attributes.ICustomQueries
 }
 
 type repository struct {
@@ -27,6 +31,8 @@ type repository struct {
 	products            *repository_products.CustomQueries
 	manufacturer        *repository_manufacturers.CustomQueries
 	media               *repository_media.Queries
+	attributeGroups     *repository_attribute_groups.CustomQueries
+	attributes          *repository_attributes.CustomQueries
 }
 
 func InitRepository(psql *database.PostgresClient, keyValue key_value.IKeyValue) IRepository {
@@ -37,6 +43,8 @@ func InitRepository(psql *database.PostgresClient, keyValue key_value.IKeyValue)
 		products:            repository_products.NewCustom(psql.DB),
 		manufacturer:        repository_manufacturers.NewCustom(psql.DB),
 		media:               repository_media.New(psql.DB),
+		attributeGroups:     repository_attribute_groups.NewCustom(psql.DB),
+		attributes:          repository_attributes.NewCustom(psql.DB),
 	}
 }
 
@@ -86,4 +94,20 @@ func (r *repository) Media(opts ...Option) repository_media.Querier {
 		return r.media.WithTx(options.Tx)
 	}
 	return r.media
+}
+
+func (r *repository) AttributeGroups(opts ...Option) repository_attribute_groups.ICustomQueries {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.attributeGroups.WithTx(options.Tx)
+	}
+	return r.attributeGroups
+}
+
+func (r *repository) Attributes(opts ...Option) repository_attributes.ICustomQueries {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.attributes.WithTx(options.Tx)
+	}
+	return r.attributes
 }

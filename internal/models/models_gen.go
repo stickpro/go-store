@@ -13,6 +13,26 @@ import (
 	"github.com/stickpro/go-store/internal/constant"
 )
 
+type Attribute struct {
+	ID               uuid.UUID        `db:"id" json:"id"`
+	AttributeGroupID uuid.NullUUID    `db:"attribute_group_id" json:"attribute_group_id"`
+	Name             string           `db:"name" json:"name"`
+	Type             string           `db:"type" json:"type" validate:"required,oneof=text number boolean select multiselect"`
+	IsFilterable     pgtype.Bool      `db:"is_filterable" json:"is_filterable"`
+	IsVisible        pgtype.Bool      `db:"is_visible" json:"is_visible"`
+	SortOrder        pgtype.Int4      `db:"sort_order" json:"sort_order"`
+	CreatedAt        pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+}
+
+type AttributeGroup struct {
+	ID          uuid.UUID        `db:"id" json:"id"`
+	Name        string           `db:"name" json:"name"`
+	Description pgtype.Text      `db:"description" json:"description"`
+	CreatedAt   pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt   pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+}
+
 type Category struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
 	ParentID        uuid.NullUUID    `db:"parent_id" json:"parent_id"`
