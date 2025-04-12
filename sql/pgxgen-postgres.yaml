@@ -129,3 +129,65 @@ sqlc:
               column_values:
                 updated_at: now()
               returning: "*"
+        # Attribute Groups
+        attribute_groups:
+          output_dir: postgres/queries/attribute_groups
+          primary_column: id
+          methods:
+            create:
+              skip_columns:
+                - id
+                - updated_at
+              returning: "*"
+              column_values:
+                created_at: now()
+            update:
+              name: Update
+              skip_columns:
+                - id
+                - created_at
+              column_values:
+                updated_at: now()
+              returning: "*"
+            find:
+              name: GetAll
+              order:
+                by: name
+              limit: true
+              offset: true
+        # Attributes
+        attributes:
+          output_dir: postgres/queries/attributes
+          primary_column: id
+          methods:
+            create:
+              skip_columns:
+                - id
+                - updated_at
+              returning: "*"
+              column_values:
+                created_at: now()
+            update:
+              name: Update
+              skip_columns:
+                - id
+                - created_at
+                - attribute_group_id
+              column_values:
+                updated_at: now()
+              returning: "*"
+            find:
+              name: GetAll
+              order:
+                by: sort_order
+              limit: true
+              offset: true
+            find_by_group:
+              name: GetByGroup
+              where:
+                attribute_group_id:
+                  value: "= $1"
+              order:
+                by: sort_order
+              limit: true
+              offset: true
