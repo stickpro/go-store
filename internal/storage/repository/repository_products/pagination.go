@@ -2,13 +2,8 @@ package repository_products
 
 import (
 	"context"
-	"fmt"
-	"github.com/georgysavva/scany/v2/pgxscan"
-	"github.com/huandu/go-sqlbuilder"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/base"
-	"github.com/stickpro/go-store/pkg/dbutils"
-	"math"
 )
 
 type ProductsWithPaginationParams struct {
@@ -23,57 +18,14 @@ func (s *CustomQueries) GetWithPaginate(
 	ctx context.Context,
 	params ProductsWithPaginationParams,
 ) (*base.FindResponseWithFullPagination[*FindRow], error) {
-	countSb := sqlbuilder.PostgreSQL.NewSelectBuilder().
-		Select("COUNT(1)").
-		From("products")
-
-	sb := sqlbuilder.PostgreSQL.NewSelectBuilder().
-		Select("*").
-		From("products")
-
-	limit, offset, err := dbutils.Pagination(params.Page, params.PageSize, dbutils.WithMaxLimit(100))
-	if err != nil {
-		return nil, fmt.Errorf("pagination error: %w", err)
-	}
-
-	orderBy := params.OrderBy
-	if orderBy == "" {
-		orderBy = "products.sort_order"
-	}
-	if !params.IsAscOrdering {
-		sb.Desc()
-	}
-	sb.OrderBy(orderBy)
-	sb.Limit(int(limit)).Offset(int(offset)) // #nosec
-
-	var items []*FindRow
-	sql, args := sb.Build()
-	if err := pgxscan.Select(ctx, s.psql, &items, sql, args...); err != nil {
-		return nil, fmt.Errorf("failed to fetch items: %w", err)
-	}
-
-	var totalCnt uint64
-	pagingSQL, args := countSb.Build()
-	if err := pgxscan.Get(ctx, s.psql, &totalCnt, pagingSQL, args...); err != nil {
-		return nil, fmt.Errorf("failed to fetch total count: %w", err)
-	}
-
-	page := uint64(1)
-	if params.Page != nil {
-		page = uint64(*params.Page)
-	}
-	lastPage := uint64(1)
-	if params.PageSize != nil {
-		lastPage = uint64(math.Ceil(float64(totalCnt) / float64(*params.PageSize)))
-	}
-
-	return &base.FindResponseWithFullPagination[*FindRow]{
-		Items: items,
-		Pagination: base.FullPagingData{
-			Total:    totalCnt,
-			PageSize: uint64(limit),
-			Page:     page,
-			LastPage: lastPage,
+	return base.Paginate[models.Product, *FindRow](ctx, s.db, params.CommonFindParams, base.PaginationConfig[models.Product, *FindRow]{
+		TableName:    "products",
+		DefaultOrder: "created_at",
+		MaxLimit:     100,
+		AllowedFieldOrder: map[string]bool{
+			"id":         true,
+			"name":       true,
+			"created_at": true,
 		},
-	}, nil
+	})
 }
