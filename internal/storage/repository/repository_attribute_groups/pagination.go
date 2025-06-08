@@ -6,20 +6,12 @@ import (
 	"github.com/stickpro/go-store/internal/storage/base"
 )
 
-type AttributeGroupsWithPaginationParams struct {
-	base.CommonFindParams
-}
-
-type FindRow struct {
-	*models.AttributeGroup
-}
-
 func (s *CustomQueries) GetWithPaginate(
 	ctx context.Context,
 	params base.CommonFindParams,
-) (*base.FindResponseWithFullPagination[*FindRow], error) {
-	return base.Paginate[models.AttributeGroup, *FindRow](ctx, s.db, params, base.PaginationConfig[models.AttributeGroup, *FindRow]{
-		TableName:    "attribute_groups",
+) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error) {
+	return base.Paginate[*models.AttributeGroup](ctx, s.db, params, base.PaginationConfig[*models.AttributeGroup]{
+		TableName:    "attribute",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,
 		AllowedFieldOrder: map[string]bool{

@@ -16,7 +16,7 @@ import (
 
 type IManufacturerService interface {
 	CreateManufacturer(ctx context.Context, dto CreateDTO) (*models.Manufacturer, error)
-	GetManufacturersWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_manufacturers.FindRow], error)
+	GetManufacturersWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*models.Manufacturer], error)
 	GetManufacturerByID(ctx context.Context, id uuid.UUID) (*models.Manufacturer, error)
 	GetManufacturerBySlug(ctx context.Context, slug string) (*models.Manufacturer, error)
 	UpdateManufacturer(ctx context.Context, dto UpdateDTO) (*models.Manufacturer, error)
@@ -57,7 +57,7 @@ func (s *Service) CreateManufacturer(ctx context.Context, dto CreateDTO) (*model
 	return mfc, nil
 }
 
-func (s *Service) GetManufacturersWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_manufacturers.FindRow], error) {
+func (s *Service) GetManufacturersWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*models.Manufacturer], error) {
 	commonParams := base.NewCommonFindParams()
 	if dto.PageSize != nil {
 		commonParams.PageSize = dto.PageSize
@@ -65,13 +65,13 @@ func (s *Service) GetManufacturersWithPagination(ctx context.Context, dto GetDTO
 	if dto.Page != nil {
 		commonParams.Page = dto.Page
 	}
-	mfcs, err := s.storage.Manufacturers().GetWithPaginate(ctx, repository_manufacturers.ManufacturersWithPaginationParams{
+	mfrs, err := s.storage.Manufacturers().GetWithPaginate(ctx, repository_manufacturers.ManufacturersWithPaginationParams{
 		CommonFindParams: *commonParams,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return mfcs, nil
+	return mfrs, nil
 }
 
 func (s *Service) GetManufacturerByID(ctx context.Context, id uuid.UUID) (*models.Manufacturer, error) {

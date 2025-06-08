@@ -57,6 +57,19 @@ func (h Handler) getManufacturerByID(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(manufacturer_response.NewFromModel(mfc)))
 }
 
+// getManufacturerByID is a function get Manufacturer by ID
+//
+//	@Summary		Manufacturer
+//	@Description	Get Manufacturer by ID
+//	@Tags			Manufacturer
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Manufacturer ID"
+//	@Success		200	{object}	response.Result[manufacturer_response.ManufacturerResponse]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		404	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
+//	@Router			/v1/manufacturer/id/:id/ [get]
 func (h Handler) getManufacturers(c fiber.Ctx) error {
 	req := &manufacturer_request.GetManufacturerWithPagination{}
 	if err := c.Bind().Query(req); err != nil {
@@ -74,4 +87,5 @@ func (h *Handler) initManufacturerRoutes(v1 fiber.Router) {
 	m := v1.Group("/manufacturer")
 	m.Get("/:slug", h.getManufacturerBySlug)
 	m.Get("/id/:id", h.getManufacturerByID)
+	m.Get("/", h.getManufacturers)
 }

@@ -1,0 +1,1 @@
+drop table if exists attribute_groups cascade;

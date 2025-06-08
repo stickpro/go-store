@@ -131,7 +131,7 @@ sqlc:
               returning: "*"
         # Attribute Groups
         attribute_groups:
-          output_dir: postgres/queries/attribute_groups
+          output_dir: postgres/queries/attribute
           primary_column: id
           methods:
             create:

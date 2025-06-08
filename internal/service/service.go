@@ -2,8 +2,10 @@ package service
 
 import (
 	"github.com/stickpro/go-store/internal/config"
+	"github.com/stickpro/go-store/internal/service/attribute"
 	"github.com/stickpro/go-store/internal/service/auth"
 	"github.com/stickpro/go-store/internal/service/category"
+	"github.com/stickpro/go-store/internal/service/geo"
 	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/service/media"
 	"github.com/stickpro/go-store/internal/service/product"
@@ -22,6 +24,8 @@ type Services struct {
 	MediaService        media.IMediaService
 	SearchService       searchtypes.ISearchService
 	ManufacturerService manufacturer.IManufacturerService
+	AttributeService    attribute.IAttributeService
+	GeoService          geo.IGeoService
 }
 
 func InitService(
@@ -36,8 +40,11 @@ func InitService(
 	productService := product.New(conf, logger, storage)
 	mediaService := media.New(conf, logger, storage)
 	manufacturerService := manufacturer.New(conf, logger, storage)
+	attributeService := attribute.New(conf, logger, storage)
 
 	searchService, _ := search.New(conf)
+
+	geoService := geo.New(conf, logger)
 
 	return &Services{
 		UserService:         userService,
@@ -47,5 +54,14 @@ func InitService(
 		MediaService:        mediaService,
 		SearchService:       searchService,
 		ManufacturerService: manufacturerService,
+		AttributeService:    attributeService,
+		GeoService:          geoService,
 	}, nil
+}
+
+func (s *Services) Close() error {
+	if err := s.GeoService.Close(); err != nil {
+		return err
+	}
+	return nil
 }

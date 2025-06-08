@@ -15,7 +15,7 @@ import (
 
 type ICategoryService interface {
 	CreateCategory(ctx context.Context, dto CreateDTO) (*models.Category, error)
-	GetCategoriesWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error)
+	GetCategoriesWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*models.Category], error)
 	GetCategoryByID(ctx context.Context, id uuid.UUID) (*models.Category, error)
 	GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error)
 	UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error)
@@ -73,7 +73,7 @@ func (s *Service) GetCategoryBySlug(ctx context.Context, slug string) (*models.C
 	return cat, nil
 }
 
-func (s *Service) GetCategoriesWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_categories.FindRow], error) {
+func (s *Service) GetCategoriesWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*models.Category], error) {
 	commonParams := base.NewCommonFindParams()
 	if dto.PageSize != nil {
 		commonParams.PageSize = dto.PageSize

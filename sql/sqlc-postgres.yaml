@@ -155,7 +155,7 @@ sql:
 
   # attribute groups
   - schema: postgres/migrations
-    queries: postgres/queries/attribute_groups
+    queries: postgres/queries/attribute
     engine: postgresql
     gen:
       go:

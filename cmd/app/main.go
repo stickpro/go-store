@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/stickpro/go-store/cmd/console"
-	"github.com/urfave/cli/v2"
+	g0store "github.com/stickpro/go-store/pkg/util/signal"
+	"github.com/urfave/cli/v3"
 	"os"
+	"os/signal"
 	"runtime"
 )
 
@@ -26,21 +29,22 @@ var (
 // @in							header
 // @name						Authorization
 func main() {
-	app := &cli.App{
-		Name:                 appName,
-		Description:          "Api for go store",
-		Version:              getBuildVersion(),
-		Suggest:              true,
-		EnableBashCompletion: true,
+	ctx, cancel := signal.NotifyContext(context.Background(), g0store.Shutdown()...)
+	defer cancel()
+
+	app := &cli.Command{
+		Name:        appName,
+		Description: "Api for go store",
+		Version:     getBuildVersion(),
+		Suggest:     true,
 		Flags: []cli.Flag{
 			cli.HelpFlag,
 			cli.VersionFlag,
-			cli.BashCompletionFlag,
 		},
 		Commands: console.InitCommands(version, appName, commitHash),
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	if err := app.Run(ctx, os.Args); err != nil {
 		_, _ = fmt.Println(err.Error())
 		os.Exit(1)
 	}

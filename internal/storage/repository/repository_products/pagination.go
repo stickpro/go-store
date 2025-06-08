@@ -18,7 +18,7 @@ func (s *CustomQueries) GetWithPaginate(
 	ctx context.Context,
 	params ProductsWithPaginationParams,
 ) (*base.FindResponseWithFullPagination[*FindRow], error) {
-	return base.Paginate[models.Product, *FindRow](ctx, s.db, params.CommonFindParams, base.PaginationConfig[models.Product, *FindRow]{
+	return base.Paginate[*FindRow](ctx, s.db, params.CommonFindParams, base.PaginationConfig[*FindRow]{
 		TableName:    "products",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,

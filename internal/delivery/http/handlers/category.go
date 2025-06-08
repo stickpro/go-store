@@ -68,7 +68,7 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			string	query		category_request.GetCategoryWithPagination	true	"GetCategoriesWithPagination"
-//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[repository_categories.FindRow]]
+//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[*models.Category]]
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Router			/v1/category/ [get]

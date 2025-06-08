@@ -3,6 +3,7 @@ package repository_attribute_groups
 import (
 	"context"
 	"github.com/jackc/pgx/v5"
+	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/base"
 )
 
@@ -11,7 +12,7 @@ type ICustomQueries interface {
 	GetWithPaginate(
 		ctx context.Context,
 		params base.CommonFindParams,
-	) (*base.FindResponseWithFullPagination[*FindRow], error)
+	) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error)
 }
 
 type CustomQueries struct {
