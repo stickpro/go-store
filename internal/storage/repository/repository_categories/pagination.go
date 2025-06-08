@@ -17,8 +17,8 @@ type FindRow struct {
 func (s *CustomQueries) GetWithPaginate(
 	ctx context.Context,
 	params CategoryWithPaginationParams,
-) (*base.FindResponseWithFullPagination[*FindRow], error) {
-	return base.Paginate[models.Category, *FindRow](ctx, s.db, params.CommonFindParams, base.PaginationConfig[models.Category, *FindRow]{
+) (*base.FindResponseWithFullPagination[*models.Category], error) {
+	return base.Paginate[*models.Category](ctx, s.db, params.CommonFindParams, base.PaginationConfig[*models.Category]{
 		TableName:    "categories",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,

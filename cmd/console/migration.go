@@ -1,11 +1,12 @@
 package console
 
 import (
+	"context"
 	"fmt"
 	"github.com/stickpro/go-store/pkg/logger"
 	"github.com/stickpro/go-store/pkg/migrations"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command {
@@ -23,8 +24,8 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 					Usage: "disable confirmation for migration",
 				},
 			},
-			Action: func(ctx *cli.Context) error {
-				conf, err := loadConfig(ctx.Args().Slice(), ctx.StringSlice("configs"))
+			Action: func(ctx context.Context, cl *cli.Command) error {
+				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
 				if err != nil {
 					return fmt.Errorf("failed to load config: %w", err)
 				}
@@ -34,12 +35,12 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 				mg, err := initMigrations(l, migrations.Config{
 					DBDriver:            migrations.DBDriver(conf.Postgres.Engine()),
 					DSN:                 conf.Postgres.DSN(),
-					DisableConfirmation: ctx.Bool("disable-confirmations"),
+					DisableConfirmation: cl.Bool("disable-confirmations"),
 				})
 				if err != nil {
 					return fmt.Errorf("failed to init migrations: %w", err)
 				}
-				return mg.Up(ctx.Context, ctx.Int("steps"))
+				return mg.Up(ctx, cl.Int("steps"))
 			},
 		}, // migrate.up
 		{
@@ -56,8 +57,8 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 					Usage: "disable confirmation for migration",
 				},
 			},
-			Action: func(ctx *cli.Context) error {
-				conf, err := loadConfig(ctx.Args().Slice(), ctx.StringSlice("configs"))
+			Action: func(ctx context.Context, cl *cli.Command) error {
+				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
 				if err != nil {
 					return fmt.Errorf("failed to load config: %w", err)
 				}
@@ -67,19 +68,19 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 				mg, err := initMigrations(l, migrations.Config{
 					DBDriver:            migrations.DBDriver(conf.Postgres.Engine()),
 					DSN:                 conf.Postgres.DSN(),
-					DisableConfirmation: ctx.Bool("disable-confirmations"),
+					DisableConfirmation: cl.Bool("disable-confirmations"),
 				})
 				if err != nil {
 					return fmt.Errorf("failed to init migrations: %w", err)
 				}
-				return mg.Down(ctx.Context, ctx.Int("steps"))
+				return mg.Down(ctx, cl.Int("steps"))
 			},
 		}, // migrate.down
 		{
 			Name:        "drop",
 			Description: "drop database schema",
-			Action: func(ctx *cli.Context) error {
-				conf, err := loadConfig(ctx.Args().Slice(), ctx.StringSlice("configs"))
+			Action: func(ctx context.Context, cl *cli.Command) error {
+				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
 				if err != nil {
 					return fmt.Errorf("failed to load config: %w", err)
 				}
@@ -95,14 +96,14 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 				if err != nil {
 					return fmt.Errorf("failed to init migrations: %w", err)
 				}
-				return mg.Drop(ctx.Context)
+				return mg.Drop(ctx)
 			},
 		}, // migrate.drop
 		{
 			Name:        "version",
 			Description: "print current database schema version",
-			Action: func(ctx *cli.Context) error {
-				conf, err := loadConfig(ctx.Args().Slice(), ctx.StringSlice("configs"))
+			Action: func(ctx context.Context, cl *cli.Command) error {
+				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
 				if err != nil {
 					return fmt.Errorf("failed to load config: %w", err)
 				}
@@ -119,7 +120,7 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 					return fmt.Errorf("failed to init migrations: %w", err)
 				}
 
-				ver, isDirty, err := mg.Version(ctx.Context)
+				ver, isDirty, err := mg.Version(ctx)
 				if err != nil {
 					return fmt.Errorf("failed to get version: %w", err)
 				}

@@ -34,6 +34,7 @@ func (h *Handler) InitHandler(api *fiber.App) {
 	h.initAuthRoutes(v1)
 	h.initCategoryRoutes(v1)
 	h.initProductRoutes(v1)
+	h.initGeoRoutes(v1)
 
 	secured := v1.Group(
 		"/",

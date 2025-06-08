@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/base"
-	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 	"time"
 )
@@ -46,7 +45,7 @@ func NewFromModel(mfc *models.Manufacturer) *ManufacturerResponse {
 }
 
 func NewPaginatedFromFindRows(
-	data *base.FindResponseWithFullPagination[*repository_manufacturers.FindRow],
+	data *base.FindResponseWithFullPagination[*models.Manufacturer],
 ) *base.FindResponseWithFullPagination[*ManufacturerResponse] {
 	items := make([]*ManufacturerResponse, 0, len(data.Items))
 	for _, row := range data.Items {

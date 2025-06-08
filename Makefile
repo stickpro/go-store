@@ -65,6 +65,9 @@ gen-swag:
 	swag fmt
 	swag init --parseDependency --parseInternal -g ./cmd/app/main.go
 
+download-geodb:
+	curl -L -o ./storage/geo/GeoLite2-City.mmdb https://git.io/GeoLite2-City.mmdb
+
 # Empty goals trap
 %:
 	@:

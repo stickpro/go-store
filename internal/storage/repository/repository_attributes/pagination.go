@@ -10,15 +10,11 @@ type AttributesWithPaginationParams struct {
 	base.CommonFindParams
 }
 
-type FindRow struct {
-	models.Attribute
-}
-
 func (s *CustomQueries) GetWithPaginate(
 	ctx context.Context,
 	params AttributesWithPaginationParams,
-) (*base.FindResponseWithFullPagination[*FindRow], error) {
-	return base.Paginate[models.AttributeGroup, *FindRow](ctx, s.db, params.CommonFindParams, base.PaginationConfig[models.AttributeGroup, *FindRow]{
+) (*base.FindResponseWithFullPagination[*models.Attribute], error) {
+	return base.Paginate[*models.Attribute](ctx, s.db, params.CommonFindParams, base.PaginationConfig[*models.Attribute]{
 		TableName:    "attributes",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,

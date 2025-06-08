@@ -29,6 +29,11 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 	if err != nil {
 		l.Fatal("error start DI service", err)
 	}
+	defer func() {
+		if serviceCloseErr := services.Close(); serviceCloseErr != nil {
+			l.Fatal("services close error", serviceCloseErr)
+		}
+	}()
 	l.Info("Start DI service")
 
 	srv := server.InitServer(conf, services, l)
