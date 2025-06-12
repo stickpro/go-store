@@ -9,6 +9,7 @@ import (
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag gen import
+	_ "github.com/stickpro/go-store/internal/models"
 	_ "github.com/stickpro/go-store/internal/tools/apierror"
 )
 
@@ -34,6 +35,18 @@ func (h *Handler) getGeoLocation(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(geo_response.GeoResponse{City: location}))
 }
 
+// findCity is a function find city by name
+//
+//	@Summary		Find city
+//	@Description	Find city by name
+//	@Tags			Geo
+//	@Accept			json
+//	@Produce		json
+//	@Param			city	query		string	true	"City name"
+//	@Success		200		{object}	response.Result[[]models.City]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/geo/city/find [get]
 func (h *Handler) findCity(c fiber.Ctx) error {
 	city := c.Query("city")
 	if city == "" {
@@ -44,11 +57,31 @@ func (h *Handler) findCity(c fiber.Ctx) error {
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
-	return c.JSON(response.OkByData(location))
+	return c.JSON(response.OkByData(location.Hits))
+}
+
+// getPopularCity is a function return most popular city
+//
+//	@Summary		Get popular city
+//	@Description	Get most popular city
+//	@Tags			Geo
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	response.Result[geo_response.CityResponse]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
+//	@Router			/v1/geo/city/popular [get]
+func (h *Handler) getPopularCity(c fiber.Ctx) error {
+	cities, err := h.services.GeoService.GetPopularCity(c.Context())
+	if err != nil {
+		return h.handleError(err, "cities")
+	}
+	return c.JSON(response.OkByData(geo_response.NewFromModels(cities)))
 }
 
 func (h *Handler) initGeoRoutes(v1 fiber.Router) {
 	g := v1.Group("/geo")
 	g.Get("/city", h.getGeoLocation)
 	g.Get("/city/find", h.findCity)
+	g.Get("/city/popular", h.getPopularCity)
 }

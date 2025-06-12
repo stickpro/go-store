@@ -8,7 +8,6 @@ package repository_cities
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -62,31 +61,45 @@ func (q *Queries) GetByCity(ctx context.Context, city string) ([]*models.City, e
 	return items, nil
 }
 
-const getForIndex = `-- name: GetForIndex :many
-SELECT id, address, city, region FROM cities
+const getCityOrderByPopulation = `-- name: GetCityOrderByPopulation :many
+SELECT id, address, postal_code, country, federal_district, region_type, region, area_type, area, city_type, city, settlement_type, settlement, kladr_id, fias_id, fias_level, capital_marker, okato, oktmo, tax_office, timezone, geo_lat, geo_lon, population, foundation_year FROM cities ORDER BY population DESC LIMIT 20
 `
 
-type GetForIndexRow struct {
-	ID      uuid.UUID `db:"id" json:"id"`
-	Address string    `db:"address" json:"address"`
-	City    string    `db:"city" json:"city"`
-	Region  string    `db:"region" json:"region"`
-}
-
-func (q *Queries) GetForIndex(ctx context.Context) ([]*GetForIndexRow, error) {
-	rows, err := q.db.Query(ctx, getForIndex)
+func (q *Queries) GetCityOrderByPopulation(ctx context.Context) ([]*models.City, error) {
+	rows, err := q.db.Query(ctx, getCityOrderByPopulation)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []*GetForIndexRow{}
+	items := []*models.City{}
 	for rows.Next() {
-		var i GetForIndexRow
+		var i models.City
 		if err := rows.Scan(
 			&i.ID,
 			&i.Address,
-			&i.City,
+			&i.PostalCode,
+			&i.Country,
+			&i.FederalDistrict,
+			&i.RegionType,
 			&i.Region,
+			&i.AreaType,
+			&i.Area,
+			&i.CityType,
+			&i.City,
+			&i.SettlementType,
+			&i.Settlement,
+			&i.KladrID,
+			&i.FiasID,
+			&i.FiasLevel,
+			&i.CapitalMarker,
+			&i.Okato,
+			&i.Oktmo,
+			&i.TaxOffice,
+			&i.Timezone,
+			&i.GeoLat,
+			&i.GeoLon,
+			&i.Population,
+			&i.FoundationYear,
 		); err != nil {
 			return nil, err
 		}

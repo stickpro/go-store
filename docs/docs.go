@@ -448,6 +448,85 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/geo/city/find": {
+            "get": {
+                "description": "Find city by name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Geo"
+                ],
+                "summary": "Find city",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "City name",
+                        "name": "city",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_City"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/geo/city/popular": {
+            "get": {
+                "description": "Get most popular city",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Geo"
+                ],
+                "summary": "Get popular city",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_geo_response_CityResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/manufacturer/": {
             "post": {
                 "description": "Create Manufacturer",
@@ -1485,6 +1564,37 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-array_github_com_stickpro_go-store_internal_models_City": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.City"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_geo_response_CityResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_geo_response.CityResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "ManufacturerResponse": {
             "type": "object",
             "properties": {
@@ -1953,6 +2063,86 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_stickpro_go-store_internal_delivery_http_response_geo_response.CityResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "area": {
+                    "type": "string"
+                },
+                "area_type": {
+                    "type": "string"
+                },
+                "capital_marker": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "city_type": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "federal_district": {
+                    "type": "string"
+                },
+                "fias_id": {
+                    "type": "string"
+                },
+                "fias_level": {
+                    "type": "integer"
+                },
+                "foundation_year": {
+                    "type": "integer"
+                },
+                "geo_lat": {
+                    "type": "number"
+                },
+                "geo_lon": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kladr_id": {
+                    "type": "string"
+                },
+                "okato": {
+                    "type": "string"
+                },
+                "oktmo": {
+                    "type": "string"
+                },
+                "population": {
+                    "type": "integer"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "region_type": {
+                    "type": "string"
+                },
+                "settlement": {
+                    "type": "string"
+                },
+                "settlement_type": {
+                    "type": "string"
+                },
+                "tax_office": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_stickpro_go-store_internal_models.Category": {
             "type": "object",
             "properties": {
@@ -1994,6 +2184,86 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "$ref": "#/definitions/pgtype.Timestamp"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_models.City": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "area": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "area_type": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "capital_marker": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "city_type": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "federal_district": {
+                    "type": "string"
+                },
+                "fias_id": {
+                    "type": "string"
+                },
+                "fias_level": {
+                    "type": "integer"
+                },
+                "foundation_year": {
+                    "type": "integer"
+                },
+                "geo_lat": {
+                    "type": "number"
+                },
+                "geo_lon": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kladr_id": {
+                    "type": "string"
+                },
+                "okato": {
+                    "type": "string"
+                },
+                "oktmo": {
+                    "type": "string"
+                },
+                "population": {
+                    "type": "integer"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "region_type": {
+                    "type": "string"
+                },
+                "settlement": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "settlement_type": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "tax_office": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
                 }
             }
         },

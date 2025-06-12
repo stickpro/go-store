@@ -48,6 +48,7 @@ func (e *SearchEngine) Search(nameIndex string, query string, limit, offset int6
 	if err != nil {
 		return nil, err
 	}
+
 	result := &searchtypes.SearchResult{
 		Hits:   searchResult.Hits,
 		Offset: searchResult.Offset,
