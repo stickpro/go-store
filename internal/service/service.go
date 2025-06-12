@@ -44,7 +44,7 @@ func InitService(
 
 	searchService, _ := search.New(conf)
 
-	geoService := geo.New(conf, logger)
+	geoService := geo.New(conf, logger, storage)
 
 	return &Services{
 		UserService:         userService,

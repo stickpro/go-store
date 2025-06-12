@@ -18,6 +18,58 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/attribute/": {
+            "post": {
+                "description": "Create attribute group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "Create attribute group",
+                "parameters": [
+                    {
+                        "description": "Create category",
+                        "name": "create",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.CreateAttributeGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AttributeGroupResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "description": "Auth a user",
@@ -150,7 +202,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow"
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category"
                         }
                     },
                     "401": {
@@ -348,6 +400,41 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/geo/city/": {
+            "get": {
+                "description": "Get city by IP address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Geo"
+                ],
+                "summary": "Geo city",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-GeoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -933,6 +1020,26 @@ const docTemplate = `{
                 }
             }
         },
+        "AttributeGroupResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "AuthRequest": {
             "type": "object",
             "required": [
@@ -1216,6 +1323,28 @@ const docTemplate = `{
                 }
             }
         },
+        "GeoResponse": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-AttributeGroupResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/AttributeGroupResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-AuthResponse": {
             "type": "object",
             "properties": {
@@ -1238,6 +1367,20 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/CategoryResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-GeoResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/GeoResponse"
                 },
                 "message": {
                     "type": "string"
@@ -1300,14 +1443,14 @@ const docTemplate = `{
                 }
             }
         },
-        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow": {
+        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow"
+                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category"
                 },
                 "message": {
                     "type": "string"
@@ -1539,13 +1682,13 @@ const docTemplate = `{
                 }
             }
         },
-        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow": {
+        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_storage_repository_repository_categories.FindRow"
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Category"
                     }
                 },
                 "pagination": {
@@ -1794,7 +1937,23 @@ const docTemplate = `{
                 "OutOfStock"
             ]
         },
-        "github_com_stickpro_go-store_internal_storage_repository_repository_categories.FindRow": {
+        "github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.CreateAttributeGroupRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_models.Category": {
             "type": "object",
             "properties": {
                 "created_at": {

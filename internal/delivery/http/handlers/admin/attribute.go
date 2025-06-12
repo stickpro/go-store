@@ -11,19 +11,19 @@ import (
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 )
 
-// updateAtt0 is a function create category
+// updateAtt0 is a function create attribute group
 //
-//	@Summary		Create Category
-//	@Description	Create category
-//	@Tags			Category
+//	@Summary		Create attribute group
+//	@Description	Create attribute group
+//	@Tags			Attribute
 //	@Accept			json
 //	@Produce		json
-//	@Param			create	body		category_request.CreateCategoryRequest	true	"Create category"
-//	@Success		200		{object}	response.Result[category_response.CategoryResponse]
+//	@Param			create	body		attribute_request.CreateAttributeGroupRequest	true	"Create category"
+//	@Success		200		{object}	response.Result[attribute_response.AttributeGroupResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/category/ [POST]
+//	@Router			/v1/attribute/ [POST]
 func (h Handler) createAtributeGroup(c fiber.Ctx) error {
 	req := &attribute_request.CreateAttributeGroupRequest{}
 	if err := c.Bind().Body(req); err != nil {

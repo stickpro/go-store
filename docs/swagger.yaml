@@ -16,6 +16,19 @@ definitions:
           $ref: '#/definitions/APIError'
         type: array
     type: object
+  AttributeGroupResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   AuthRequest:
     properties:
       email:
@@ -214,6 +227,20 @@ definitions:
       total:
         type: integer
     type: object
+  GeoResponse:
+    properties:
+      city:
+        type: string
+    type: object
+  JSONResponse-AttributeGroupResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/AttributeGroupResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-AuthResponse:
     properties:
       code:
@@ -229,6 +256,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/CategoryResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-GeoResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/GeoResponse'
       message:
         type: string
     type: object
@@ -268,12 +304,12 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow:
+  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow'
+        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category'
       message:
         type: string
     type: object
@@ -427,11 +463,11 @@ definitions:
       token:
         type: string
     type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow:
+  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_storage_repository_repository_categories.FindRow'
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Category'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
@@ -605,7 +641,18 @@ definitions:
     - InStock
     - PreOrder
     - OutOfStock
-  github_com_stickpro_go-store_internal_storage_repository_repository_categories.FindRow:
+  github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.CreateAttributeGroupRequest:
+    properties:
+      description:
+        maxLength: 100
+        minLength: 1
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  github_com_stickpro_go-store_internal_models.Category:
     properties:
       created_at:
         $ref: '#/definitions/pgtype.Timestamp'
@@ -744,6 +791,40 @@ info:
   title: GO-store
   version: "1.0"
 paths:
+  /v1/attribute/:
+    post:
+      consumes:
+      - application/json
+      description: Create attribute group
+      parameters:
+      - description: Create category
+        in: body
+        name: create
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.CreateAttributeGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AttributeGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Create attribute group
+      tags:
+      - Attribute
   /v1/auth/login:
     post:
       consumes:
@@ -826,7 +907,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_categories_FindRow'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category'
         "401":
           description: Unauthorized
           schema:
@@ -967,6 +1048,29 @@ paths:
       summary: Category
       tags:
       - Category
+  /v1/geo/city/:
+    get:
+      consumes:
+      - application/json
+      description: Get city by IP address
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-GeoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Geo city
+      tags:
+      - Geo
   /v1/manufacturer/:
     post:
       consumes:

@@ -46,6 +46,12 @@ func InitCommands(currentAppVersion, appName, commitHash string) []*cli.Command 
 			Flags:       []cli.Flag{cfgPathsFlag()},
 			Commands:    prepareMigrationCommands(appName, currentAppVersion),
 		}, // migrate
+		{
+			Name:        "geo",
+			Description: "geo commands",
+			Flags:       []cli.Flag{cfgPathsFlag()},
+			Commands:    prepareGeoCommands(appName, currentAppVersion),
+		},
 	}
 }
 

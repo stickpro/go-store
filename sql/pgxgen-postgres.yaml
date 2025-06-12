@@ -191,3 +191,10 @@ sqlc:
                 by: sort_order
               limit: true
               offset: true
+        # Cities
+        cities:
+          output_dir: postgres/queries/cities
+          primary_column: id
+          methods:
+            find:
+              name: GetAll
