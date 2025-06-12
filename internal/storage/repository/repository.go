@@ -4,6 +4,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attribute_groups"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attributes"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_categories"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_cities"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_personal_access_tokens"
@@ -22,6 +23,7 @@ type IRepository interface {
 	Manufacturers(opts ...Option) repository_manufacturers.ICustomQueries
 	AttributeGroups(opts ...Option) repository_attribute_groups.ICustomQueries
 	Attributes(opts ...Option) repository_attributes.ICustomQueries
+	Cities(opts ...Option) repository_cities.Querier
 }
 
 type repository struct {
@@ -33,6 +35,7 @@ type repository struct {
 	media               *repository_media.Queries
 	attributeGroups     *repository_attribute_groups.CustomQueries
 	attributes          *repository_attributes.CustomQueries
+	cities              *repository_cities.Queries
 }
 
 func InitRepository(psql *database.PostgresClient, keyValue key_value.IKeyValue) IRepository {
@@ -45,6 +48,7 @@ func InitRepository(psql *database.PostgresClient, keyValue key_value.IKeyValue)
 		media:               repository_media.New(psql.DB),
 		attributeGroups:     repository_attribute_groups.NewCustom(psql.DB),
 		attributes:          repository_attributes.NewCustom(psql.DB),
+		cities:              repository_cities.New(psql.DB),
 	}
 }
 
@@ -110,4 +114,12 @@ func (r *repository) Attributes(opts ...Option) repository_attributes.ICustomQue
 		return r.attributes.WithTx(options.Tx)
 	}
 	return r.attributes
+}
+
+func (r *repository) Cities(opts ...Option) repository_cities.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.cities.WithTx(options.Tx)
+	}
+	return r.cities
 }

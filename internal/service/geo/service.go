@@ -1,9 +1,12 @@
 package geo
 
 import (
+	"context"
 	"fmt"
 	"github.com/oschwald/geoip2-golang"
 	"github.com/stickpro/go-store/internal/config"
+	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/logger"
 	"net"
 )
@@ -11,25 +14,28 @@ import (
 type IGeoService interface {
 	GetCityByIP(ip string) (string, error)
 	Close() error
+	GetAllCity(ctx context.Context) ([]*models.City, error)
 }
 
 type Service struct {
-	cfg    *config.Config
-	logger logger.Logger
-	db     *geoip2.Reader
+	cfg     *config.Config
+	logger  logger.Logger
+	db      *geoip2.Reader
+	storage storage.IStorage
 }
 
 const dbPath = "storage/geo/GeoLite2-City.mmdb"
 
-func New(cfg *config.Config, logger logger.Logger) *Service {
+func New(cfg *config.Config, logger logger.Logger, st storage.IStorage) *Service {
 	db, err := geoip2.Open(dbPath)
 	if err != nil {
 		logger.Error("failed to open GeoIP database", "error", err)
 	}
 	return &Service{
-		cfg:    cfg,
-		logger: logger,
-		db:     db,
+		cfg:     cfg,
+		logger:  logger,
+		db:      db,
+		storage: st,
 	}
 }
 
@@ -63,4 +69,13 @@ func (s *Service) Close() error {
 		return s.db.Close()
 	}
 	return nil
+}
+
+// GetAllCity Method only for create index not use in project
+func (s *Service) GetAllCity(ctx context.Context) ([]*models.City, error) {
+	cities, err := s.storage.Cities().GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return cities, nil
 }
