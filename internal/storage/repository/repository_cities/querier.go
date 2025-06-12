@@ -13,7 +13,7 @@ import (
 type Querier interface {
 	GetAll(ctx context.Context) ([]*models.City, error)
 	GetByCity(ctx context.Context, city string) ([]*models.City, error)
-	GetForIndex(ctx context.Context) ([]*GetForIndexRow, error)
+	GetCityOrderByPopulation(ctx context.Context) ([]*models.City, error)
 }
 
 var _ Querier = (*Queries)(nil)

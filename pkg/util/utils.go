@@ -104,3 +104,18 @@ func GetFunctionName(temp any) string {
 	strs = strings.Split(funcName, "-")
 	return strs[0]
 }
+
+func StructToMap(data any) ([]map[string]interface{}, error) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []map[string]interface{}
+	err = json.Unmarshal(jsonData, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
