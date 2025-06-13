@@ -509,7 +509,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_geo_response_CityResponse"
+                            "$ref": "#/definitions/JSONResponse-CityResponse"
                         }
                     },
                     "400": {
@@ -1188,6 +1188,86 @@ const docTemplate = `{
                 }
             }
         },
+        "CityResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "area": {
+                    "type": "string"
+                },
+                "area_type": {
+                    "type": "string"
+                },
+                "capital_marker": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "city_type": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "federal_district": {
+                    "type": "string"
+                },
+                "fias_id": {
+                    "type": "string"
+                },
+                "fias_level": {
+                    "type": "integer"
+                },
+                "foundation_year": {
+                    "type": "integer"
+                },
+                "geo_lat": {
+                    "type": "number"
+                },
+                "geo_lon": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kladr_id": {
+                    "type": "string"
+                },
+                "okato": {
+                    "type": "string"
+                },
+                "oktmo": {
+                    "type": "string"
+                },
+                "population": {
+                    "type": "integer"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "region_type": {
+                    "type": "string"
+                },
+                "settlement": {
+                    "type": "string"
+                },
+                "settlement_type": {
+                    "type": "string"
+                },
+                "tax_office": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
         "CreateCategoryRequest": {
             "type": "object",
             "required": [
@@ -1452,6 +1532,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-CityResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/CityResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-GeoResponse": {
             "type": "object",
             "properties": {
@@ -1575,20 +1669,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.City"
                     }
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_geo_response_CityResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_geo_response.CityResponse"
                 },
                 "message": {
                     "type": "string"
@@ -2059,86 +2139,6 @@ const docTemplate = `{
                     "minLength": 1
                 },
                 "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_delivery_http_response_geo_response.CityResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "area": {
-                    "type": "string"
-                },
-                "area_type": {
-                    "type": "string"
-                },
-                "capital_marker": {
-                    "type": "integer"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "city_type": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "federal_district": {
-                    "type": "string"
-                },
-                "fias_id": {
-                    "type": "string"
-                },
-                "fias_level": {
-                    "type": "integer"
-                },
-                "foundation_year": {
-                    "type": "integer"
-                },
-                "geo_lat": {
-                    "type": "number"
-                },
-                "geo_lon": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "kladr_id": {
-                    "type": "string"
-                },
-                "okato": {
-                    "type": "string"
-                },
-                "oktmo": {
-                    "type": "string"
-                },
-                "population": {
-                    "type": "integer"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "region_type": {
-                    "type": "string"
-                },
-                "settlement": {
-                    "type": "string"
-                },
-                "settlement_type": {
-                    "type": "string"
-                },
-                "tax_office": {
-                    "type": "string"
-                },
-                "timezone": {
                     "type": "string"
                 }
             }
