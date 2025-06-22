@@ -73,7 +73,6 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Router			/v1/category/ [get]
-//	@Security		BearerAuth
 func (h Handler) getCategories(c fiber.Ctx) error {
 	req := &category_request.GetCategoryWithPagination{}
 	if err := c.Bind().Query(req); err != nil {

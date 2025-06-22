@@ -102,6 +102,7 @@ func (s *Service) UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Ca
 		MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
 		MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
 		IsEnable:        dto.IsEnable,
+		ImagePath:       pgtypeutils.EncodeText(dto.ImagePath),
 		ID:              dto.ID,
 	}
 
