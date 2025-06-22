@@ -77,6 +77,20 @@ type City struct {
 	FoundationYear  int16           `db:"foundation_year" json:"foundation_year"`
 }
 
+type Collection struct {
+	ID          uuid.UUID          `db:"id" json:"id"`
+	Name        string             `db:"name" json:"name"`
+	Description pgtype.Text        `db:"description" json:"description"`
+	Slug        string             `db:"slug" json:"slug"`
+	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+type CollectionProduct struct {
+	CollectionID uuid.UUID `db:"collection_id" json:"collection_id"`
+	ProductID    uuid.UUID `db:"product_id" json:"product_id"`
+}
+
 type Manufacturer struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
 	Name            string           `db:"name" json:"name"`

@@ -5,6 +5,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/attribute"
 	"github.com/stickpro/go-store/internal/service/auth"
 	"github.com/stickpro/go-store/internal/service/category"
+	"github.com/stickpro/go-store/internal/service/collections"
 	"github.com/stickpro/go-store/internal/service/geo"
 	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/service/media"
@@ -21,6 +22,7 @@ type Services struct {
 	AuthService         auth.IAuthService
 	CategoryService     category.ICategoryService
 	ProductService      product.IProductService
+	CollectionService   collections.ICollectionsService
 	MediaService        media.IMediaService
 	SearchService       searchtypes.ISearchService
 	ManufacturerService manufacturer.IManufacturerService
@@ -38,6 +40,7 @@ func InitService(
 
 	categoryService := category.New(conf, logger, storage)
 	productService := product.New(conf, logger, storage)
+	collectionServer := collections.New(conf, logger, storage)
 	mediaService := media.New(conf, logger, storage)
 	manufacturerService := manufacturer.New(conf, logger, storage)
 	attributeService := attribute.New(conf, logger, storage)
@@ -51,6 +54,7 @@ func InitService(
 		AuthService:         authService,
 		CategoryService:     categoryService,
 		ProductService:      productService,
+		CollectionService:   collectionServer,
 		MediaService:        mediaService,
 		SearchService:       searchService,
 		ManufacturerService: manufacturerService,

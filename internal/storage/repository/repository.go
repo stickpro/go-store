@@ -5,6 +5,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attributes"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_categories"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_cities"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_personal_access_tokens"
@@ -24,6 +25,7 @@ type IRepository interface {
 	AttributeGroups(opts ...Option) repository_attribute_groups.ICustomQueries
 	Attributes(opts ...Option) repository_attributes.ICustomQueries
 	Cities(opts ...Option) repository_cities.Querier
+	Collections(opts ...Option) repository_collections.ICustomQueries
 }
 
 type repository struct {
@@ -36,6 +38,7 @@ type repository struct {
 	attributeGroups     *repository_attribute_groups.CustomQueries
 	attributes          *repository_attributes.CustomQueries
 	cities              *repository_cities.Queries
+	collections         *repository_collections.CustomQueries
 }
 
 func InitRepository(psql *database.PostgresClient, keyValue key_value.IKeyValue) IRepository {
@@ -49,6 +52,7 @@ func InitRepository(psql *database.PostgresClient, keyValue key_value.IKeyValue)
 		attributeGroups:     repository_attribute_groups.NewCustom(psql.DB),
 		attributes:          repository_attributes.NewCustom(psql.DB),
 		cities:              repository_cities.New(psql.DB),
+		collections:         repository_collections.NewCustom(psql.DB),
 	}
 }
 
@@ -122,4 +126,12 @@ func (r *repository) Cities(opts ...Option) repository_cities.Querier {
 		return r.cities.WithTx(options.Tx)
 	}
 	return r.cities
+}
+
+func (r *repository) Collections(opts ...Option) repository_collections.ICustomQueries {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.collections.WithTx(options.Tx)
+	}
+	return r.collections
 }
