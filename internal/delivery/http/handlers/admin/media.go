@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/medium_response"
 	"github.com/stickpro/go-store/internal/service/media"
@@ -31,8 +32,8 @@ var allowedTypes = map[string]bool{
 //	@Produce		json
 //	@Param			document	formData	file	true	"File to upload"
 //	@Success		200			{object}	response.Result[medium_response.MediumResponse]
-//	@Failure		400			{object}	apierror.Errors "Unsupported file type"
-//	@Failure		500			{object}	apierror.Errors "Internal server error"
+//	@Failure		400			{object}	apierror.Errors	"Unsupported file type"
+//	@Failure		500			{object}	apierror.Errors	"Internal server error"
 //	@Router			/v1/media/upload [post]
 func (h *Handler) storeFile(c fiber.Ctx) error {
 	file, err := c.FormFile("file")
@@ -88,7 +89,34 @@ func (h *Handler) storeFile(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(mediumResponse))
 }
 
+// deleteFile handles file delete
+//
+//	@Summary		Delete file
+//	@Description	Allows users to delete files of specific types (JPEG, PDF, WEBP)
+//	@Tags			Files
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		uuid.UUID	true	"Media ID"
+//	@Success		200	{object}	response.Result[string]
+//	@Failure		400	{object}	apierror.Errors	"Unsupported file type"
+//	@Failure		500	{object}	apierror.Errors	"Internal server error"
+//	@Router			/v1/media/:id [delete]
+func (h *Handler) deleteFile(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+
+	err = h.services.MediaService.Delete(c.Context(), id)
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+	}
+
+	return c.JSON(response.OkByMessage("Media successfully deleted"))
+}
+
 func (h *Handler) initMediaRoutes(v1 fiber.Router) {
 	m := v1.Group("/media")
 	m.Post("/upload", h.storeFile)
+	m.Delete("/:id", h.deleteFile)
 }

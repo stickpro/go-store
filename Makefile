@@ -38,8 +38,6 @@ run: build
 	$(OUT_BIN) $(filter-out $@,$(MAKECMDGOALS))
 
 #database
-migrate:
-	migrate -path "$(MIGRATIONS_DIR)" -database "$(DATABASE_URL)" $(filter-out $@,$(MAKECMDGOALS))
 
 db-create-migration:
 	migrate create -ext sql -dir "$(MIGRATIONS_DIR)" $(filter-out $@,$(MAKECMDGOALS))

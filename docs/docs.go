@@ -987,6 +987,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/media/:id": {
+            "delete": {
+                "description": "Allows users to delete files of specific types (JPEG, PDF, WEBP)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Delete file",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-string"
+                        }
+                    },
+                    "400": {
+                        "description": "Unsupported file type",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/media/upload": {
             "post": {
                 "description": "Allows users to upload files of specific types (JPEG, PDF, WEBP)",
@@ -1664,17 +1699,13 @@ const docTemplate = `{
         "CreateProductRequest": {
             "type": "object",
             "required": [
-                "height",
                 "is_enable",
-                "length",
                 "minimum",
                 "model",
                 "name",
                 "price",
                 "slug",
-                "sort_order",
-                "weight",
-                "width"
+                "sort_order"
             ],
             "properties": {
                 "description": {
@@ -1706,6 +1737,12 @@ const docTemplate = `{
                 },
                 "manufacturer_id": {
                     "type": "string"
+                },
+                "media_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "meta_description": {
                     "type": "string"
@@ -2001,6 +2038,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-string": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "ManufacturerResponse": {
             "type": "object",
             "properties": {
@@ -2240,6 +2291,19 @@ const docTemplate = `{
                 }
             }
         },
+        "StockStatus": {
+            "type": "string",
+            "enum": [
+                "IN_STOCK",
+                "PRE_ORDER",
+                "OUT_OF_STOCK"
+            ],
+            "x-enum-varnames": [
+                "InStock",
+                "PreOrder",
+                "OutOfStock"
+            ]
+        },
         "UpdateCategoryRequest": {
             "type": "object",
             "properties": {
@@ -2472,19 +2536,6 @@ const docTemplate = `{
                     "format": "date-time"
                 }
             }
-        },
-        "github_com_stickpro_go-store_internal_constant.StockStatus": {
-            "type": "string",
-            "enum": [
-                "IN_STOCK",
-                "PRE_ORDER",
-                "OUT_OF_STOCK"
-            ],
-            "x-enum-varnames": [
-                "InStock",
-                "PreOrder",
-                "OutOfStock"
-            ]
         },
         "github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.CreateAttributeGroupRequest": {
             "type": "object",
@@ -2728,7 +2779,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "stock_status": {
-                    "$ref": "#/definitions/github_com_stickpro_go-store_internal_constant.StockStatus"
+                    "$ref": "#/definitions/StockStatus"
                 },
                 "subtract": {
                     "type": "boolean"

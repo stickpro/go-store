@@ -164,6 +164,12 @@ type Product struct {
 	UpdatedAt       pgtype.Timestamp     `db:"updated_at" json:"updated_at"`
 }
 
+type ProductMedium struct {
+	ProductID uuid.UUID `db:"product_id" json:"product_id"`
+	MediaID   uuid.UUID `db:"media_id" json:"media_id"`
+	SortOrder int32     `db:"sort_order" json:"sort_order"`
+}
+
 type User struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
 	Email           string           `db:"email" json:"email" validate:"required,email"`

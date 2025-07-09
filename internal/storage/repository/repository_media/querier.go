@@ -14,6 +14,7 @@ import (
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.Medium, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	Get(ctx context.Context, id uuid.UUID) (*models.Medium, error)
 }
 
 var _ Querier = (*Queries)(nil)

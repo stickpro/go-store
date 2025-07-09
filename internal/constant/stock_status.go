@@ -1,6 +1,6 @@
 package constant
 
-type StockStatus string
+type StockStatus string // @name StockStatus
 
 const (
 	InStock    StockStatus = "IN_STOCK"

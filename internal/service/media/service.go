@@ -2,18 +2,21 @@ package media
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
+	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/logger"
 	"github.com/stickpro/go-store/pkg/object_storage"
 )
 
 type IMediaService interface {
 	Save(ctx context.Context, dto SaveMediumDTO) (*models.Medium, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type Service struct {
@@ -64,4 +67,29 @@ func (s Service) Save(ctx context.Context, dto SaveMediumDTO) (*models.Medium, e
 	}
 
 	return medium, nil
+}
+
+func (s Service) Delete(ctx context.Context, id uuid.UUID) error {
+	mediaInfo, err := s.storage.Media().Get(ctx, id)
+
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.l.Debug("failed to get media by ID", "error", parsedErr)
+		return parsedErr
+	}
+	return repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		err = s.storage.Media(repository.WithTx(tx)).Delete(ctx, id)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.l.Error("failed to delete media", "error", parsedErr)
+			return parsedErr
+
+		}
+		err := s.objectStorage.Delete(ctx, mediaInfo.Path)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

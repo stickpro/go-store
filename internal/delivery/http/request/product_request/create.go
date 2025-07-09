@@ -26,12 +26,13 @@ type CreateProductRequest struct {
 	Image           *string         `json:"image"`
 	ManufacturerID  *uuid.UUID      `json:"manufacturer_id,omitempty" validate:"omitempty,uuid"`
 	Price           decimal.Decimal `json:"price" validate:"required,numeric"`
-	Weight          decimal.Decimal `json:"weight" validate:"required,numeric"`
-	Length          decimal.Decimal `json:"length" validate:"required,numeric"`
-	Width           decimal.Decimal `json:"width" validate:"required,numeric"`
-	Height          decimal.Decimal `json:"height" validate:"required,numeric"`
+	Weight          decimal.Decimal `json:"weight" validate:"numeric"`
+	Length          decimal.Decimal `json:"length" validate:"numeric"`
+	Width           decimal.Decimal `json:"width" validate:"numeric"`
+	Height          decimal.Decimal `json:"height" validate:"numeric"`
 	Subtract        bool            `json:"subtract" validate:"boolean"`
 	Minimum         int64           `json:"minimum" validate:"required"`
 	SortOrder       int32           `json:"sort_order" validate:"required"`
 	IsEnable        bool            `json:"is_enable" validate:"required,boolean"`
+	MediaIDs        []*uuid.UUID    `json:"media_ids,omitempty" validate:"omitempty"`
 } // @name CreateProductRequest
