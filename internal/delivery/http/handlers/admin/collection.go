@@ -109,7 +109,7 @@ func (h *Handler) updateCollection(c fiber.Ctx) error {
 }
 
 func (h *Handler) initCollectionRoutes(v1 fiber.Router) {
-	c := v1.Group("/collections")
+	c := v1.Group("/collection")
 	c.Get("/", h.getCollections)
 	c.Post("/", h.createCollection)
 	c.Put("/:id", h.updateCollection)

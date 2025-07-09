@@ -3,10 +3,12 @@ package product
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
+	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -59,13 +61,31 @@ func (s Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Prod
 		IsEnable:        dto.IsEnable,
 		Viewed:          0,
 	}
-
-	prd, err := s.storage.Products().Create(ctx, params)
+	prd := &models.Product{}
+	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		prd, err := s.storage.Products(repository.WithTx(tx)).Create(ctx, params)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to create product", "error", parsedErr)
+			return parsedErr
+		}
+		for _, mediaID := range dto.MediaIDs {
+			err := s.storage.Products(repository.WithTx(tx)).CreateProductMedia(ctx, repository_products.CreateProductMediaParams{
+				ProductID: prd.ID,
+				MediaID:   *mediaID,
+			})
+			if err != nil {
+				parsedErr := pgerror.ParseError(err)
+				s.logger.Error("failed to create product media", "error", parsedErr)
+				return parsedErr
+			}
+		}
+		return nil
+	})
 	if err != nil {
-		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to create product", "error", parsedErr)
-		return nil, parsedErr
+		return nil, err
 	}
+
 	return prd, nil
 
 }

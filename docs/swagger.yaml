@@ -248,6 +248,10 @@ definitions:
         type: string
       manufacturer_id:
         type: string
+      media_ids:
+        items:
+          type: string
+        type: array
       meta_description:
         type: string
       meta_h1:
@@ -285,17 +289,13 @@ definitions:
       width:
         type: number
     required:
-    - height
     - is_enable
-    - length
     - minimum
     - model
     - name
     - price
     - slug
     - sort_order
-    - weight
-    - width
     type: object
   FullPagingData:
     properties:
@@ -447,6 +447,15 @@ definitions:
         items:
           $ref: '#/definitions/github_com_stickpro_go-store_internal_models.City'
         type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-string:
+    properties:
+      code:
+        type: integer
+      data:
+        type: string
       message:
         type: string
     type: object
@@ -609,6 +618,16 @@ definitions:
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
+  StockStatus:
+    enum:
+    - IN_STOCK
+    - PRE_ORDER
+    - OUT_OF_STOCK
+    type: string
+    x-enum-varnames:
+    - InStock
+    - PreOrder
+    - OutOfStock
   UpdateCategoryRequest:
     properties:
       description:
@@ -772,16 +791,6 @@ definitions:
     - email
     - location
     type: object
-  github_com_stickpro_go-store_internal_constant.StockStatus:
-    enum:
-    - IN_STOCK
-    - PRE_ORDER
-    - OUT_OF_STOCK
-    type: string
-    x-enum-varnames:
-    - InStock
-    - PreOrder
-    - OutOfStock
   github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.CreateAttributeGroupRequest:
     properties:
       description:
@@ -943,7 +952,7 @@ definitions:
       sort_order:
         type: integer
       stock_status:
-        $ref: '#/definitions/github_com_stickpro_go-store_internal_constant.StockStatus'
+        $ref: '#/definitions/StockStatus'
       subtract:
         type: boolean
       upc:
@@ -1640,6 +1649,29 @@ paths:
       summary: Manufacturer
       tags:
       - Manufacturer
+  /v1/media/:id:
+    delete:
+      consumes:
+      - application/json
+      description: Allows users to delete files of specific types (JPEG, PDF, WEBP)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-string'
+        "400":
+          description: Unsupported file type
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Delete file
+      tags:
+      - Files
   /v1/media/upload:
     post:
       consumes:
