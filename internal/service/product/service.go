@@ -20,6 +20,7 @@ type IProductService interface {
 	GetProductWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 	GetProductById(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetProductBySlug(ctx context.Context, slug string) (*models.Product, error)
+	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*WithMediumDTO, error)
 	UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Product, error)
 }
 
@@ -27,6 +28,14 @@ type Service struct {
 	cfg     *config.Config
 	logger  logger.Logger
 	storage storage.IStorage
+}
+
+func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Service {
+	return &Service{
+		cfg:     cfg,
+		logger:  logger,
+		storage: storage,
+	}
 }
 
 func (s Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Product, error) {
@@ -164,10 +173,20 @@ func (s Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Prod
 	return prd, nil
 }
 
-func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Service {
-	return &Service{
-		cfg:     cfg,
-		logger:  logger,
-		storage: storage,
+func (s Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*WithMediumDTO, error) {
+	product, err := s.GetProductById(ctx, id)
+	if err != nil {
+		return nil, err
 	}
+	media, err := s.storage.Products().GetMediaByProductID(ctx, id)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to get product media", "error", err)
+		return nil, parsedErr
+	}
+
+	return &WithMediumDTO{
+		Product: product,
+		Medium:  media,
+	}, nil
 }

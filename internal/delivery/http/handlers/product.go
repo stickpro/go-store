@@ -62,7 +62,7 @@ func (h Handler) getProductByID(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(product_response.NewFromModel(prd)))
 }
 
-// getProducts is a function to Load categories
+// getProducts is a function to Load products
 //
 //	@Summary		Get products
 //	@Description	Get products
@@ -88,9 +88,35 @@ func (h Handler) getProducts(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(prds))
 }
 
+// getProductWithMediumByID is a function to Load product with medium by ID
+//
+//	@Summary		Get product with medium by ID
+//	@Description	Get product with medium by ID
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		uuid.UUID	true	"Product ID"
+//	@Success		200	{object}	response.Result[product_response.ProductWithMediumResponse]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		404	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
+//	@Router			/v1/product/id/:id/with-medium [get]
+func (h Handler) getProductWithMediumByID(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	prd, err := h.services.ProductService.GetProductWithMediumByID(c.Context(), id)
+	if err != nil {
+		return h.handleError(err, "product")
+	}
+	return c.JSON(response.OkByData(product_response.NewFromModelWithMedium(prd.Product, prd.Medium)))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Get("/", h.getProducts)
 	p.Get("/:slug", h.getProductBySlug)
 	p.Get("/id/:id", h.getProductByID)
+	p.Get("/id/:id/with-medium", h.getProductWithMediumByID)
 }

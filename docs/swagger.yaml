@@ -394,6 +394,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-ProductWithMediumResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ProductWithMediumResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-RegisterUserResponse:
     properties:
       code:
@@ -565,6 +574,15 @@ definitions:
         type: number
       width:
         type: number
+    type: object
+  ProductWithMediumResponse:
+    properties:
+      medium:
+        items:
+          $ref: '#/definitions/MediumResponse'
+        type: array
+      product:
+        $ref: '#/definitions/ProductResponse'
     type: object
   RegisterRequest:
     properties:
@@ -1858,6 +1876,33 @@ paths:
           schema:
             $ref: '#/definitions/APIErrors'
       summary: Product
+      tags:
+      - Product
+  /v1/product/id/:id/with-medium:
+    get:
+      consumes:
+      - application/json
+      description: Get product with medium by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ProductWithMediumResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get product with medium by ID
       tags:
       - Product
   /v1/user:

@@ -3,6 +3,7 @@ package product_response
 import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/stickpro/go-store/internal/delivery/http/response/medium_response"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
@@ -69,5 +70,17 @@ func NewFromModel(product *models.Product) ProductResponse {
 		Minimum:         product.Minimum,
 		SortOrder:       product.SortOrder,
 		IsEnable:        product.IsEnable,
+	}
+}
+
+type ProductWithMediumResponse struct {
+	Product ProductResponse                  `json:"product"`
+	Medium  []medium_response.MediumResponse `json:"medium"`
+} // @name ProductWithMediumResponse
+
+func NewFromModelWithMedium(product *models.Product, medium []*models.Medium) ProductWithMediumResponse {
+	return ProductWithMediumResponse{
+		Product: NewFromModel(product),
+		Medium:  medium_response.NewFromModels(medium),
 	}
 }

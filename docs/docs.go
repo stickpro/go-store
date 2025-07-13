@@ -1311,6 +1311,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/product/id/:id/with-medium": {
+            "get": {
+                "description": "Get product with medium by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Get product with medium by ID",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ProductWithMediumResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/user": {
             "get": {
                 "security": [
@@ -1951,6 +1992,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-ProductWithMediumResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ProductWithMediumResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-RegisterUserResponse": {
             "type": "object",
             "properties": {
@@ -2211,6 +2266,20 @@ const docTemplate = `{
                 },
                 "width": {
                     "type": "number"
+                }
+            }
+        },
+        "ProductWithMediumResponse": {
+            "type": "object",
+            "properties": {
+                "medium": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MediumResponse"
+                    }
+                },
+                "product": {
+                    "$ref": "#/definitions/ProductResponse"
                 }
             }
         },

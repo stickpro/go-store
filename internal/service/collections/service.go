@@ -58,7 +58,7 @@ func (s *Service) GetCollectionByID(ctx context.Context, ID uuid.UUID) (*models.
 	collection, err := s.storage.Collections().Get(ctx, ID)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
-		s.l.Debug("failed to get collection by ID", "error", parsedErr)
+		s.l.Debug("failed to get collection by ID ", parsedErr)
 		return nil, parsedErr
 	}
 	return collection, nil
