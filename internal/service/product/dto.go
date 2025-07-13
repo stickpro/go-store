@@ -5,6 +5,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
+	"github.com/stickpro/go-store/internal/models"
 )
 
 type CreateDTO struct {
@@ -69,6 +70,11 @@ type UpdateDTO struct {
 	Minimum         int64                `json:"minimum"`
 	SortOrder       int32                `json:"sort_order"`
 	IsEnable        bool                 `json:"is_enable"`
+}
+
+type WithMediumDTO struct {
+	Product *models.Product  `json:"product"`
+	Medium  []*models.Medium `json:"media"`
 }
 
 type GetDTO struct {

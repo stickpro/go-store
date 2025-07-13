@@ -29,3 +29,11 @@ func NewFromModel(medium *models.Medium) MediumResponse {
 		CreatedAt: medium.CreatedAt.Time,
 	}
 }
+
+func NewFromModels(mediums []*models.Medium) []MediumResponse {
+	res := make([]MediumResponse, len(mediums))
+	for i, medium := range mediums {
+		res[i] = NewFromModel(medium)
+	}
+	return res
+}
