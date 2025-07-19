@@ -70,6 +70,7 @@ type UpdateDTO struct {
 	Minimum         int64                `json:"minimum"`
 	SortOrder       int32                `json:"sort_order"`
 	IsEnable        bool                 `json:"is_enable"`
+	MediaIDs        []*uuid.UUID         `json:"media_ids,omitempty"` //nolint:tagliatelle
 }
 
 type WithMediumDTO struct {
@@ -158,5 +159,6 @@ func RequestToUpdateDTO(req *product_request.UpdateProductRequest) UpdateDTO {
 		Minimum:         req.Minimum,
 		SortOrder:       req.SortOrder,
 		IsEnable:        req.IsEnable,
+		MediaIDs:        req.MediaIDs,
 	}
 }

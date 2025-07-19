@@ -8,3 +8,6 @@ ORDER BY pm.sort_order;
 -- name: CreateProductMedia :exec
 INSERT INTO product_media (product_id, media_id, sort_order)
 VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;
+
+-- name: DeleteProductMedia :exec
+DELETE FROM product_media WHERE product_id = $1;
