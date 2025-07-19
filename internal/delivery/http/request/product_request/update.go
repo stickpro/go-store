@@ -34,4 +34,5 @@ type UpdateProductRequest struct {
 	Minimum         int64           `json:"minimum" validate:"omitempty"`
 	SortOrder       int32           `json:"sort_order" validate:"omitempty"`
 	IsEnable        bool            `json:"is_enable" validate:"omitempty,boolean"`
+	MediaIDs        []*uuid.UUID    `json:"media_ids,omitempty" validate:"omitempty"`
 } // @name UpdateProductRequest

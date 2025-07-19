@@ -2512,6 +2512,12 @@ const docTemplate = `{
                 "manufacturer_id": {
                     "type": "string"
                 },
+                "media_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "meta_description": {
                     "type": "string"
                 },

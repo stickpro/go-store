@@ -165,11 +165,40 @@ func (s Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Prod
 		SortOrder:       dto.SortOrder,
 		IsEnable:        dto.IsEnable,
 	}
+	prd := &models.Product{}
+	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		prd, err := s.storage.Products().Update(ctx, params)
+		if err != nil {
+			if err != nil {
+				parsedErr := pgerror.ParseError(err)
+				s.logger.Error("failed to update product", "error", parsedErr)
+				return parsedErr
+			}
+		}
+		err = s.storage.Products(repository.WithTx(tx)).DeleteProductMedia(ctx, prd.ID)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to update product", "error", parsedErr)
+			return parsedErr
+		}
+		for _, mediaID := range dto.MediaIDs {
+			err := s.storage.Products(repository.WithTx(tx)).CreateProductMedia(ctx, repository_products.CreateProductMediaParams{
+				ProductID: prd.ID,
+				MediaID:   *mediaID,
+			})
+			if err != nil {
+				parsedErr := pgerror.ParseError(err)
+				s.logger.Error("failed to create product media", "error", parsedErr)
+				return parsedErr
+			}
+		}
+		return nil
+	})
 
-	prd, err := s.storage.Products().Update(ctx, params)
 	if err != nil {
 		return nil, err
 	}
+
 	return prd, nil
 }
 
