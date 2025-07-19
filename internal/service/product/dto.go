@@ -123,7 +123,7 @@ func RequestToCreateDTO(req *product_request.CreateProductRequest) CreateDTO {
 	}
 }
 
-func RequestToUpdateDTO(req *product_request.UpdateProductRequest) UpdateDTO {
+func RequestToUpdateDTO(req *product_request.UpdateProductRequest, id uuid.UUID) UpdateDTO {
 	var manufacturerID uuid.NullUUID
 	if req.ManufacturerID != nil {
 		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
@@ -131,6 +131,7 @@ func RequestToUpdateDTO(req *product_request.UpdateProductRequest) UpdateDTO {
 		manufacturerID = uuid.NullUUID{Valid: true}
 	}
 	return UpdateDTO{
+		ID:              id,
 		Name:            req.Name,
 		Model:           req.Model,
 		Slug:            req.Slug,

@@ -29,6 +29,7 @@ type (
 		WriteTimeout       time.Duration  `yaml:"write_timeout" env:"WRITE_TIMEOUT" default:"10s"`
 		MaxHeaderMegabytes int            `yaml:"max_header_megabytes" env:"MAX_HEADER_MEGABYTES" default:"1"`
 		Cors               HTTPCorsConfig `yaml:"cors"`
+		MaxBodyLimit       int            `yaml:"max_body_limit" default:"100" example:"100" usage:"maximum body size in mb, default 100MB"`
 	}
 
 	HTTPCorsConfig struct {
