@@ -75,7 +75,7 @@ func (s Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Prod
 		prd, err := s.storage.Products(repository.WithTx(tx)).Create(ctx, params)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to create product", "error", parsedErr)
+			s.logger.Error("failed to create product", parsedErr)
 			return parsedErr
 		}
 		for _, mediaID := range dto.MediaIDs {
@@ -85,7 +85,7 @@ func (s Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Prod
 			})
 			if err != nil {
 				parsedErr := pgerror.ParseError(err)
-				s.logger.Error("failed to create product media", "error", parsedErr)
+				s.logger.Error("failed to create product media", parsedErr)
 				return parsedErr
 			}
 		}
@@ -167,18 +167,18 @@ func (s Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Prod
 	}
 	prd := &models.Product{}
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		prd, err := s.storage.Products().Update(ctx, params)
+		prd, err := s.storage.Products(repository.WithTx(tx)).Update(ctx, params)
 		if err != nil {
 			if err != nil {
 				parsedErr := pgerror.ParseError(err)
-				s.logger.Error("failed to update product", "error", parsedErr)
+				s.logger.Error("failed to update product ", parsedErr)
 				return parsedErr
 			}
 		}
 		err = s.storage.Products(repository.WithTx(tx)).DeleteProductMedia(ctx, prd.ID)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to update product", "error", parsedErr)
+			s.logger.Error("failed to delete product", parsedErr)
 			return parsedErr
 		}
 		for _, mediaID := range dto.MediaIDs {
@@ -188,7 +188,7 @@ func (s Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Prod
 			})
 			if err != nil {
 				parsedErr := pgerror.ParseError(err)
-				s.logger.Error("failed to create product media", "error", parsedErr)
+				s.logger.Error("failed to create product media", parsedErr)
 				return parsedErr
 			}
 		}
@@ -210,7 +210,7 @@ func (s Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*W
 	media, err := s.storage.Products().GetMediaByProductID(ctx, id)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to get product media", "error", err)
+		s.logger.Error("failed to get product media", err)
 		return nil, parsedErr
 	}
 

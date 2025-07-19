@@ -3,6 +3,7 @@ package admin
 import (
 	"errors"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
@@ -57,11 +58,15 @@ func (h *Handler) createProduct(c fiber.Ctx) error {
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/product/:id [PUT]
 func (h *Handler) updateProduct(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
 	req := &product_request.UpdateProductRequest{}
 	if err := c.Bind().Body(req); err != nil {
 		return err
 	}
-	dto := product.RequestToUpdateDTO(req)
+	dto := product.RequestToUpdateDTO(req, id)
 
 	prd, err := h.services.ProductService.UpdateProduct(c.Context(), dto)
 	if err != nil {

@@ -23,6 +23,7 @@ func InitServer(cfg *config.Config, services *service.Services, logger logger.Lo
 		WriteTimeout:    cfg.HTTP.WriteTimeout,
 		StructValidator: tools.DefaultStructValidator(),
 		ErrorHandler:    errorHandler,
+		BodyLimit:       cfg.HTTP.MaxBodyLimit * 1024 * 1024,
 	})
 
 	router.NewRouter(cfg, services, logger).Init(app)
