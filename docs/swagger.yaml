@@ -459,6 +459,17 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_github_com_stickpro_go-store_internal_models_Product:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Product'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-string:
     properties:
       code:
@@ -920,6 +931,73 @@ definitions:
         type: string
       updated_at:
         $ref: '#/definitions/pgtype.Timestamptz'
+    type: object
+  github_com_stickpro_go-store_internal_models.Product:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      ean:
+        $ref: '#/definitions/pgtype.Text'
+      height:
+        type: number
+      id:
+        type: string
+      image:
+        $ref: '#/definitions/pgtype.Text'
+      is_enable:
+        type: boolean
+      isbn:
+        $ref: '#/definitions/pgtype.Text'
+      jan:
+        $ref: '#/definitions/pgtype.Text'
+      length:
+        type: number
+      location:
+        $ref: '#/definitions/pgtype.Text'
+      manufacturer_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      meta_description:
+        $ref: '#/definitions/pgtype.Text'
+      meta_h1:
+        $ref: '#/definitions/pgtype.Text'
+      meta_keyword:
+        $ref: '#/definitions/pgtype.Text'
+      meta_title:
+        $ref: '#/definitions/pgtype.Text'
+      minimum:
+        type: integer
+      model:
+        type: string
+      mpn:
+        $ref: '#/definitions/pgtype.Text'
+      name:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+      sku:
+        $ref: '#/definitions/pgtype.Text'
+      slug:
+        type: string
+      sort_order:
+        type: integer
+      stock_status:
+        $ref: '#/definitions/StockStatus'
+      subtract:
+        type: boolean
+      upc:
+        $ref: '#/definitions/pgtype.Text'
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      viewed:
+        type: integer
+      weight:
+        type: number
+      width:
+        type: number
     type: object
   github_com_stickpro_go-store_internal_storage_repository_repository_products.FindRow:
     properties:
@@ -1855,6 +1933,35 @@ paths:
       summary: Product
       tags:
       - Product
+  /v1/product/find:
+    get:
+      consumes:
+      - application/json
+      description: Find product by name
+      parameters:
+      - description: Product name
+        in: query
+        name: city
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Find product
+      tags:
+      - Geo
   /v1/product/id/:id/:
     get:
       consumes:

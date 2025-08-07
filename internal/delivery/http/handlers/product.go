@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
@@ -10,6 +12,7 @@ import (
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
+	_ "github.com/stickpro/go-store/internal/models"
 	_ "github.com/stickpro/go-store/internal/storage/base"
 	_ "github.com/stickpro/go-store/internal/storage/repository/repository_products"
 )
@@ -113,9 +116,35 @@ func (h Handler) getProductWithMediumByID(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(product_response.NewFromModelWithMedium(prd.Product, prd.Medium)))
 }
 
+// findProduct is a function find product by name
+//
+//	@Summary		Find product
+//	@Description	Find product by name
+//	@Tags			Geo
+//	@Accept			json
+//	@Produce		json
+//	@Param			product	query		string	true	"Product name"
+//	@Success		200		{object}	response.Result[[]models.Product]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/find [get]
+func (h *Handler) findProduct(c fiber.Ctx) error {
+	city := c.Query("product")
+	if city == "" {
+		return apierror.New().AddError(fmt.Errorf("product is requered")).SetHttpCode(fiber.StatusBadRequest)
+
+	}
+	location, err := h.services.SearchService.Search(constant.ProductsIndex, city, 10, 0)
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	return c.JSON(response.OkByData(location.Hits))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Get("/", h.getProducts)
+	p.Get("/find", h.findProduct)
 	p.Get("/:slug", h.getProductBySlug)
 	p.Get("/id/:id", h.getProductByID)
 	p.Get("/id/:id/with-medium", h.getProductWithMediumByID)

@@ -37,15 +37,14 @@ func InitService(
 ) (*Services, error) {
 	userService := user.New(conf, logger, storage)
 	authService := auth.New(conf, logger, storage, userService)
+	searchService, _ := search.New(conf)
 
 	categoryService := category.New(conf, logger, storage)
-	productService := product.New(conf, logger, storage)
+	productService := product.New(conf, logger, storage, searchService)
 	collectionServer := collections.New(conf, logger, storage)
 	mediaService := media.New(conf, logger, storage)
 	manufacturerService := manufacturer.New(conf, logger, storage)
 	attributeService := attribute.New(conf, logger, storage)
-
-	searchService, _ := search.New(conf)
 
 	geoService := geo.New(conf, logger, storage, searchService)
 
