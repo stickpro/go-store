@@ -1,5 +1,6 @@
 package constant
 
 const (
-	CitiesIndex string = "cities"
+	CitiesIndex   string = "cities"
+	ProductsIndex string = "products"
 )

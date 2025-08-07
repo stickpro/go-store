@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository"
@@ -22,19 +23,23 @@ type IProductService interface {
 	GetProductBySlug(ctx context.Context, slug string) (*models.Product, error)
 	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*WithMediumDTO, error)
 	UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Product, error)
+	// CreateProductIndex Indexing
+	CreateProductIndex(ctx context.Context, reindex bool) error
 }
 
 type Service struct {
-	cfg     *config.Config
-	logger  logger.Logger
-	storage storage.IStorage
+	cfg           *config.Config
+	logger        logger.Logger
+	storage       storage.IStorage
+	searchService searchtypes.ISearchService
 }
 
-func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Service {
+func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, ss searchtypes.ISearchService) *Service {
 	return &Service{
-		cfg:     cfg,
-		logger:  logger,
-		storage: storage,
+		cfg:           cfg,
+		logger:        logger,
+		storage:       storage,
+		searchService: ss,
 	}
 }
 

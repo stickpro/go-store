@@ -8,7 +8,7 @@ import (
 )
 
 func initIndexer(ctx context.Context, service *service.Services, l logger.Logger, reindex ...bool) {
-	forceReindex := false
+	forceReindex := true
 	if len(reindex) > 0 {
 		forceReindex = reindex[0]
 	}
@@ -18,6 +18,14 @@ func initIndexer(ctx context.Context, service *service.Services, l logger.Logger
 			l.Error("failed to create city index", "error", err)
 		}
 	}
+
+	if service.ProductService != nil {
+		err := service.ProductService.CreateProductIndex(ctx, forceReindex)
+		if err != nil {
+			l.Error("failed to create product index", "error", err)
+		}
+	}
+
 }
 
 func structToMap(data any) ([]map[string]interface{}, error) {
