@@ -1,1 +1,0 @@
-drop table if exists collection_product cascade;

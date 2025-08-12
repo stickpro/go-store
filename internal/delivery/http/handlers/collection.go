@@ -26,12 +26,12 @@ func (h Handler) getCollectionByID(c fiber.Ctx) error {
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
-	collection, err := h.services.CollectionService.GetCollectionByID(c.Context(), id)
+	collectionDTO, err := h.services.CollectionService.GetCollectionByID(c.Context(), id)
 	if err != nil {
 		return h.handleError(err, "collection")
 	}
 
-	return c.JSON(response.OkByData(collection_response.NewFromModel(collection)))
+	return c.JSON(response.OkByData(collection_response.NewFromDTO(collectionDTO)))
 }
 
 // getCollectionBySlug is a function get collection by slug
@@ -49,11 +49,11 @@ func (h Handler) getCollectionByID(c fiber.Ctx) error {
 //	@Router			/v1/collection/:slug/ [get]
 func (h Handler) getCollectionSlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
-	collection, err := h.services.CollectionService.GetCollectionBySlug(c.Context(), slug)
+	collectionDTO, err := h.services.CollectionService.GetCollectionBySlug(c.Context(), slug)
 	if err != nil {
 		return h.handleError(err, "collection")
 	}
-	return c.JSON(response.OkByData(collection_response.NewFromModel(collection)))
+	return c.JSON(response.OkByData(collection_response.NewFromDTO(collectionDTO)))
 }
 
 func (h Handler) initCollectionRoutes(v1 fiber.Router) {

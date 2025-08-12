@@ -8,8 +8,44 @@ package repository_collections
 import (
 	"context"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/models"
 )
+
+const addProductsToCollection = `-- name: AddProductsToCollection :exec
+INSERT INTO collection_products (collection_id, product_id)
+SELECT $1::uuid, p.id
+FROM products p
+WHERE p.id = any($2::uuid[])
+  AND NOT EXISTS (
+    SELECT 1
+    FROM collection_products cp
+    WHERE cp.collection_id = $1
+  AND cp.product_id = p.id
+    )
+`
+
+type AddProductsToCollectionParams struct {
+	CollectionID uuid.UUID   `db:"collection_id" json:"collection_id"`
+	ProductIds   []uuid.UUID `db:"product_ids" json:"product_ids"`
+}
+
+func (q *Queries) AddProductsToCollection(ctx context.Context, arg AddProductsToCollectionParams) error {
+	_, err := q.db.Exec(ctx, addProductsToCollection, arg.CollectionID, arg.ProductIds)
+	return err
+}
+
+const deleteProductsFromCollection = `-- name: DeleteProductsFromCollection :exec
+DELETE FROM collection_products
+WHERE collection_id = $1
+`
+
+func (q *Queries) DeleteProductsFromCollection(ctx context.Context, collectionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteProductsFromCollection, collectionID)
+	return err
+}
 
 const getBySlug = `-- name: GetBySlug :one
 SELECT id, name, description, slug, created_at, updated_at FROM collections WHERE slug=$1 LIMIT 1
@@ -27,4 +63,134 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Collectio
 		&i.UpdatedAt,
 	)
 	return &i, err
+}
+
+const getCollectionWithProductsByID = `-- name: GetCollectionWithProductsByID :many
+SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
+       p.id        AS product_id,
+       p.name      AS product_name,
+       p.slug      AS product_slug,
+       p.model     AS product_model,
+       p.price     AS product_price,
+       p.is_enable AS product_is_enable,
+       p.image     AS product_image
+FROM collections c
+         LEFT JOIN collection_products cp ON cp.collection_id = c.id
+         LEFT JOIN products p ON p.id = cp.product_id
+WHERE c.id = $1
+`
+
+type GetCollectionWithProductsByIDRow struct {
+	ID              uuid.UUID           `db:"id" json:"id"`
+	Name            string              `db:"name" json:"name"`
+	Description     pgtype.Text         `db:"description" json:"description"`
+	Slug            string              `db:"slug" json:"slug"`
+	CreatedAt       pgtype.Timestamptz  `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
+	ProductID       uuid.NullUUID       `db:"product_id" json:"product_id"`
+	ProductName     pgtype.Text         `db:"product_name" json:"product_name"`
+	ProductSlug     pgtype.Text         `db:"product_slug" json:"product_slug"`
+	ProductModel    pgtype.Text         `db:"product_model" json:"product_model"`
+	ProductPrice    decimal.NullDecimal `db:"product_price" json:"product_price"`
+	ProductIsEnable pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
+	ProductImage    pgtype.Text         `db:"product_image" json:"product_image"`
+}
+
+func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUID) ([]*GetCollectionWithProductsByIDRow, error) {
+	rows, err := q.db.Query(ctx, getCollectionWithProductsByID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetCollectionWithProductsByIDRow{}
+	for rows.Next() {
+		var i GetCollectionWithProductsByIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Slug,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ProductID,
+			&i.ProductName,
+			&i.ProductSlug,
+			&i.ProductModel,
+			&i.ProductPrice,
+			&i.ProductIsEnable,
+			&i.ProductImage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCollectionWithProductsBySlug = `-- name: GetCollectionWithProductsBySlug :many
+SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
+       p.id        AS product_id,
+       p.name      AS product_name,
+       p.slug      AS product_slug,
+       p.model     AS product_model,
+       p.price     AS product_price,
+       p.is_enable AS product_is_enable,
+       p.image     AS product_image
+FROM collections c
+         LEFT JOIN collection_products cp ON cp.collection_id = c.id
+         LEFT JOIN products p ON p.id = cp.product_id
+WHERE c.slug = $1
+`
+
+type GetCollectionWithProductsBySlugRow struct {
+	ID              uuid.UUID           `db:"id" json:"id"`
+	Name            string              `db:"name" json:"name"`
+	Description     pgtype.Text         `db:"description" json:"description"`
+	Slug            string              `db:"slug" json:"slug"`
+	CreatedAt       pgtype.Timestamptz  `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
+	ProductID       uuid.NullUUID       `db:"product_id" json:"product_id"`
+	ProductName     pgtype.Text         `db:"product_name" json:"product_name"`
+	ProductSlug     pgtype.Text         `db:"product_slug" json:"product_slug"`
+	ProductModel    pgtype.Text         `db:"product_model" json:"product_model"`
+	ProductPrice    decimal.NullDecimal `db:"product_price" json:"product_price"`
+	ProductIsEnable pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
+	ProductImage    pgtype.Text         `db:"product_image" json:"product_image"`
+}
+
+func (q *Queries) GetCollectionWithProductsBySlug(ctx context.Context, slug string) ([]*GetCollectionWithProductsBySlugRow, error) {
+	rows, err := q.db.Query(ctx, getCollectionWithProductsBySlug, slug)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetCollectionWithProductsBySlugRow{}
+	for rows.Next() {
+		var i GetCollectionWithProductsBySlugRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Slug,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ProductID,
+			&i.ProductName,
+			&i.ProductSlug,
+			&i.ProductModel,
+			&i.ProductPrice,
+			&i.ProductIsEnable,
+			&i.ProductImage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

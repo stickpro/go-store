@@ -6,7 +6,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/request/collection_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/collection_response"
-	"github.com/stickpro/go-store/internal/service/collections"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
@@ -26,7 +26,7 @@ import (
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/dv-admin/collection/ [get]
+//	@Router			/v1/collection/ [get]
 //
 //	@Security		BearerAuth
 func (h *Handler) getCollections(c fiber.Ctx) error {
@@ -34,7 +34,7 @@ func (h *Handler) getCollections(c fiber.Ctx) error {
 	if err := c.Bind().Query(req); err != nil {
 		return err
 	}
-	cls, err := h.services.CollectionService.GetCollectionsWithPagination(c.Context(), collections.GetDTO{
+	cls, err := h.services.CollectionService.GetCollectionsWithPagination(c.Context(), dto.GetCollectionDTO{
 		Page:     req.Page,
 		PageSize: req.PageSize,
 	})
@@ -56,7 +56,7 @@ func (h *Handler) getCollections(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/dv-admin/collection/ [post]
+//	@Router			/v1/collection/ [post]
 //
 //	@Security		BearerAuth
 func (h *Handler) createCollection(c fiber.Ctx) error {
@@ -65,8 +65,8 @@ func (h *Handler) createCollection(c fiber.Ctx) error {
 		return err
 	}
 
-	dto := collections.RequestToCreateDTO(req)
-	col, err := h.services.CollectionService.CreateCollection(c.Context(), dto)
+	d := dto.RequestToCreateCollectionDTO(req)
+	col, err := h.services.CollectionService.CreateCollection(c.Context(), d)
 	if err != nil {
 		return h.handleError(err, "collection")
 	}
@@ -86,7 +86,7 @@ func (h *Handler) createCollection(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/dv-admin/collection/:id [put]
+//	@Router			/v1/collection/:id [put]
 //
 //	@Security		BearerAuth
 func (h *Handler) updateCollection(c fiber.Ctx) error {
@@ -100,8 +100,8 @@ func (h *Handler) updateCollection(c fiber.Ctx) error {
 		return err
 	}
 
-	dto := collections.RequestToUpdateDTO(req, id)
-	col, err := h.services.CollectionService.UpdateCollection(c.Context(), dto)
+	d := dto.RequestToUpdateCollectionDTO(req, id)
+	col, err := h.services.CollectionService.UpdateCollection(c.Context(), d)
 	if err != nil {
 		return h.handleError(err, "collection")
 	}

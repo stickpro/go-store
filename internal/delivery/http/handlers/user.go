@@ -19,7 +19,7 @@ import (
 //	@Failure		401	{object}	apierror.Errors
 //	@Failure		422	{object}	apierror.Errors
 //	@Failure		503	{object}	apierror.Errors
-//	@Router			/v1/user [get]
+//	@Router			/v1/user/info [get]
 //	@Security		BearerAuth
 func (h *Handler) authUser(c fiber.Ctx) error {
 	user, err := loadAuthUser(c)
