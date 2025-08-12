@@ -3,10 +3,14 @@ package collections
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
+	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/dto/mapper"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
+	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -14,11 +18,11 @@ import (
 )
 
 type ICollectionsService interface {
-	CreateCollection(ctx context.Context, dto CreateDTO) (*models.Collection, error)
-	GetCollectionByID(ctx context.Context, ID uuid.UUID) (*models.Collection, error)
-	GetCollectionBySlug(ctx context.Context, slug string) (*models.Collection, error)
-	GetCollectionsWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*models.Collection], error)
-	UpdateCollection(ctx context.Context, dto UpdateDTO) (*models.Collection, error)
+	CreateCollection(ctx context.Context, d dto.CreateCollectionDTO) (*models.Collection, error)
+	GetCollectionByID(ctx context.Context, ID uuid.UUID) (*dto.WithProductsCollectionDTO, error)
+	GetCollectionBySlug(ctx context.Context, slug string) (*dto.WithProductsCollectionDTO, error)
+	GetCollectionsWithPagination(ctx context.Context, d dto.GetCollectionDTO) (*base.FindResponseWithFullPagination[*models.Collection], error)
+	UpdateCollection(ctx context.Context, d dto.UpdateCollectionDTO) (*models.Collection, error)
 	DeleteCollection(ctx context.Context, ID uuid.UUID) error
 }
 
@@ -36,50 +40,66 @@ func New(cfg *config.Config, log logger.Logger, storage storage.IStorage) *Servi
 	}
 }
 
-func (s *Service) CreateCollection(ctx context.Context, dto CreateDTO) (*models.Collection, error) {
+func (s *Service) CreateCollection(ctx context.Context, d dto.CreateCollectionDTO) (*models.Collection, error) {
 	params := repository_collections.CreateParams{
-		Name: dto.Name,
-		Slug: dto.Slug,
+		Name: d.Name,
+		Slug: d.Slug,
 	}
-	if dto.Description != nil {
-		params.Description = pgtypeutils.EncodeText(dto.Description)
+	if d.Description != nil {
+		params.Description = pgtypeutils.EncodeText(d.Description)
 	}
 
-	collection, err := s.storage.Collections().Create(ctx, params)
+	var col *models.Collection
+	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		collection, err := s.storage.Collections().Create(ctx, params)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.l.Error("failed to create collection", "error", parsedErr)
+			return parsedErr
+		}
+		col = collection
+		err = s.updateProductToCollection(ctx, collection, d.ProductIds, tx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
-		parsedErr := pgerror.ParseError(err)
-		s.l.Error("failed to create collection", "error", parsedErr)
-		return nil, parsedErr
+		return nil, err
 	}
-	return collection, nil
+
+	return col, nil
 }
 
-func (s *Service) GetCollectionByID(ctx context.Context, ID uuid.UUID) (*models.Collection, error) {
-	collection, err := s.storage.Collections().Get(ctx, ID)
+func (s *Service) GetCollectionByID(ctx context.Context, ID uuid.UUID) (*dto.WithProductsCollectionDTO, error) {
+	rows, err := s.storage.Collections().GetCollectionWithProductsByID(ctx, ID)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.l.Debug("failed to get collection by ID ", parsedErr)
 		return nil, parsedErr
 	}
-	return collection, nil
+	d := mapper.MapCollectionToDTO(rows)
+	return d, nil
 }
-func (s *Service) GetCollectionBySlug(ctx context.Context, slug string) (*models.Collection, error) {
-	collection, err := s.storage.Collections().GetBySlug(ctx, slug)
+func (s *Service) GetCollectionBySlug(ctx context.Context, slug string) (*dto.WithProductsCollectionDTO, error) {
+	rows, err := s.storage.Collections().GetCollectionWithProductsBySlug(ctx, slug)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.l.Debug("failed to get collection by ID", "error", parsedErr)
 		return nil, parsedErr
 	}
-	return collection, nil
+	d := mapper.MapCollectionBySlugToDTO(rows)
+	return d, nil
 }
 
-func (s *Service) GetCollectionsWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*models.Collection], error) {
+func (s *Service) GetCollectionsWithPagination(ctx context.Context, d dto.GetCollectionDTO) (*base.FindResponseWithFullPagination[*models.Collection], error) {
 	commonParams := base.NewCommonFindParams()
-	if dto.PageSize != nil {
-		commonParams.PageSize = dto.PageSize
+	if d.PageSize != nil {
+		commonParams.PageSize = d.PageSize
 	}
-	if dto.Page != nil {
-		commonParams.Page = dto.Page
+	if d.Page != nil {
+		commonParams.Page = d.Page
 	}
 
 	collections, err := s.storage.Collections().GetWithPaginate(ctx, repository_collections.CollectionWithPaginationParams{
@@ -93,29 +113,77 @@ func (s *Service) GetCollectionsWithPagination(ctx context.Context, dto GetDTO) 
 	return collections, nil
 }
 
-func (s *Service) UpdateCollection(ctx context.Context, dto UpdateDTO) (*models.Collection, error) {
+func (s *Service) UpdateCollection(ctx context.Context, d dto.UpdateCollectionDTO) (*models.Collection, error) {
 	params := repository_collections.UpdateParams{
-		ID:          dto.ID,
-		Name:        dto.Name,
-		Slug:        dto.Slug,
-		Description: pgtypeutils.EncodeText(dto.Description),
+		ID:          d.ID,
+		Name:        d.Name,
+		Slug:        d.Slug,
+		Description: pgtypeutils.EncodeText(d.Description),
+	}
+	var col *models.Collection
+	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		collection, err := s.storage.Collections().Update(ctx, params)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.l.Error("failed to update collection", "error", parsedErr)
+			return parsedErr
+		}
+		col = collection
+		err = s.updateProductToCollection(ctx, collection, d.ProductIds, tx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	collection, err := s.storage.Collections().Update(ctx, params)
-	if err != nil {
-		parsedErr := pgerror.ParseError(err)
-		s.l.Error("failed to update collection", "error", parsedErr)
-		return nil, parsedErr
-	}
-	return collection, nil
+	return col, nil
 }
 
 func (s *Service) DeleteCollection(ctx context.Context, ID uuid.UUID) error {
-	err := s.storage.Collections().Delete(ctx, ID)
+	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		err := s.storage.Collections().Delete(ctx, ID)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.l.Error("failed to delete collection", "error", parsedErr)
+			return parsedErr
+		}
+		err = s.storage.Collections(repository.WithTx(tx)).DeleteProductsFromCollection(ctx, ID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
-		parsedErr := pgerror.ParseError(err)
-		s.l.Error("failed to delete collection", "error", parsedErr)
-		return parsedErr
+		return err
+	}
+
+	return nil
+}
+
+func (s *Service) updateProductToCollection(
+	ctx context.Context,
+	collection *models.Collection,
+	productIds []uuid.UUID,
+	dbTx pgx.Tx,
+) error {
+	err := s.storage.Collections(repository.WithTx(dbTx)).DeleteProductsFromCollection(ctx, collection.ID)
+	if err != nil {
+		return err
+	}
+	if len(productIds) == 0 {
+		return nil
+	}
+	err = s.storage.Collections(repository.WithTx(dbTx)).AddProductsToCollection(ctx, repository_collections.AddProductsToCollectionParams{
+		CollectionID: collection.ID,
+		ProductIds:   productIds,
+	})
+	if err != nil {
+		return err
 	}
 	return nil
 }

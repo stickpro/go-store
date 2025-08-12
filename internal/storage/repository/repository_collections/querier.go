@@ -12,11 +12,15 @@ import (
 )
 
 type Querier interface {
+	AddProductsToCollection(ctx context.Context, arg AddProductsToCollectionParams) error
 	Create(ctx context.Context, arg CreateParams) (*models.Collection, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	DeleteProductsFromCollection(ctx context.Context, collectionID uuid.UUID) error
 	Get(ctx context.Context, id uuid.UUID) (*models.Collection, error)
 	GetAll(ctx context.Context, arg GetAllParams) ([]*models.Collection, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Collection, error)
+	GetCollectionWithProductsByID(ctx context.Context, id uuid.UUID) ([]*GetCollectionWithProductsByIDRow, error)
+	GetCollectionWithProductsBySlug(ctx context.Context, slug string) ([]*GetCollectionWithProductsBySlugRow, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.Collection, error)
 }
 

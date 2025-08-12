@@ -186,6 +186,10 @@ definitions:
         type: string
       name:
         type: string
+      product_ids:
+        items:
+          type: string
+        type: array
       slug:
         type: string
     required:
@@ -697,6 +701,10 @@ definitions:
         type: string
       name:
         type: string
+      product_ids:
+        items:
+          type: string
+        type: array
       slug:
         type: string
     required:
@@ -1373,67 +1381,7 @@ paths:
       summary: Category
       tags:
       - Category
-  /v1/collection/:slug/:
-    get:
-      consumes:
-      - application/json
-      description: Get collection by slug
-      parameters:
-      - description: Collection Slug
-        in: path
-        name: slug
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-CollectionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Collection
-      tags:
-      - Collection
-  /v1/collection/id/:id/:
-    get:
-      consumes:
-      - application/json
-      description: Get collection by ID
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-CollectionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Collection
-      tags:
-      - Collection
-  /v1/dv-admin/collection/:
+  /v1/collection/:
     get:
       consumes:
       - application/json
@@ -1504,7 +1452,7 @@ paths:
       summary: Create Collection
       tags:
       - Collections
-  /v1/dv-admin/collection/:id:
+  /v1/collection/:id:
     put:
       consumes:
       - application/json
@@ -1540,6 +1488,66 @@ paths:
       summary: Update Collection
       tags:
       - Collections
+  /v1/collection/:slug/:
+    get:
+      consumes:
+      - application/json
+      description: Get collection by slug
+      parameters:
+      - description: Collection Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CollectionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Collection
+      tags:
+      - Collection
+  /v1/collection/id/:id/:
+    get:
+      consumes:
+      - application/json
+      description: Get collection by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CollectionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Collection
+      tags:
+      - Collection
   /v1/geo/city/:
     get:
       consumes:
@@ -1941,7 +1949,7 @@ paths:
       parameters:
       - description: Product name
         in: query
-        name: city
+        name: product
         required: true
         type: string
       produces:
@@ -2016,7 +2024,7 @@ paths:
       summary: Get product with medium by ID
       tags:
       - Product
-  /v1/user:
+  /v1/user/info:
     get:
       consumes:
       - application/json

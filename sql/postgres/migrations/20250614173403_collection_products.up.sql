@@ -1,4 +1,4 @@
-create table collection_product
+create table collection_products
 (
     collection_id uuid not null,
     product_id    uuid not null,

@@ -16,7 +16,7 @@ import (
 func prepareGeoCommands(appName, currentAppVersion string) []*cli.Command {
 	return []*cli.Command{
 		{
-			Name:        "import-city",
+			Name:        "cienaa.csv",
 			Description: "import city from csv file",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
