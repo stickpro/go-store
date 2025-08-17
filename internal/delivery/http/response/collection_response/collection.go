@@ -47,6 +47,10 @@ func NewFromModels(collection []*models.Collection) []*CollectionResponse {
 }
 
 func NewFromDTO(d *dto.WithProductsCollectionDTO) *CollectionResponseWithProducts {
+	products := d.Products
+	if products == nil {
+		products = make([]*models.ShortProduct, 0)
+	}
 	return &CollectionResponseWithProducts{
 		ID:          d.ID,
 		Name:        d.Name,
@@ -54,6 +58,6 @@ func NewFromDTO(d *dto.WithProductsCollectionDTO) *CollectionResponseWithProduct
 		Slug:        d.Slug,
 		CreatedAt:   d.CreatedAt,
 		UpdatedAt:   d.UpdatedAt,
-		Products:    d.Products,
+		Products:    products,
 	}
 }
