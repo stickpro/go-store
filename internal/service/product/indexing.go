@@ -3,6 +3,7 @@ package product
 import (
 	"context"
 	"github.com/stickpro/go-store/internal/constant"
+	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/tools"
 	utils "github.com/stickpro/go-store/pkg/util"
 )
@@ -66,4 +67,13 @@ func (s *Service) CreateProductIndex(ctx context.Context, reindex bool) error {
 	s.logger.Info("Product index created successfully")
 
 	return nil
+}
+
+func (s *Service) IndexProduct(_ context.Context, product *models.Product) error {
+	data, err := utils.StructToMap([]*models.Product{product})
+	if err != nil {
+		return err
+	}
+
+	return s.searchService.UpsertDocument(constant.ProductsIndex, data)
 }
