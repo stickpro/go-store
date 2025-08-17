@@ -94,6 +94,11 @@ func (s Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Prod
 				return parsedErr
 			}
 		}
+		err = s.IndexProduct(ctx, prd)
+		if err != nil {
+			s.logger.Error("failed to index product", "error", err)
+			return err
+		}
 		return nil
 	})
 	if err != nil {
@@ -196,6 +201,12 @@ func (s Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Prod
 				s.logger.Error("failed to create product media", parsedErr)
 				return parsedErr
 			}
+		}
+
+		err = s.IndexProduct(ctx, prd)
+		if err != nil {
+			s.logger.Error("failed to index product", err)
+			return err
 		}
 		return nil
 	})

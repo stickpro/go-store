@@ -4,6 +4,8 @@ type ISearchService interface {
 	Search(nameIndex string, query string, limit, offset int64) (*SearchResult, error)
 	CreateIndex(nameIndex string, data []map[string]interface{}, opts ...IndexOptions) error
 	CheckIndex(nameIndex string) (bool, error)
+	UpsertDocument(indexName string, doc []map[string]interface{}) error
+	DeleteDocument(indexName string, id string) error
 }
 
 type SearchResult struct {

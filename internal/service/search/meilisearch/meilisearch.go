@@ -64,3 +64,19 @@ func (e *SearchEngine) CheckIndex(nameIndex string) (bool, error) {
 	}
 	return true, nil
 }
+
+func (e *SearchEngine) UpsertDocument(indexName string, doc []map[string]interface{}) error {
+	_, err := e.client.Index(indexName).AddDocuments(doc, "id")
+	if err != nil {
+		return fmt.Errorf("failed to upsert document: %w", err)
+	}
+	return nil
+}
+
+func (e *SearchEngine) DeleteDocument(indexName string, id string) error {
+	_, err := e.client.Index(indexName).DeleteDocument(id)
+	if err != nil {
+		return fmt.Errorf("failed to delete document: %w", err)
+	}
+	return nil
+}
