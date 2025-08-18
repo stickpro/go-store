@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/tools/apierror"

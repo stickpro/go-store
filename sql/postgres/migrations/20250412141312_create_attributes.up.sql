@@ -2,6 +2,7 @@ create table attributes (
     id uuid primary key default gen_random_uuid(),
     attribute_group_id uuid references attribute_groups(id) on delete cascade,
     name varchar(255) not null,
+    value text not null,
     type varchar(50) not null,
     is_filterable boolean default false,
     is_visible boolean default true,
