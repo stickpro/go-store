@@ -2,7 +2,11 @@ package attribute
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
@@ -14,10 +18,13 @@ import (
 )
 
 type IAttributeService interface {
-	GetAttributeGroup(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error)
-	CreateAttributeGroup(ctx context.Context, dto CreateGroupDTO) (*models.AttributeGroup, error)
-	UpdateAttributeGroup(ctx context.Context, dto UpdateGroupDTO) (*models.AttributeGroup, error)
-	CreateAttribute(ctx context.Context, dto CreateDTO) (*models.Attribute, error)
+	GetAttributeGroup(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error)
+	GetAttributeGroupByID(ctx context.Context, id uuid.UUID) (*models.AttributeGroup, error)
+	CreateAttributeGroup(ctx context.Context, d dto.CreateAttributeGroupDTO) (*models.AttributeGroup, error)
+	UpdateAttributeGroup(ctx context.Context, d dto.UpdateAttributeGroupDTO, id uuid.UUID) (*models.AttributeGroup, error)
+	DeleteAttributeGroup(ctx context.Context, id uuid.UUID) error
+
+	CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO) (*models.Attribute, error)
 }
 
 type Service struct {
@@ -34,13 +41,13 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Se
 	}
 }
 
-func (s *Service) GetAttributeGroup(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error) {
+func (s *Service) GetAttributeGroup(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error) {
 	commonParams := base.NewCommonFindParams()
-	if dto.PageSize != nil {
-		commonParams.PageSize = dto.PageSize
+	if d.PageSize != nil {
+		commonParams.PageSize = d.PageSize
 	}
-	if dto.Page != nil {
-		commonParams.Page = dto.Page
+	if d.Page != nil {
+		commonParams.Page = d.Page
 	}
 
 	attributeGroup, err := s.storage.AttributeGroups().GetWithPaginate(ctx, *commonParams)
@@ -51,10 +58,20 @@ func (s *Service) GetAttributeGroup(ctx context.Context, dto GetDTO) (*base.Find
 	return attributeGroup, nil
 }
 
-func (s *Service) CreateAttributeGroup(ctx context.Context, dto CreateGroupDTO) (*models.AttributeGroup, error) {
+func (s *Service) GetAttributeGroupByID(ctx context.Context, id uuid.UUID) (*models.AttributeGroup, error) {
+	attributeGroup, err := s.storage.AttributeGroups().GetByID(ctx, id)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to get attribute group by ID", "error", parsedErr)
+		return nil, parsedErr
+	}
+	return attributeGroup, nil
+}
+
+func (s *Service) CreateAttributeGroup(ctx context.Context, d dto.CreateAttributeGroupDTO) (*models.AttributeGroup, error) {
 	params := repository_attribute_groups.CreateParams{
-		Name:        dto.Name,
-		Description: pgtypeutils.EncodeText(dto.Description),
+		Name:        d.Name,
+		Description: pgtypeutils.EncodeText(d.Description),
 	}
 
 	attributeGroup, err := s.storage.AttributeGroups().Create(ctx, params)
@@ -66,10 +83,11 @@ func (s *Service) CreateAttributeGroup(ctx context.Context, dto CreateGroupDTO) 
 	return attributeGroup, nil
 }
 
-func (s *Service) UpdateAttributeGroup(ctx context.Context, dto UpdateGroupDTO) (*models.AttributeGroup, error) {
+func (s *Service) UpdateAttributeGroup(ctx context.Context, d dto.UpdateAttributeGroupDTO, id uuid.UUID) (*models.AttributeGroup, error) {
 	params := repository_attribute_groups.UpdateParams{
-		Name:        dto.Name,
-		Description: pgtypeutils.EncodeText(dto.Description),
+		Name:        d.Name,
+		Description: pgtypeutils.EncodeText(d.Description),
+		ID:          id,
 	}
 	attributeGroup, err := s.storage.AttributeGroups().Update(ctx, params)
 	if err != nil {
@@ -80,14 +98,37 @@ func (s *Service) UpdateAttributeGroup(ctx context.Context, dto UpdateGroupDTO) 
 	return attributeGroup, nil
 }
 
-func (s *Service) CreateAttribute(ctx context.Context, dto CreateDTO) (*models.Attribute, error) {
+func (s *Service) DeleteAttributeGroup(ctx context.Context, id uuid.UUID) error {
+	err := pgx.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		err := s.storage.AttributeGroups().Delete(ctx, id)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to delete attribute group", "error", parsedErr)
+			return parsedErr
+		}
+		err = s.storage.Attributes().DeleteByAttributeGroupID(ctx, id)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to delete attributes by attribute group ID", "error", parsedErr)
+			return parsedErr
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Service) CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO) (*models.Attribute, error) {
 	params := repository_attributes.CreateParams{
-		AttributeGroupID: dto.AttributeGroupID,
-		Name:             dto.Name,
-		Type:             dto.Type,
-		IsFilterable:     pgtypeutils.EncodeBool(dto.IsFilterable),
-		IsVisible:        pgtypeutils.EncodeBool(dto.IsVisible),
-		SortOrder:        pgtypeutils.EncodeInt4(dto.SortOrder),
+		AttributeGroupID: d.AttributeGroupID,
+		Name:             d.Name,
+		Type:             d.Type,
+		IsFilterable:     pgtypeutils.EncodeBool(d.IsFilterable),
+		IsVisible:        pgtypeutils.EncodeBool(d.IsVisible),
+		SortOrder:        pgtypeutils.EncodeInt4(d.SortOrder),
 	}
 
 	attribute, err := s.storage.Attributes().Create(ctx, params)

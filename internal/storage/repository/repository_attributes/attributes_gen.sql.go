@@ -14,14 +14,15 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO attributes (attribute_group_id, name, type, is_filterable, is_visible, sort_order, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, now())
-	RETURNING id, attribute_group_id, name, type, is_filterable, is_visible, sort_order, created_at, updated_at
+INSERT INTO attributes (attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+	RETURNING id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at
 `
 
 type CreateParams struct {
 	AttributeGroupID uuid.NullUUID `db:"attribute_group_id" json:"attribute_group_id"`
 	Name             string        `db:"name" json:"name"`
+	Value            string        `db:"value" json:"value"`
 	Type             string        `db:"type" json:"type"`
 	IsFilterable     pgtype.Bool   `db:"is_filterable" json:"is_filterable"`
 	IsVisible        pgtype.Bool   `db:"is_visible" json:"is_visible"`
@@ -32,6 +33,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Attribu
 	row := q.db.QueryRow(ctx, create,
 		arg.AttributeGroupID,
 		arg.Name,
+		arg.Value,
 		arg.Type,
 		arg.IsFilterable,
 		arg.IsVisible,
@@ -42,6 +44,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Attribu
 		&i.ID,
 		&i.AttributeGroupID,
 		&i.Name,
+		&i.Value,
 		&i.Type,
 		&i.IsFilterable,
 		&i.IsVisible,
@@ -53,7 +56,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Attribu
 }
 
 const getAll = `-- name: GetAll :many
-SELECT id, attribute_group_id, name, type, is_filterable, is_visible, sort_order, created_at, updated_at FROM attributes ORDER BY sort_order DESC LIMIT $1 OFFSET $2
+SELECT id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at FROM attributes ORDER BY sort_order DESC LIMIT $1 OFFSET $2
 `
 
 type GetAllParams struct {
@@ -74,6 +77,7 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.Attri
 			&i.ID,
 			&i.AttributeGroupID,
 			&i.Name,
+			&i.Value,
 			&i.Type,
 			&i.IsFilterable,
 			&i.IsVisible,
@@ -93,13 +97,15 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.Attri
 
 const update = `-- name: Update :one
 UPDATE attributes
-	SET name=$1, type=$2, is_filterable=$3, is_visible=$4, sort_order=$5, updated_at=now()
-	WHERE id=$6
-	RETURNING id, attribute_group_id, name, type, is_filterable, is_visible, sort_order, created_at, updated_at
+	SET name=$1, value=$2, type=$3, is_filterable=$4, is_visible=$5, sort_order=$6, 
+		updated_at=now()
+	WHERE id=$7
+	RETURNING id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at
 `
 
 type UpdateParams struct {
 	Name         string      `db:"name" json:"name"`
+	Value        string      `db:"value" json:"value"`
 	Type         string      `db:"type" json:"type"`
 	IsFilterable pgtype.Bool `db:"is_filterable" json:"is_filterable"`
 	IsVisible    pgtype.Bool `db:"is_visible" json:"is_visible"`
@@ -110,6 +116,7 @@ type UpdateParams struct {
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Attribute, error) {
 	row := q.db.QueryRow(ctx, update,
 		arg.Name,
+		arg.Value,
 		arg.Type,
 		arg.IsFilterable,
 		arg.IsVisible,
@@ -121,6 +128,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Attribu
 		&i.ID,
 		&i.AttributeGroupID,
 		&i.Name,
+		&i.Value,
 		&i.Type,
 		&i.IsFilterable,
 		&i.IsVisible,

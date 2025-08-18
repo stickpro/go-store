@@ -2,6 +2,7 @@ package admin
 
 import (
 	"errors"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/delivery/middleware"
@@ -33,6 +34,7 @@ func (h *Handler) InitAdminHandler(api *fiber.App) {
 	h.initCollectionRoutes(secured)
 	h.initProductRoutes(secured)
 	h.initMediaRoutes(secured)
+	h.initAttributeRoutes(secured)
 }
 
 func (h Handler) handleError(err error, modelName string) error {

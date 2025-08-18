@@ -37,6 +37,15 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Attribu
 	return &i, err
 }
 
+const delete = `-- name: Delete :exec
+DELETE FROM attribute_groups WHERE id=$1
+`
+
+func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, delete, id)
+	return err
+}
+
 const getAll = `-- name: GetAll :many
 SELECT id, name, description, created_at, updated_at FROM attribute_groups ORDER BY name DESC LIMIT $1 OFFSET $2
 `

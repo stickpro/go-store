@@ -17,6 +17,7 @@ type Attribute struct {
 	ID               uuid.UUID        `db:"id" json:"id"`
 	AttributeGroupID uuid.NullUUID    `db:"attribute_group_id" json:"attribute_group_id"`
 	Name             string           `db:"name" json:"name"`
+	Value            string           `db:"value" json:"value"`
 	Type             string           `db:"type" json:"type"`
 	IsFilterable     pgtype.Bool      `db:"is_filterable" json:"is_filterable"`
 	IsVisible        pgtype.Bool      `db:"is_visible" json:"is_visible"`

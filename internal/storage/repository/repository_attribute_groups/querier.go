@@ -7,12 +7,15 @@ package repository_attribute_groups
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/models"
 )
 
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.AttributeGroup, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 	GetAll(ctx context.Context, arg GetAllParams) ([]*models.AttributeGroup, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*models.AttributeGroup, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.AttributeGroup, error)
 }
 

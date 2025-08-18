@@ -131,7 +131,7 @@ sqlc:
               returning: "*"
         # Attribute Groups
         attribute_groups:
-          output_dir: postgres/queries/attribute
+          output_dir: postgres/queries/attribute_groups
           primary_column: id
           methods:
             create:
@@ -155,6 +155,7 @@ sqlc:
                 by: name
               limit: true
               offset: true
+            delete:
         # Attributes
         attributes:
           output_dir: postgres/queries/attributes

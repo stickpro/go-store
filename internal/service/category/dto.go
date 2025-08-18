@@ -63,8 +63,6 @@ func RequestToUpdateDTO(req *category_request.UpdateCategoryRequest, id uuid.UUI
 	var parentID uuid.NullUUID
 	if req.ParentID != nil {
 		parentID = uuid.NullUUID{UUID: *req.ParentID, Valid: true}
-	} else {
-		parentID = uuid.NullUUID{Valid: false}
 	}
 
 	return UpdateDTO{

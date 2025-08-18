@@ -1,10 +1,11 @@
 package attribute_response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
-	"time"
 )
 
 type AttributeGroupResponse struct {
@@ -15,7 +16,7 @@ type AttributeGroupResponse struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 } // @name AttributeGroupResponse
 
-func NewFromModel(aGroup *models.AttributeGroup) AttributeGroupResponse {
+func NewFromGroupModel(aGroup *models.AttributeGroup) AttributeGroupResponse {
 	return AttributeGroupResponse{
 		ID:          aGroup.ID,
 		Name:        aGroup.Name,
