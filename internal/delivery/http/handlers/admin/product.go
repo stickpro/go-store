@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
@@ -9,7 +8,6 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
 	"github.com/stickpro/go-store/internal/service/product"
 	"github.com/stickpro/go-store/internal/tools/apierror"
-	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 )
 
 // createProduct is a function create product
@@ -34,11 +32,7 @@ func (h *Handler) createProduct(c fiber.Ctx) error {
 
 	prd, err := h.services.ProductService.CreateProduct(c.Context(), dto)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "product")
 	}
 	return c.JSON(response.OkByData(product_response.NewFromModel(prd)))
 }
@@ -70,11 +64,7 @@ func (h *Handler) updateProduct(c fiber.Ctx) error {
 
 	prd, err := h.services.ProductService.UpdateProduct(c.Context(), dto)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "product")
 	}
 	return c.JSON(response.OkByData(product_response.NewFromModel(prd)))
 }

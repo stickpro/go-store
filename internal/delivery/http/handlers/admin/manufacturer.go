@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/delivery/http/request/manufacturer_request"
@@ -9,7 +8,6 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response/manufacturer_response"
 	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/tools/apierror"
-	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 )
 
 // createManufacturer is a function create manufacturer
@@ -34,11 +32,7 @@ func (h *Handler) createManufacturer(c fiber.Ctx) error {
 	dto := manufacturer.RequestToCreateDTO(req)
 	mfc, err := h.services.ManufacturerService.CreateManufacturer(c.Context(), dto)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "manufacturer")
 	}
 	return c.JSON(response.OkByData(manufacturer_response.NewFromModel(mfc)))
 }
@@ -70,11 +64,7 @@ func (h *Handler) updateManufacturer(c fiber.Ctx) error {
 	dto := manufacturer.RequestToUpdateDTO(req, id)
 	mfc, err := h.services.ManufacturerService.UpdateManufacturer(c.Context(), dto)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "manufacturer")
 	}
 	return c.JSON(response.OkByData(manufacturer_response.NewFromModel(mfc)))
 }

@@ -2,6 +2,7 @@ package repository_attributes
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/base"
@@ -11,7 +12,7 @@ type ICustomQueries interface {
 	Querier
 	GetWithPaginate(
 		ctx context.Context,
-		params AttributesWithPaginationParams,
+		params base.CommonFindParams,
 	) (*base.FindResponseWithFullPagination[*models.Attribute], error)
 }
 

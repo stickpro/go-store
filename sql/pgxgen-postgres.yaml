@@ -173,7 +173,6 @@ sqlc:
               skip_columns:
                 - id
                 - created_at
-                - attribute_group_id
               column_values:
                 updated_at: now()
               returning: "*"
@@ -192,6 +191,7 @@ sqlc:
                 by: sort_order
               limit: true
               offset: true
+            delete:
         # Cities
         cities:
           output_dir: postgres/queries/cities

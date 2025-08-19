@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"errors"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/delivery/http/request/attribute_request"
@@ -10,7 +8,6 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response/attribute_response"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
-	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 )
 
 // getAttributeGroups is a function get attribute groups with pagination
@@ -35,9 +32,9 @@ func (h *Handler) getAttributeGroups(c fiber.Ctx) error {
 	}
 
 	d := dto.GetDTO{Page: req.Page, PageSize: req.PageSize}
-	aGroups, err := h.services.AttributeService.GetAttributeGroup(c.Context(), d)
+	aGroups, err := h.services.AttributeService.GetAttributeGroups(c.Context(), d)
 	if err != nil {
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "attribute group")
 	}
 
 	return c.JSON(response.OkByData(aGroups))
@@ -67,11 +64,7 @@ func (h *Handler) createAttributeGroup(c fiber.Ctx) error {
 	d := dto.RequestToCreateAttributeGroupDTO(req)
 	aGroup, err := h.services.AttributeService.CreateAttributeGroup(c.Context(), d)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "attribute group")
 	}
 	return c.JSON(response.OkByData(attribute_response.NewFromGroupModel(aGroup)))
 }
@@ -105,11 +98,7 @@ func (h *Handler) updateAttributeGroup(c fiber.Ctx) error {
 	d := dto.RequestToUpdateAttributeGroupDTO(req)
 	aGroup, err := h.services.AttributeService.UpdateAttributeGroup(c.Context(), d, id)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "attribute group")
 	}
 	return c.JSON(response.OkByData(attribute_response.NewFromGroupModel(aGroup)))
 }
@@ -171,6 +160,21 @@ func (h *Handler) deleteAttributeGroup(c fiber.Ctx) error {
 	return c.JSON(response.OkByMessage("Attribute groups successfully deleted"))
 }
 
+// createAttribute is a function create attribute
+//
+//	@Summary		Create attribute
+//	@Description	Create attribute
+//	@Tags			Attribute
+//	@Accept			json
+//	@Produce		json
+//	@Param			create	body		attribute_request.CreateAttributeRequest	true	"Create attribute"
+//	@Success		200		{object}	response.Result[attribute_response.AttributeResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/attribute/ [POST]
+//
+//	@Security		BearerAuth
 func (h *Handler) createAttribute(c fiber.Ctx) error {
 	req := &attribute_request.CreateAttributeRequest{}
 	if err := c.Bind().Body(req); err != nil {
@@ -180,15 +184,114 @@ func (h *Handler) createAttribute(c fiber.Ctx) error {
 	d := dto.RequestToCreateAttributeDTO(req)
 	attr, err := h.services.AttributeService.CreateAttribute(c.Context(), d)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "attribute")
 	}
 	return c.JSON(response.OkByData(attribute_response.NewFromAttributeModel(attr)))
 }
 
+// getAttributeByID is a function get attribute by ID
+//
+//	@Summary		Get attribute by ID
+//	@Description	Get attribute by ID
+//	@Tags			Attribute
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		uuid.UUID	true	"Attribute ID"
+//	@Success		200	{object}	response.Result[attribute_response.AttributeResponse]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		422	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
+//	@Router			/v1/attribute/:id [GET]
+//
+//	@Security		BearerAuth
+func (h *Handler) getAttributeByID(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+
+	attr, err := h.services.AttributeService.GetAttributeByID(c.Context(), id)
+	if err != nil {
+		return h.handleError(err, "attribute")
+	}
+
+	return c.JSON(response.OkByData(attribute_response.NewFromAttributeModel(attr)))
+}
+
+// getAttributes is a function get attributes with pagination
+//
+//	@Summary		Get attributes
+//	@Description	Get attributes with pagination
+//	@Tags			Attribute
+//	@Accept			json
+//	@Produce		json
+//	@Param			string	query		attribute_request.GetAttributeWithPagination	true	"GetAttributesWithPagination"
+//	@Success		200		{object}	response.Result[[]attribute_response.AttributeResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/attribute/ [GET]
+//
+//	@Security		BearerAuth
+func (h *Handler) getAttributes(c fiber.Ctx) error {
+	req := &attribute_request.GetAttributeWithPagination{}
+	if err := c.Bind().Query(req); err != nil {
+		return err
+	}
+	d := dto.GetDTO{Page: req.Page, PageSize: req.PageSize}
+	attrs, err := h.services.AttributeService.GetAttributes(c.Context(), d)
+	if err != nil {
+		return h.handleError(err, "attributes")
+	}
+
+	return c.JSON(response.OkByData(attrs))
+}
+func (h *Handler) updateAttribute(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+
+	req := &attribute_request.UpdateAttributeRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	d := dto.RequestToUpdateAttributeDTO(req)
+	attr, err := h.services.AttributeService.UpdateAttribute(c.Context(), d, id)
+	if err != nil {
+		return h.handleError(err, "attribute")
+	}
+	return c.JSON(response.OkByData(attribute_response.NewFromAttributeModel(attr)))
+}
+
+// deleteAttribute is a function delete attribute by ID
+//
+//	@Summary		Delete attribute by ID
+//	@Description	Delete attribute by ID
+//	@Tags			Attribute
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		uuid.UUID	true	"Attribute ID"
+//	@Success		200	{object}	response.Result[string]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		422	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
+//	@Router			/v1/attribute/:id [DELETE]
+//
+//	@Security		BearerAuth
+func (h *Handler) deleteAttribute(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+
+	if err := h.services.AttributeService.DeleteAttribute(c.Context(), id); err != nil {
+		return h.handleError(err, "attribute")
+	}
+
+	return c.JSON(response.OkByMessage("Attribute successfully deleted"))
+}
 func (h *Handler) initAttributeRoutes(v1 fiber.Router) {
 	c := v1.Group("/attribute")
 	c.Get("/group/", h.getAttributeGroups)
@@ -196,4 +299,11 @@ func (h *Handler) initAttributeRoutes(v1 fiber.Router) {
 	c.Post("/group/", h.createAttributeGroup)
 	c.Put("/group/:id", h.updateAttributeGroup)
 	c.Delete("/group/:id", h.deleteAttributeGroup)
+
+	c.Get("/", h.getAttributes)
+	c.Post("/", h.createAttribute)
+	c.Get("/:id", h.getAttributeByID)
+	c.Put("/:id", h.updateAttribute)
+	c.Delete("/:id", h.deleteAttribute)
+
 }

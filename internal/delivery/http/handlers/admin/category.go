@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/delivery/http/request/category_request"
@@ -9,7 +8,6 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response/category_response"
 	"github.com/stickpro/go-store/internal/service/category"
 	"github.com/stickpro/go-store/internal/tools/apierror"
-	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 )
 
 // createCategory is a function create category
@@ -34,11 +32,7 @@ func (h *Handler) createCategory(c fiber.Ctx) error {
 	dto := category.RequestToCreateDTO(req)
 	cat, err := h.services.CategoryService.CreateCategory(c.Context(), dto)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "category")
 	}
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
 }
@@ -75,11 +69,7 @@ func (h *Handler) updateCategory(c fiber.Ctx) error {
 	dto := category.RequestToUpdateDTO(req, id)
 	cat, err := h.services.CategoryService.UpdateCategory(c.Context(), dto)
 	if err != nil {
-		var uniqueErr *pgerror.UniqueConstraintError
-		if errors.As(err, &uniqueErr) {
-			return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
-		}
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+		return h.handleError(err, "category")
 	}
 
 	return c.JSON(response.OkByData(category_response.NewFromModel(cat)))
