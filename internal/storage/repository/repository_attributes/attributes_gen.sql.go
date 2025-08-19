@@ -55,6 +55,15 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Attribu
 	return &i, err
 }
 
+const delete = `-- name: Delete :exec
+DELETE FROM attributes WHERE id=$1
+`
+
+func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, delete, id)
+	return err
+}
+
 const getAll = `-- name: GetAll :many
 SELECT id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at FROM attributes ORDER BY sort_order DESC LIMIT $1 OFFSET $2
 `
@@ -97,24 +106,26 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.Attri
 
 const update = `-- name: Update :one
 UPDATE attributes
-	SET name=$1, value=$2, type=$3, is_filterable=$4, is_visible=$5, sort_order=$6, 
-		updated_at=now()
-	WHERE id=$7
+	SET attribute_group_id=$1, name=$2, value=$3, type=$4, is_filterable=$5, is_visible=$6, 
+		sort_order=$7, updated_at=now()
+	WHERE id=$8
 	RETURNING id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at
 `
 
 type UpdateParams struct {
-	Name         string      `db:"name" json:"name"`
-	Value        string      `db:"value" json:"value"`
-	Type         string      `db:"type" json:"type"`
-	IsFilterable pgtype.Bool `db:"is_filterable" json:"is_filterable"`
-	IsVisible    pgtype.Bool `db:"is_visible" json:"is_visible"`
-	SortOrder    pgtype.Int4 `db:"sort_order" json:"sort_order"`
-	ID           uuid.UUID   `db:"id" json:"id"`
+	AttributeGroupID uuid.NullUUID `db:"attribute_group_id" json:"attribute_group_id"`
+	Name             string        `db:"name" json:"name"`
+	Value            string        `db:"value" json:"value"`
+	Type             string        `db:"type" json:"type"`
+	IsFilterable     pgtype.Bool   `db:"is_filterable" json:"is_filterable"`
+	IsVisible        pgtype.Bool   `db:"is_visible" json:"is_visible"`
+	SortOrder        pgtype.Int4   `db:"sort_order" json:"sort_order"`
+	ID               uuid.UUID     `db:"id" json:"id"`
 }
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Attribute, error) {
 	row := q.db.QueryRow(ctx, update,
+		arg.AttributeGroupID,
 		arg.Name,
 		arg.Value,
 		arg.Type,

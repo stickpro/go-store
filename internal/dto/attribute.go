@@ -34,17 +34,18 @@ type CreateAttributeDTO struct {
 	Value            string        `json:"value"`
 	AttributeGroupID uuid.NullUUID `json:"attribute_group_id"`
 	Type             string        `json:"type"`
-	IsFilterable     *bool         `json:"is_filterable"`
-	IsVisible        *bool         `json:"is_visible"`
+	IsFilterable     bool          `json:"is_filterable"`
+	IsVisible        bool          `json:"is_visible"`
 	SortOrder        *int32        `json:"sort_order"`
 }
 
 type UpdateAttributeDTO struct {
 	Name             string        `json:"name"`
+	Value            string        `json:"value"`
 	AttributeGroupID uuid.NullUUID `json:"attribute_group_id"`
 	Type             string        `json:"type"`
-	IsFilterable     *bool         `json:"is_filterable"`
-	IsVisible        *bool         `json:"is_visible"`
+	IsFilterable     bool          `json:"is_filterable"`
+	IsVisible        bool          `json:"is_visible"`
 	SortOrder        *int32        `json:"sort_order"`
 }
 
@@ -58,8 +59,24 @@ func RequestToCreateAttributeDTO(req *attribute_request.CreateAttributeRequest) 
 		Value:            req.Value,
 		AttributeGroupID: aGroupID,
 		Type:             req.Type,
-		IsFilterable:     &req.IsFilterable,
-		IsVisible:        &req.IsVisible,
+		IsFilterable:     req.IsFilterable,
+		IsVisible:        req.IsVisible,
+		SortOrder:        req.SortOrder,
+	}
+}
+
+func RequestToUpdateAttributeDTO(req *attribute_request.UpdateAttributeRequest) UpdateAttributeDTO {
+	var aGroupID uuid.NullUUID
+	if req.AttributeGroupID != nil {
+		aGroupID = uuid.NullUUID{UUID: *req.AttributeGroupID, Valid: true}
+	}
+	return UpdateAttributeDTO{
+		Name:             req.Name,
+		Value:            req.Value,
+		AttributeGroupID: aGroupID,
+		Type:             req.Type,
+		IsFilterable:     req.IsFilterable,
+		IsVisible:        req.IsVisible,
 		SortOrder:        req.SortOrder,
 	}
 }

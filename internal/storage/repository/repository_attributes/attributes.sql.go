@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/models"
 )
 
 const deleteByAttributeGroupID = `-- name: DeleteByAttributeGroupID :exec
@@ -18,4 +19,26 @@ DELETE FROM attributes WHERE attribute_group_id = $1::uuid
 func (q *Queries) DeleteByAttributeGroupID(ctx context.Context, dollar_1 uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteByAttributeGroupID, dollar_1)
 	return err
+}
+
+const getByID = `-- name: GetByID :one
+SELECT id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at FROM attributes WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Attribute, error) {
+	row := q.db.QueryRow(ctx, getByID, id)
+	var i models.Attribute
+	err := row.Scan(
+		&i.ID,
+		&i.AttributeGroupID,
+		&i.Name,
+		&i.Value,
+		&i.Type,
+		&i.IsFilterable,
+		&i.IsVisible,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
 }

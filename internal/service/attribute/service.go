@@ -18,13 +18,17 @@ import (
 )
 
 type IAttributeService interface {
-	GetAttributeGroup(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error)
+	GetAttributeGroups(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error)
 	GetAttributeGroupByID(ctx context.Context, id uuid.UUID) (*models.AttributeGroup, error)
 	CreateAttributeGroup(ctx context.Context, d dto.CreateAttributeGroupDTO) (*models.AttributeGroup, error)
 	UpdateAttributeGroup(ctx context.Context, d dto.UpdateAttributeGroupDTO, id uuid.UUID) (*models.AttributeGroup, error)
 	DeleteAttributeGroup(ctx context.Context, id uuid.UUID) error
 
 	CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO) (*models.Attribute, error)
+	GetAttributes(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.Attribute], error)
+	GetAttributeByID(ctx context.Context, id uuid.UUID) (*models.Attribute, error)
+	UpdateAttribute(ctx context.Context, d dto.UpdateAttributeDTO, id uuid.UUID) (*models.Attribute, error)
+	DeleteAttribute(ctx context.Context, id uuid.UUID) error
 }
 
 type Service struct {
@@ -41,8 +45,8 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Se
 	}
 }
 
-func (s *Service) GetAttributeGroup(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error) {
-	commonParams := base.NewCommonFindParams()
+func (s *Service) GetAttributeGroups(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error) {
+	commonParams := *base.NewCommonFindParams()
 	if d.PageSize != nil {
 		commonParams.PageSize = d.PageSize
 	}
@@ -50,7 +54,7 @@ func (s *Service) GetAttributeGroup(ctx context.Context, d dto.GetDTO) (*base.Fi
 		commonParams.Page = d.Page
 	}
 
-	attributeGroup, err := s.storage.AttributeGroups().GetWithPaginate(ctx, *commonParams)
+	attributeGroup, err := s.storage.AttributeGroups().GetWithPaginate(ctx, commonParams)
 
 	if err != nil {
 		return nil, err
@@ -126,8 +130,8 @@ func (s *Service) CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO)
 		AttributeGroupID: d.AttributeGroupID,
 		Name:             d.Name,
 		Type:             d.Type,
-		IsFilterable:     pgtypeutils.EncodeBool(d.IsFilterable),
-		IsVisible:        pgtypeutils.EncodeBool(d.IsVisible),
+		IsFilterable:     pgtypeutils.EncodeBool(&d.IsFilterable),
+		IsVisible:        pgtypeutils.EncodeBool(&d.IsVisible),
 		SortOrder:        pgtypeutils.EncodeInt4(d.SortOrder),
 	}
 
@@ -138,4 +142,62 @@ func (s *Service) CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO)
 		return nil, parsedErr
 	}
 	return attribute, nil
+}
+
+func (s *Service) GetAttributeByID(ctx context.Context, id uuid.UUID) (*models.Attribute, error) {
+	attribute, err := s.storage.Attributes().GetByID(ctx, id)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to get attribute by ID", "error", parsedErr)
+		return nil, parsedErr
+	}
+
+	return attribute, nil
+}
+
+func (s *Service) GetAttributes(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.Attribute], error) {
+	commonParams := *base.NewCommonFindParams()
+	if d.PageSize != nil {
+		commonParams.PageSize = d.PageSize
+	}
+	if d.Page != nil {
+		commonParams.Page = d.Page
+	}
+
+	attributes, err := s.storage.Attributes().GetWithPaginate(ctx, commonParams)
+	if err != nil {
+		return nil, err
+	}
+
+	return attributes, nil
+}
+
+func (s *Service) UpdateAttribute(ctx context.Context, d dto.UpdateAttributeDTO, id uuid.UUID) (*models.Attribute, error) {
+	params := repository_attributes.UpdateParams{
+		ID:               id,
+		AttributeGroupID: d.AttributeGroupID,
+		Name:             d.Name,
+		Type:             d.Type,
+		IsFilterable:     pgtypeutils.EncodeBool(&d.IsFilterable),
+		IsVisible:        pgtypeutils.EncodeBool(&d.IsVisible),
+		SortOrder:        pgtypeutils.EncodeInt4(d.SortOrder),
+	}
+
+	attribute, err := s.storage.Attributes().Update(ctx, params)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to update attribute", "error", parsedErr)
+		return nil, parsedErr
+	}
+	return attribute, nil
+}
+
+func (s *Service) DeleteAttribute(ctx context.Context, id uuid.UUID) error {
+	err := s.storage.Attributes().Delete(ctx, id)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to delete attribute", "error", parsedErr)
+		return parsedErr
+	}
+	return nil
 }
