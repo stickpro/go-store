@@ -129,6 +129,7 @@ func (s *Service) CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO)
 	params := repository_attributes.CreateParams{
 		AttributeGroupID: d.AttributeGroupID,
 		Name:             d.Name,
+		Value:            d.Value,
 		Type:             d.Type,
 		IsFilterable:     pgtypeutils.EncodeBool(&d.IsFilterable),
 		IsVisible:        pgtypeutils.EncodeBool(&d.IsVisible),

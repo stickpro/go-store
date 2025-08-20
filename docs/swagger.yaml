@@ -143,6 +143,46 @@ definitions:
       updated_at:
         type: string
     type: object
+  CreateAttributeGroupRequest:
+    properties:
+      description:
+        maxLength: 100
+        minLength: 1
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  CreateAttributeRequest:
+    properties:
+      attribute_group_id:
+        type: string
+      is_filterable:
+        type: boolean
+      is_visible:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      sort_order:
+        minimum: 0
+        type: integer
+      type:
+        enum:
+        - string
+        type: string
+      value:
+        minLength: 1
+        type: string
+    required:
+    - is_filterable
+    - is_visible
+    - name
+    - type
+    - value
+    type: object
   CreateCategoryRequest:
     properties:
       description:
@@ -452,6 +492,28 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_AttributeGroupResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/AttributeGroupResponse'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_github_com_stickpro_go-store_internal_models_City:
     properties:
       code:
@@ -471,6 +533,15 @@ definitions:
         items:
           $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Product'
         type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse'
       message:
         type: string
     type: object
@@ -832,7 +903,7 @@ definitions:
     - email
     - location
     type: object
-  github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.CreateAttributeGroupRequest:
+  github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.UpdateAttributeGroupRequest:
     properties:
       description:
         maxLength: 100
@@ -842,6 +913,29 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse:
+    properties:
+      attribute_group_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      created_at:
+        type: string
+      id:
+        type: string
+      is_filterable:
+        type: boolean
+      is_visible:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+      type:
+        type: string
+      updated_at:
+        type: string
+      value:
+        type: string
     type: object
   github_com_stickpro_go-store_internal_models.Category:
     properties:
@@ -1126,7 +1220,42 @@ info:
   title: GO-store
   version: "1.0"
 paths:
-  /v1/attribute/:
+  /v1/attribute-group:
+    get:
+      consumes:
+      - application/json
+      description: Get attribute groups with pagination
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_AttributeGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get attribute groups
+      tags:
+      - Attribute
     post:
       consumes:
       - application/json
@@ -1137,7 +1266,7 @@ paths:
         name: create
         required: true
         schema:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.CreateAttributeGroupRequest'
+          $ref: '#/definitions/CreateAttributeGroupRequest'
       produces:
       - application/json
       responses:
@@ -1157,7 +1286,229 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
       summary: Create attribute group
+      tags:
+      - Attribute
+  /v1/attribute-group/:id:
+    delete:
+      consumes:
+      - application/json
+      description: Delete attribute group by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-string'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Delete attribute group by ID
+      tags:
+      - Attribute
+    get:
+      consumes:
+      - application/json
+      description: Get attribute group by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AttributeGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get attribute group by ID
+      tags:
+      - Attribute
+    put:
+      consumes:
+      - application/json
+      description: Update attribute group
+      parameters:
+      - description: Update attribute group
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.UpdateAttributeGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AttributeGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Update attribute group
+      tags:
+      - Attribute
+  /v1/attribute/:
+    get:
+      consumes:
+      - application/json
+      description: Get attributes with pagination
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get attributes
+      tags:
+      - Attribute
+    post:
+      consumes:
+      - application/json
+      description: Create attribute
+      parameters:
+      - description: Create attribute
+        in: body
+        name: create
+        required: true
+        schema:
+          $ref: '#/definitions/CreateAttributeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Create attribute
+      tags:
+      - Attribute
+  /v1/attribute/:id:
+    delete:
+      consumes:
+      - application/json
+      description: Delete attribute by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-string'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Delete attribute by ID
+      tags:
+      - Attribute
+    get:
+      consumes:
+      - application/json
+      description: Get attribute by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get attribute by ID
       tags:
       - Attribute
   /v1/auth/login:
