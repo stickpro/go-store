@@ -12,8 +12,7 @@ builds:
 
 archives:
   - id: archive
-    format: tar.gz
-    builds: [go-store]
+  - formats: [ 'tar.gz' ]
 
 nfpms:
   - id: "go-store"
