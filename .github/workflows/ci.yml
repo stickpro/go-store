@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -30,9 +30,9 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.59.1 # актуальная версия
+          version: v2.1
 
       - name: Run linter
         run: golangci-lint run ./...
