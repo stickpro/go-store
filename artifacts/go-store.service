@@ -1,0 +1,18 @@
+[Unit]
+Description=Go store service
+After=network.target
+
+[Service]
+Environment="GOTRACEBACK=all"
+User=gostore
+Restart=always
+RestartSec=3
+WorkingDirectory=/etc/go-store/
+ExecStart=/bin/bash /etc/go-store/start.sh
+
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=go-store
+
+[Install]
+WantedBy=multi-user.target

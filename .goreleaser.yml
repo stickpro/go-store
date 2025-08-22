@@ -1,0 +1,38 @@
+project_name: go-store
+
+builds:
+  - id: go-store
+    main: ./cmd/app/main
+    binary: go-store
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: archive
+    format: tar.gz
+    builds: [go-store]
+
+nfpms:
+  - id: "go-store"
+    bindir: /etc/go-store
+    contents:
+        - src: configs/config.template.yaml
+          dst: /etc/go-store/configs/config.template.yaml
+          type: config
+        - src: artifacts/go-store.service
+          dst: /etc/go-store/go-store.service
+    scripts:
+      preinstall: "artifacts/scripts/preinstall.sh"
+      postinstall: "artifacts/scripts/postinstall.sh"
+    builds: [go-store]
+    formats:
+      - deb
+      - rpm
+    vendor: "Go commerce"
+    homepage: "https://github.com/stickpro/go-store"
+    maintainer: "Dev Team <stick.qwe@gmail.com>"
+    description: "Go store is a simple and efficient e-commerce platform written in Go."
+    license: "MIT"
