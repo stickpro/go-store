@@ -1,10 +1,11 @@
 package category_response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
-	"time"
 )
 
 type CategoryResponse struct {

@@ -41,7 +41,7 @@ type repository struct {
 	collections         *repository_collections.CustomQueries
 }
 
-func InitRepository(psql *database.PostgresClient, keyValue key_value.IKeyValue) IRepository {
+func InitRepository(psql *database.PostgresClient, _ key_value.IKeyValue) IRepository {
 	return &repository{
 		users:               repository_users.New(psql.DB),
 		personalAccessToken: repository_personal_access_tokens.New(psql.DB),

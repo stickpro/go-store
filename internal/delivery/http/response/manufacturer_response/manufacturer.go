@@ -1,11 +1,12 @@
 package manufacturer_response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
-	"time"
 )
 
 type ManufacturerResponse struct {

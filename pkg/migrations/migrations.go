@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/stickpro/go-store/sql"
 	"io"
 	"os"
 	"strings"
@@ -13,6 +12,8 @@ import (
 	"github.com/golang-migrate/migrate/v4/database"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/stickpro/go-store/sql"
 )
 
 type Migration struct {

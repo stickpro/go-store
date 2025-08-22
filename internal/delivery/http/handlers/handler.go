@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"reflect"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/binder"
 	"github.com/google/uuid"
@@ -11,7 +13,6 @@ import (
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 	"github.com/stickpro/go-store/pkg/logger"
-	"reflect"
 )
 
 type Handler struct {
@@ -36,6 +37,7 @@ func (h *Handler) InitHandler(api *fiber.App) {
 	h.initProductRoutes(v1)
 	h.initCollectionRoutes(v1)
 	h.initGeoRoutes(v1)
+	h.initManufacturerRoutes(v1)
 
 	secured := v1.Group(
 		"/",

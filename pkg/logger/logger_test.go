@@ -2,8 +2,9 @@ package logger_test
 
 import (
 	"fmt"
-	"github.com/stickpro/go-store/pkg/logger"
 	"testing"
+
+	"github.com/stickpro/go-store/pkg/logger"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

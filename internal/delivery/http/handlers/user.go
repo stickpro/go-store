@@ -4,6 +4,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/user_response"
+
+	// swaggo
 	_ "github.com/stickpro/go-store/internal/tools/apierror"
 )
 

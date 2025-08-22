@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/router"

@@ -3,12 +3,13 @@ package app
 import (
 	"context"
 	"errors"
+	"net/http"
+
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/server"
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/logger"
-	"net/http"
 )
 
 func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
@@ -52,5 +53,4 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 	}
 
 	<-ctx.Done()
-
 }

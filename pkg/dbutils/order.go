@@ -3,10 +3,10 @@ package dbutils
 import (
 	"errors"
 	"fmt"
-	utils "github.com/stickpro/go-store/pkg/util"
 	"strings"
 
 	"github.com/huandu/go-sqlbuilder"
+	utils "github.com/stickpro/go-store/pkg/util"
 )
 
 var ErrOrderByIsNotValid = errors.New("order_by field is not valid")
@@ -93,7 +93,7 @@ func BuildOrderBy[T ValidableString](b sqlbuilder.Builder, orderBy StringOrderBy
 	}
 	orderByQuery = strings.TrimSuffix(orderByQuery, ", ")
 
-	if len(orderByQuery) <= 0 {
+	if len(orderByQuery) == 0 {
 		return b, nil
 	}
 

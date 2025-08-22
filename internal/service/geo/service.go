@@ -3,6 +3,8 @@ package geo
 import (
 	"context"
 	"fmt"
+	"net"
+
 	"github.com/oschwald/geoip2-golang"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/constant"
@@ -11,7 +13,6 @@ import (
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/logger"
 	utils "github.com/stickpro/go-store/pkg/util"
-	"net"
 )
 
 type IGeoService interface {

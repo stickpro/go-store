@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/constant"
@@ -58,7 +59,7 @@ func (h Handler) getProductByID(c fiber.Ctx) error {
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
-	prd, err := h.services.ProductService.GetProductById(c.Context(), id)
+	prd, err := h.services.ProductService.GetProductByID(c.Context(), id)
 	if err != nil {
 		return h.handleError(err, "category")
 	}
@@ -132,7 +133,6 @@ func (h *Handler) findProduct(c fiber.Ctx) error {
 	city := c.Query("product")
 	if city == "" {
 		return apierror.New().AddError(fmt.Errorf("product is requered")).SetHttpCode(fiber.StatusBadRequest)
-
 	}
 	location, err := h.services.SearchService.Search(constant.ProductsIndex, city, 10, 0)
 	if err != nil {

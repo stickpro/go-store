@@ -83,7 +83,7 @@ func With(l Logger, args ...any) Logger {
 		lg.appVersion,
 		lg.zapConfig,
 		lg.options,
-		lg.sugaredLogger.With(args...),
+		lg.With(args...),
 	}
 }
 
@@ -102,7 +102,7 @@ func WithExtended(l ExtendedLogger, args ...any) ExtendedLogger {
 		lg.appVersion,
 		lg.zapConfig,
 		lg.options,
-		lg.sugaredLogger.With(args...),
+		lg.With(args...),
 	}
 }
 
@@ -114,14 +114,13 @@ func initLogger(opts ...Option) *logger {
 		o(&l)
 	}
 
-	logLevel := safeLevel(LogLevel(l.config.Level))
-	logTrace := safeLevel(LogLevel(l.config.Trace))
+	logLevel := safeLevel(l.config.Level)
+	logTrace := safeLevel(l.config.Trace)
 
 	l.zapConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
 	encoder := zapcore.NewJSONEncoder(l.zapConfig)
-	switch l.config.Format {
-	case LoggerFormatConsole:
+	if l.config.Format == LoggerFormatConsole {
 		if l.config.ConsoleColored {
 			l.zapConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		}

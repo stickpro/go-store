@@ -45,7 +45,7 @@ func GenerateYamlTemplate(cfg any, filePath string, opts ...Option) error {
 		return fmt.Errorf("failed to encode yaml: %w", err)
 	}
 
-	if err := os.WriteFile(filePath, buf.Bytes(), os.ModePerm); err != nil {
+	if err := os.WriteFile(filePath, buf.Bytes(), 0600); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 

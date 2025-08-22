@@ -10,6 +10,7 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
+	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attribute_groups"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attributes"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
@@ -104,13 +105,13 @@ func (s *Service) UpdateAttributeGroup(ctx context.Context, d dto.UpdateAttribut
 
 func (s *Service) DeleteAttributeGroup(ctx context.Context, id uuid.UUID) error {
 	err := pgx.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		err := s.storage.AttributeGroups().Delete(ctx, id)
+		err := s.storage.AttributeGroups(repository.WithTx(tx)).Delete(ctx, id)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
 			s.logger.Error("failed to delete attribute group", "error", parsedErr)
 			return parsedErr
 		}
-		err = s.storage.Attributes().DeleteByAttributeGroupID(ctx, id)
+		err = s.storage.Attributes(repository.WithTx(tx)).DeleteByAttributeGroupID(ctx, id)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
 			s.logger.Error("failed to delete attributes by attribute group ID", "error", parsedErr)

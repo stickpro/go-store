@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/stickpro/go-store/cmd/console"
-	g0store "github.com/stickpro/go-store/pkg/util/signal"
-	"github.com/urfave/cli/v3"
 	"os"
 	"os/signal"
 	"runtime"
+
+	"github.com/stickpro/go-store/cmd/console"
+	g0store "github.com/stickpro/go-store/pkg/util/signal"
+	"github.com/urfave/cli/v3"
 )
 
 var (
@@ -45,8 +46,7 @@ func main() {
 	}
 
 	if err := app.Run(ctx, os.Args); err != nil {
-		_, _ = fmt.Println(err.Error())
-		os.Exit(1)
+		fmt.Println(err.Error())
 	}
 }
 

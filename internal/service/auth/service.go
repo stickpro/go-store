@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/crc32"
+
 	"github.com/stickpro/go-store/internal/config"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/user"
 	"github.com/stickpro/go-store/internal/storage"
@@ -14,7 +17,6 @@ import (
 	"github.com/stickpro/go-store/internal/tools/hash"
 	"github.com/stickpro/go-store/internal/tools/str"
 	"github.com/stickpro/go-store/pkg/logger"
-	"hash/crc32"
 )
 
 type Token struct {
@@ -24,8 +26,8 @@ type Token struct {
 }
 
 type IAuthService interface {
-	RegisterUser(ctx context.Context, dto RegisterDTO) (*models.User, error)
-	Auth(ctx context.Context, dto AuthDTO) (*Token, error)
+	RegisterUser(ctx context.Context, d dto.RegisterDTO) (*models.User, error)
+	Auth(ctx context.Context, d dto.AuthDTO) (*Token, error)
 	AuthByUser(ctx context.Context, user *models.User) (*Token, error)
 	GetUserByToken(ctx context.Context, hashedToken string) (*models.User, error)
 }
@@ -46,12 +48,12 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, use
 	}
 }
 
-func (s Service) RegisterUser(ctx context.Context, dto RegisterDTO) (*models.User, error) {
+func (s Service) RegisterUser(ctx context.Context, d dto.RegisterDTO) (*models.User, error) {
 	params := &repository_users.CreateParams{
-		Email:    dto.Email,
-		Password: dto.Password,
-		Location: dto.Location,
-		Language: dto.Language,
+		Email:    d.Email,
+		Password: d.Password,
+		Location: d.Location,
+		Language: d.Language,
 	}
 	registeredUser, err := s.userService.StoreUser(ctx, *params)
 	if err != nil {
@@ -61,8 +63,8 @@ func (s Service) RegisterUser(ctx context.Context, dto RegisterDTO) (*models.Use
 	return registeredUser, nil
 }
 
-func (s Service) Auth(ctx context.Context, dto AuthDTO) (*Token, error) {
-	userForAuth, err := s.userService.GetUserByEmail(ctx, dto.Email)
+func (s Service) Auth(ctx context.Context, d dto.AuthDTO) (*Token, error) {
+	userForAuth, err := s.userService.GetUserByEmail(ctx, d.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func (s Service) Auth(ctx context.Context, dto AuthDTO) (*Token, error) {
 		return nil, err
 	}
 
-	if !tools.CheckPasswordHash(dto.Password, userForAuth.Password) {
+	if !tools.CheckPasswordHash(d.Password, userForAuth.Password) {
 		return nil, err
 	}
 

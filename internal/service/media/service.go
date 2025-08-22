@@ -2,8 +2,10 @@ package media
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
@@ -83,7 +85,6 @@ func (s Service) Delete(ctx context.Context, id uuid.UUID) error {
 			parsedErr := pgerror.ParseError(err)
 			s.l.Error("failed to delete media", "error", parsedErr)
 			return parsedErr
-
 		}
 		err := s.objectStorage.Delete(ctx, mediaInfo.Path)
 		if err != nil {

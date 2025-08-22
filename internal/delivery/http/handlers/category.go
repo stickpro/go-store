@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response/category_response"
 	"github.com/stickpro/go-store/internal/service/category"
 	"github.com/stickpro/go-store/internal/tools/apierror"
+
 	// swag-gen import
 	_ "github.com/stickpro/go-store/internal/models"
 	_ "github.com/stickpro/go-store/internal/storage/base"

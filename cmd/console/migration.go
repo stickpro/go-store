@@ -3,9 +3,9 @@ package console
 import (
 	"context"
 	"fmt"
+
 	"github.com/stickpro/go-store/pkg/logger"
 	"github.com/stickpro/go-store/pkg/migrations"
-
 	"github.com/urfave/cli/v3"
 )
 

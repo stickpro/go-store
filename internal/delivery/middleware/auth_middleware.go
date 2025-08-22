@@ -1,11 +1,12 @@
 package middleware
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/stickpro/go-store/internal/service/auth"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 	"github.com/stickpro/go-store/internal/tools/hash"
-	"strings"
 )
 
 func AuthMiddleware(auth auth.IAuthService) fiber.Handler {

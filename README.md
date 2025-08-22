@@ -20,5 +20,5 @@ Run migrations
 ```
 Import cities
 ```shell
-./.bin/go-store geo  import-city -f ./storage/geo/city.csv
+./.bin/go-store geo  import-city -f ./storage/geo/city.csv_
  ```

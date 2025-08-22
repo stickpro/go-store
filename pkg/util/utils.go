@@ -81,7 +81,7 @@ func AppendIfNotExistInArray[T any](values []T, newElement T, fn func(v T) bool)
 	return values
 }
 
-func JsonToStruct(src any, dst any) error {
+func JSONToStruct(src any, dst any) error {
 	result, err := json.Marshal(src)
 	if err != nil {
 		return err

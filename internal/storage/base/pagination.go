@@ -3,10 +3,11 @@ package base
 import (
 	"context"
 	"fmt"
+	"math"
+
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/stickpro/go-store/pkg/dbutils"
-	"math"
 )
 
 type PaginationConfig[R any] struct {
