@@ -2,7 +2,7 @@ project_name: go-store
 
 builds:
   - id: go-store
-    main: ./cmd/app/main
+    main: ./cmd/app
     binary: go-store
     goos:
       - linux
