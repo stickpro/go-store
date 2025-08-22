@@ -1,17 +1,18 @@
 package dto
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/delivery/http/request/collection_request"
 	"github.com/stickpro/go-store/internal/models"
-	"time"
 )
 
 type CreateCollectionDTO struct {
 	Name        string      `json:"name"`
 	Description *string     `json:"description,omitempty"`
 	Slug        string      `json:"slug"`
-	ProductIds  []uuid.UUID `json:"product_ids,omitempty"`
+	ProductIDs  []uuid.UUID `json:"product_ids,omitempty"` //nolint:tagliatelle
 }
 
 type GetCollectionDTO struct {
@@ -24,7 +25,7 @@ type UpdateCollectionDTO struct {
 	Name        string      `json:"name"`
 	Description *string     `json:"description,omitempty"`
 	Slug        string      `json:"slug"`
-	ProductIds  []uuid.UUID `json:"product_ids,omitempty"`
+	ProductIDs  []uuid.UUID `json:"product_ids,omitempty"` //nolint:tagliatelle
 }
 
 type WithProductsCollectionDTO struct {
@@ -42,16 +43,16 @@ func RequestToCreateCollectionDTO(req *collection_request.CreateCollectionReques
 		Name:        req.Name,
 		Description: req.Description,
 		Slug:        req.Slug,
-		ProductIds:  req.ProductIDs,
+		ProductIDs:  req.ProductIDs,
 	}
 }
 
-func RequestToUpdateCollectionDTO(req *collection_request.UpdateCollectionRequest, ID uuid.UUID) UpdateCollectionDTO {
+func RequestToUpdateCollectionDTO(req *collection_request.UpdateCollectionRequest, id uuid.UUID) UpdateCollectionDTO {
 	return UpdateCollectionDTO{
-		ID:          ID,
+		ID:          id,
 		Name:        req.Name,
 		Description: req.Description,
 		Slug:        req.Slug,
-		ProductIds:  req.ProductIDs,
+		ProductIDs:  req.ProductIDs,
 	}
 }

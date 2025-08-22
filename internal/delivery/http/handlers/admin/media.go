@@ -3,18 +3,19 @@ package admin
 import (
 	"errors"
 	"fmt"
-	"github.com/gofiber/fiber/v3"
-	"github.com/google/uuid"
-	"github.com/stickpro/go-store/internal/delivery/http/response"
-	"github.com/stickpro/go-store/internal/delivery/http/response/medium_response"
-	"github.com/stickpro/go-store/internal/service/media"
-	"github.com/stickpro/go-store/internal/tools/apierror"
 	"io"
 	"net/http"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/delivery/http/response"
+	"github.com/stickpro/go-store/internal/delivery/http/response/medium_response"
+	"github.com/stickpro/go-store/internal/service/media"
+	"github.com/stickpro/go-store/internal/tools/apierror"
 )
 
 var allowedTypes = map[string]bool{

@@ -29,35 +29,35 @@ type ExtendedLogger interface {
 	Sugar() *sugaredLogger
 }
 
-// Logger common interface
-type Logger interface {
-	Debug(...any)
-	Debugln(...any)
+// Logger common interface.
+type Logger interface { //nolint:interfacebloat
+	Debug(args ...any)
+	Debugln(args ...any)
 	Debugf(template string, args ...any)
 	Debugw(msg string, keysAndValues ...any)
 
-	Info(...any)
-	Infoln(...any)
+	Info(args ...any)
+	Infoln(args ...any)
 	Infof(template string, args ...any)
 	Infow(msg string, keysAndValues ...any)
 
-	Warn(...any)
-	Warnln(...any)
+	Warn(args ...any)
+	Warnln(args ...any)
 	Warnf(template string, args ...any)
 	Warnw(msg string, keysAndValues ...any)
 
-	Error(...any)
-	Errorln(...any)
+	Error(args ...any)
+	Errorln(args ...any)
 	Errorf(template string, args ...any)
 	Errorw(msg string, keysAndValues ...any)
 
-	Fatal(...any)
-	Fatalln(...any)
+	Fatal(args ...any)
+	Fatalln(args ...any)
 	Fatalf(template string, args ...any)
 	Fatalw(msg string, keysAndValues ...any)
 
-	Panic(...any)
-	Panicln(...any)
+	Panic(args ...any)
+	Panicln(args ...any)
 	Panicf(template string, args ...any)
 	Panicw(msg string, keysAndValues ...any)
 }

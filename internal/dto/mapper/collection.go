@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"fmt"
+
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
@@ -9,7 +10,6 @@ import (
 )
 
 func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProductsByIDRow) *dto.WithProductsCollectionDTO {
-
 	d := &dto.WithProductsCollectionDTO{
 		ID:        rows[0].ID,
 		Name:      rows[0].Name,

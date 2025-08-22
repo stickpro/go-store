@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/stickpro/go-store/pkg/logger"
 	"time"
+
+	"github.com/stickpro/go-store/pkg/logger"
 )
 
 type (

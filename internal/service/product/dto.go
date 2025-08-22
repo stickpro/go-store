@@ -75,7 +75,7 @@ type UpdateDTO struct {
 
 type WithMediumDTO struct {
 	Product *models.Product  `json:"product"`
-	Medium  []*models.Medium `json:"media"`
+	Medium  []*models.Medium `json:"media"` //nolint:tagliatelle
 }
 
 type GetDTO struct {

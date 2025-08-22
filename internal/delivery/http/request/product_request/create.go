@@ -34,5 +34,5 @@ type CreateProductRequest struct {
 	Minimum         int64           `json:"minimum" validate:"required"`
 	SortOrder       int32           `json:"sort_order" validate:"required"`
 	IsEnable        bool            `json:"is_enable" validate:"required,boolean"`
-	MediaIDs        []*uuid.UUID    `json:"media_ids,omitempty" validate:"omitempty"`
+	MediaIDs        []*uuid.UUID    `json:"media_ids,omitempty" validate:"omitempty"` //nolint:tagliatelle
 } // @name CreateProductRequest

@@ -2,6 +2,7 @@ package product
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
@@ -19,7 +20,7 @@ import (
 type IProductService interface {
 	CreateProduct(ctx context.Context, dto CreateDTO) (*models.Product, error)
 	GetProductWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
-	GetProductById(ctx context.Context, id uuid.UUID) (*models.Product, error)
+	GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetProductBySlug(ctx context.Context, slug string) (*models.Product, error)
 	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*WithMediumDTO, error)
 	UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Product, error)
@@ -43,7 +44,7 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, ss 
 	}
 }
 
-func (s Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Product, error) {
+func (s *Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Product, error) {
 	params := repository_products.CreateParams{
 		Name:            dto.Name,
 		Model:           dto.Model,
@@ -106,10 +107,9 @@ func (s Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Prod
 	}
 
 	return prd, nil
-
 }
 
-func (s Service) GetProductWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error) {
+func (s *Service) GetProductWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error) {
 	commonParams := base.NewCommonFindParams()
 	if dto.PageSize != nil {
 		commonParams.PageSize = dto.PageSize
@@ -127,7 +127,7 @@ func (s Service) GetProductWithPagination(ctx context.Context, dto GetDTO) (*bas
 	return prds, nil
 }
 
-func (s Service) GetProductById(ctx context.Context, id uuid.UUID) (*models.Product, error) {
+func (s *Service) GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
 	prd, err := s.storage.Products().GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (s Service) GetProductById(ctx context.Context, id uuid.UUID) (*models.Prod
 	return prd, nil
 }
 
-func (s Service) GetProductBySlug(ctx context.Context, slug string) (*models.Product, error) {
+func (s *Service) GetProductBySlug(ctx context.Context, slug string) (*models.Product, error) {
 	prd, err := s.storage.Products().GetBySlug(ctx, slug)
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (s Service) GetProductBySlug(ctx context.Context, slug string) (*models.Pro
 	return prd, nil
 }
 
-func (s Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Product, error) {
+func (s *Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Product, error) {
 	params := repository_products.UpdateParams{
 		ID:              dto.ID,
 		Name:            dto.Name,
@@ -218,8 +218,8 @@ func (s Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Prod
 	return prd, nil
 }
 
-func (s Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*WithMediumDTO, error) {
-	product, err := s.GetProductById(ctx, id)
+func (s *Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*WithMediumDTO, error) {
+	product, err := s.GetProductByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}

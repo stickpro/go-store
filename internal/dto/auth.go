@@ -1,4 +1,4 @@
-package auth
+package dto
 
 type RegisterDTO struct {
 	Email    string

@@ -1,9 +1,10 @@
 package medium_response
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/models"
-	"time"
 )
 
 type MediumResponse struct {

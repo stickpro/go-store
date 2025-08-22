@@ -5,18 +5,19 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/pkg/database"
 	"github.com/stickpro/go-store/pkg/logger"
 	"github.com/urfave/cli/v3"
-	"io"
-	"os"
 )
 
 func prepareGeoCommands(appName, currentAppVersion string) []*cli.Command {
 	return []*cli.Command{
 		{
-			Name:        "cienaa.csv",
+			Name:        "import-city",
 			Description: "import city from csv file",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -40,7 +41,7 @@ func prepareGeoCommands(appName, currentAppVersion string) []*cli.Command {
 
 				dataCSV, err := os.ReadFile(cl.String("file"))
 				if err != nil {
-					l.Fatalln("couldn't open or read the file cienaa.csv", err)
+					l.Fatalln("couldn't open or read the file city.csv", err)
 				}
 
 				reader := csv.NewReader(bytes.NewReader(dataCSV))
@@ -97,14 +98,12 @@ func prepareGeoCommands(appName, currentAppVersion string) []*cli.Command {
 					return err
 				}
 				copyCount, err := dbClient.DB.CopyFrom(
-					context.Background(),
+					ctx,
 					pgx.Identifier{"cities"},
 					columns,
 					pgx.CopyFromSlice(len(dataRead), func(i int) ([]any, error) {
 						row := make([]any, len(dataRead[i]))
-						for j := range dataRead[i] {
-							row[j] = dataRead[i][j]
-						}
+						copy(row, dataRead[i])
 						return row, nil
 					}),
 				)

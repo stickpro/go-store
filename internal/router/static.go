@@ -1,9 +1,10 @@
 package router
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/static"
-	"os"
 )
 
 func (r *Router) initStaticFiles(app *fiber.App) {
@@ -15,5 +16,4 @@ func (r *Router) initStaticFiles(app *fiber.App) {
 		FS:     os.DirFS(r.config.FileStorage.Path + "/public"),
 		Browse: true,
 	}))
-
 }

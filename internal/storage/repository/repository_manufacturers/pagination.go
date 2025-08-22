@@ -2,6 +2,7 @@ package repository_manufacturers
 
 import (
 	"context"
+
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/base"
 )

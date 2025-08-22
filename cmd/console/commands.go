@@ -3,6 +3,7 @@ package console
 import (
 	"context"
 	"fmt"
+
 	"github.com/stickpro/go-store/internal/app"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/pkg/cfg"
@@ -14,7 +15,7 @@ const (
 	defaultConfigPath = "configs/config.yaml"
 )
 
-func InitCommands(currentAppVersion, appName, commitHash string) []*cli.Command {
+func InitCommands(currentAppVersion, appName, _ string) []*cli.Command {
 	return []*cli.Command{
 		{
 			Name:        "start",
@@ -91,7 +92,7 @@ func prepareConfigCommands() []*cli.Command {
 		{
 			Name:  "genenvs",
 			Usage: "generate markdown for all envs and config yaml template",
-			Action: func(ctx context.Context, _ *cli.Command) error {
+			Action: func(_ context.Context, _ *cli.Command) error {
 				if err := cfg.GenerateMarkdown(new(config.Config), "ENVS.md"); err != nil {
 					return fmt.Errorf("failed to generate markdown: %w", err)
 				}

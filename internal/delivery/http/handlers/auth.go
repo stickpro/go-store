@@ -6,7 +6,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/request/auth_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/auth_response"
-	"github.com/stickpro/go-store/internal/service/auth"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 )
 
@@ -28,7 +28,7 @@ func (h *Handler) register(c fiber.Ctx) error {
 		return err
 	}
 
-	user, err := h.services.AuthService.RegisterUser(c.Context(), auth.RegisterDTO{
+	user, err := h.services.AuthService.RegisterUser(c.Context(), dto.RegisterDTO{
 		Email:    request.Email,
 		Password: request.Password,
 		Location: request.Location,
@@ -68,7 +68,7 @@ func (h *Handler) login(c fiber.Ctx) error {
 		return err
 	}
 	ctx := c.Context()
-	token, err := h.services.AuthService.Auth(ctx, auth.AuthDTO{
+	token, err := h.services.AuthService.Auth(ctx, dto.AuthDTO{
 		Email:    request.Email,
 		Password: request.Password,
 	})

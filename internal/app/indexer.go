@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"github.com/goccy/go-json"
+
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/pkg/logger"
 )
@@ -25,20 +25,4 @@ func initIndexer(ctx context.Context, service *service.Services, l logger.Logger
 			l.Error("failed to create product index", "error", err)
 		}
 	}
-
-}
-
-func structToMap(data any) ([]map[string]interface{}, error) {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []map[string]interface{}
-	err = json.Unmarshal(jsonData, &result)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }

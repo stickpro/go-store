@@ -2,6 +2,7 @@ package meilisearch
 
 import (
 	"fmt"
+
 	meilisearchSDK "github.com/meilisearch/meilisearch-go"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
@@ -12,7 +13,7 @@ type SearchEngine struct {
 }
 
 func NewMeiliSearchSearchEngine(cfg config.SearchEngine) *SearchEngine {
-	client := meilisearchSDK.New(cfg.Host, meilisearchSDK.WithAPIKey(cfg.APIkey))
+	client := meilisearchSDK.New(cfg.Host, meilisearchSDK.WithAPIKey(cfg.APIKey))
 	return &SearchEngine{client: client}
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
@@ -16,7 +17,7 @@ import (
 )
 
 type IUserService interface {
-	GetUserByID(ctx context.Context, ID uuid.UUID) (*models.User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	StoreUser(ctx context.Context, params repository_users.CreateParams) (*models.User, error)
 }
@@ -27,8 +28,8 @@ type Service struct {
 	storage storage.IStorage
 }
 
-func (s Service) GetUserByID(ctx context.Context, ID uuid.UUID) (*models.User, error) {
-	user, err := s.storage.Users().GetByID(ctx, ID)
+func (s Service) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	user, err := s.storage.Users().GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +81,6 @@ func (s Service) StoreUser(ctx context.Context, params repository_users.CreatePa
 	}
 
 	return user, nil
-
 }
 
 func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Service {

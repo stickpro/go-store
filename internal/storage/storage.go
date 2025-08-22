@@ -3,13 +3,13 @@ package storage
 import (
 	"context"
 	"fmt"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/pkg/database"
 	"github.com/stickpro/go-store/pkg/key_value"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type IStorage interface {

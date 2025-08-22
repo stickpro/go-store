@@ -41,10 +41,10 @@ func GenerateMarkdown(cfg any, filePath string, opts ...Option) error {
 }
 
 func (c *config) generateMarkdown(l *aconfig.Loader, filePath string) error {
-	var table [][]string
+	var table [][]string //nolint:prealloc
 
 	table = append(table, []string{
-		"Name", "Required", "Secret", "Default value", "Usage", "Example",
+		"**Name**", "**Required**", "**Secret**", "**Default value**", "**Usage**", "**Example**",
 	})
 
 	sizes := make([]int, len(table[0]))
@@ -121,7 +121,7 @@ func (c *config) generateMarkdown(l *aconfig.Loader, filePath string) error {
 	_, _ = fmt.Fprintln(c.out, out.String())
 
 	if filePath != "" {
-		if err := os.WriteFile(filePath, []byte(out.String()), os.ModePerm); err != nil {
+		if err := os.WriteFile(filePath, []byte(out.String()), 0600); err != nil {
 			return err
 		}
 	}

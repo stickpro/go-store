@@ -21,7 +21,7 @@ import (
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/collection/id/:id/ [get]
-func (h Handler) getCollectionByID(c fiber.Ctx) error {
+func (h *Handler) getCollectionByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
@@ -47,7 +47,7 @@ func (h Handler) getCollectionByID(c fiber.Ctx) error {
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/collection/:slug/ [get]
-func (h Handler) getCollectionSlug(c fiber.Ctx) error {
+func (h *Handler) getCollectionBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	collectionDTO, err := h.services.CollectionService.GetCollectionBySlug(c.Context(), slug)
 	if err != nil {
@@ -56,8 +56,8 @@ func (h Handler) getCollectionSlug(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(collection_response.NewFromDTO(collectionDTO)))
 }
 
-func (h Handler) initCollectionRoutes(v1 fiber.Router) {
+func (h *Handler) initCollectionRoutes(v1 fiber.Router) {
 	c := v1.Group("/collection")
-	c.Get("/:slug", h.getCategoryBySlug)
+	c.Get("/:slug", h.getCollectionBySlug)
 	c.Get("/id/:id", h.getCollectionByID)
 }

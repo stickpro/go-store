@@ -9,7 +9,7 @@ import (
 
 type GeoResponse struct {
 	City string `json:"city"`
-} //@name GeoResponse
+} // @name GeoResponse
 
 type CityResponse struct {
 	ID              uuid.UUID       `db:"id" json:"id"`
@@ -37,7 +37,7 @@ type CityResponse struct {
 	GeoLon          decimal.Decimal `db:"geo_lon" json:"geo_lon"`
 	Population      int64           `db:"population" json:"population"`
 	FoundationYear  int16           `db:"foundation_year" json:"foundation_year"`
-} //@name CityResponse
+} // @name CityResponse
 
 func NewFromModel(city *models.City) *CityResponse {
 	return &CityResponse{

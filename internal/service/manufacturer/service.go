@@ -2,15 +2,15 @@ package manufacturer
 
 import (
 	"context"
+
 	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/config"
+	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
-
-	"github.com/stickpro/go-store/internal/config"
-	"github.com/stickpro/go-store/internal/models"
-	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/logger"
 )
 

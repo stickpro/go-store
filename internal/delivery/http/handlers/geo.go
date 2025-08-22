@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
@@ -10,7 +11,6 @@ import (
 
 	// swag gen import
 	_ "github.com/stickpro/go-store/internal/models"
-	_ "github.com/stickpro/go-store/internal/tools/apierror"
 )
 
 // getGeoLocation is a function get city by IP address
@@ -51,7 +51,6 @@ func (h *Handler) findCity(c fiber.Ctx) error {
 	city := c.Query("city")
 	if city == "" {
 		return apierror.New().AddError(fmt.Errorf("city is requered")).SetHttpCode(fiber.StatusBadRequest)
-
 	}
 	location, err := h.services.SearchService.Search(constant.CitiesIndex, city, 10, 0)
 	if err != nil {

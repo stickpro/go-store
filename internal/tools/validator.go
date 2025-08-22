@@ -2,8 +2,6 @@ package tools
 
 import (
 	"errors"
-	"github.com/shopspring/decimal"
-	"github.com/stickpro/go-store/internal/tools/apierror"
 	"reflect"
 	"regexp"
 
@@ -14,6 +12,8 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+	"github.com/stickpro/go-store/internal/tools/apierror"
 )
 
 var defaultStructValidator *StructValidator
@@ -106,7 +106,6 @@ func registerCustomValidators(validate *validator.Validate) {
 	})
 	// decimal validate
 	validate.RegisterCustomTypeFunc(ValidateDecimalType, decimal.Decimal{})
-
 }
 
 func ValidateDecimalType(field reflect.Value) interface{} {

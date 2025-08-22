@@ -306,5 +306,4 @@ func (h *Handler) initAttributeRoutes(v1 fiber.Router) {
 	a.Get("/:id", h.getAttributeByID)
 	a.Put("/:id", h.updateAttribute)
 	a.Delete("/:id", h.deleteAttribute)
-
 }

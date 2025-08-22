@@ -8,7 +8,7 @@ import (
 	"github.com/cristalhq/aconfig"
 )
 
-func GenerateDefaultEnvs(cfg any, filePath string, opts ...Option) error {
+func GenerateDefaultEnvs(cfg any, _ string, opts ...Option) error {
 	options := newOptions(opts...)
 
 	c := config{
