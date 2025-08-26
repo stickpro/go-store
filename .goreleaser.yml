@@ -26,6 +26,8 @@ nfpms:
           type: config
         - src: artifacts/go-store.service
           dst: /etc/go-store/go-store.service
+        - src: artifacts/scripts/start.sh
+          dst: /etc/go-store/start.sh
     scripts:
       preinstall: "artifacts/scripts/preinstall.sh"
       postinstall: "artifacts/scripts/postinstall.sh"

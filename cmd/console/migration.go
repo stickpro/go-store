@@ -25,20 +25,9 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 				},
 			},
 			Action: func(ctx context.Context, cl *cli.Command) error {
-				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
+				mg, err := prepareMigrations(cl, appName, currentAppVersion)
 				if err != nil {
-					return fmt.Errorf("failed to load config: %w", err)
-				}
-				loggerOpts := append(defaultLoggerOpts(appName, currentAppVersion), logger.WithConfig(conf.Log))
-
-				l := logger.NewExtended(loggerOpts...)
-				mg, err := initMigrations(l, migrations.Config{
-					DBDriver:            migrations.DBDriver(conf.Postgres.Engine()),
-					DSN:                 conf.Postgres.DSN(),
-					DisableConfirmation: cl.Bool("disable-confirmations"),
-				})
-				if err != nil {
-					return fmt.Errorf("failed to init migrations: %w", err)
+					return err
 				}
 				return mg.Up(ctx, cl.Int("steps"))
 			},
@@ -58,20 +47,9 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 				},
 			},
 			Action: func(ctx context.Context, cl *cli.Command) error {
-				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
+				mg, err := prepareMigrations(cl, appName, currentAppVersion)
 				if err != nil {
-					return fmt.Errorf("failed to load config: %w", err)
-				}
-				loggerOpts := append(defaultLoggerOpts(appName, currentAppVersion), logger.WithConfig(conf.Log))
-
-				l := logger.NewExtended(loggerOpts...)
-				mg, err := initMigrations(l, migrations.Config{
-					DBDriver:            migrations.DBDriver(conf.Postgres.Engine()),
-					DSN:                 conf.Postgres.DSN(),
-					DisableConfirmation: cl.Bool("disable-confirmations"),
-				})
-				if err != nil {
-					return fmt.Errorf("failed to init migrations: %w", err)
+					return err
 				}
 				return mg.Down(ctx, cl.Int("steps"))
 			},
@@ -80,21 +58,9 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 			Name:        "drop",
 			Description: "drop database schema",
 			Action: func(ctx context.Context, cl *cli.Command) error {
-				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
+				mg, err := prepareMigrations(cl, appName, currentAppVersion)
 				if err != nil {
-					return fmt.Errorf("failed to load config: %w", err)
-				}
-				loggerOpts := append(defaultLoggerOpts(appName, currentAppVersion), logger.WithConfig(conf.Log))
-
-				l := logger.NewExtended(loggerOpts...)
-
-				mg, err := initMigrations(l, migrations.Config{
-					DBDriver:            migrations.DBDriver(conf.Postgres.Engine()),
-					DSN:                 conf.Postgres.DSN(),
-					DisableConfirmation: false,
-				})
-				if err != nil {
-					return fmt.Errorf("failed to init migrations: %w", err)
+					return err
 				}
 				return mg.Drop(ctx)
 			},
@@ -103,22 +69,22 @@ func prepareMigrationCommands(appName, currentAppVersion string) []*cli.Command 
 			Name:        "version",
 			Description: "print current database schema version",
 			Action: func(ctx context.Context, cl *cli.Command) error {
+				mg, err := prepareMigrations(cl, appName, currentAppVersion)
+				if err != nil {
+					return err
+				}
+
 				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
 				if err != nil {
 					return fmt.Errorf("failed to load config: %w", err)
 				}
-				loggerOpts := append(defaultLoggerOpts(appName, currentAppVersion), logger.WithConfig(conf.Log))
+
+				loggerOpts := append(
+					defaultLoggerOpts(appName, currentAppVersion),
+					logger.WithConfig(conf.Log),
+				)
 
 				l := logger.NewExtended(loggerOpts...)
-
-				mg, err := initMigrations(l, migrations.Config{
-					DBDriver:            migrations.DBDriver(conf.Postgres.Engine()),
-					DSN:                 conf.Postgres.DSN(),
-					DisableConfirmation: true,
-				})
-				if err != nil {
-					return fmt.Errorf("failed to init migrations: %w", err)
-				}
 
 				ver, isDirty, err := mg.Version(ctx)
 				if err != nil {
@@ -141,4 +107,29 @@ func (ml migrationsLogger) Infof(format string, args ...interface{}) {
 
 func initMigrations(l logger.Logger, conf migrations.Config) (*migrations.Migration, error) {
 	return migrations.New(migrationsLogger{log: l}, conf)
+}
+
+func prepareMigrations(cl *cli.Command, appName, currentAppVersion string) (*migrations.Migration, error) {
+	conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	loggerOpts := append(
+		defaultLoggerOpts(appName, currentAppVersion),
+		logger.WithConfig(conf.Log),
+	)
+
+	l := logger.NewExtended(loggerOpts...)
+
+	mg, err := initMigrations(l, migrations.Config{
+		DBDriver:            migrations.DBDriver(conf.Postgres.Engine()),
+		DSN:                 conf.Postgres.DSN(),
+		DisableConfirmation: cl.Bool("disable-confirmations"),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to init migrations: %w", err)
+	}
+
+	return mg, nil
 }
