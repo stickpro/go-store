@@ -34,6 +34,11 @@ type AttributeGroup struct {
 	UpdatedAt   pgtype.Timestamp `db:"updated_at" json:"updated_at"`
 }
 
+type AttributeProduct struct {
+	ProductID   uuid.UUID `db:"product_id" json:"product_id"`
+	AttributeID uuid.UUID `db:"attribute_id" json:"attribute_id"`
+}
+
 type Category struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
 	ParentID        uuid.NullUUID    `db:"parent_id" json:"parent_id"`

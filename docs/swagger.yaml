@@ -170,8 +170,8 @@ definitions:
         minimum: 0
         type: integer
       type:
-        enum:
-        - string
+        maxLength: 255
+        minLength: 1
         type: string
       value:
         minLength: 1
@@ -913,6 +913,15 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  github_com_stickpro_go-store_internal_delivery_http_request_product_request.SyncProductAttributeRequest:
+    properties:
+      attribute_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - attribute_ids
     type: object
   github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse:
     properties:
@@ -2257,6 +2266,40 @@ paths:
           schema:
             $ref: '#/definitions/APIErrors'
       summary: Update Product
+      tags:
+      - Product
+  /v1/product/:id/sync-attribute:
+    post:
+      consumes:
+      - application/json
+      description: Sync product attribute
+      parameters:
+      - description: Sync product attribute
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_product_request.SyncProductAttributeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-string'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Sync Product Attribute
       tags:
       - Product
   /v1/product/:slug/:

@@ -1629,6 +1629,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/product/:id/sync-attribute": {
+            "post": {
+                "description": "Sync product attribute",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Sync Product Attribute",
+                "parameters": [
+                    {
+                        "description": "Sync product attribute",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_product_request.SyncProductAttributeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/product/:slug/": {
             "get": {
                 "description": "Get product by slug",
@@ -2122,9 +2174,8 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string",
-                    "enum": [
-                        "string"
-                    ]
+                    "maxLength": 255,
+                    "minLength": 1
                 },
                 "value": {
                     "type": "string",
@@ -3211,6 +3262,20 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_delivery_http_request_product_request.SyncProductAttributeRequest": {
+            "type": "object",
+            "required": [
+                "attribute_ids"
+            ],
+            "properties": {
+                "attribute_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

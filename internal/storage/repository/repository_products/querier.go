@@ -12,8 +12,10 @@ import (
 )
 
 type Querier interface {
+	AddAttributesToProduct(ctx context.Context, arg AddAttributesToProductParams) error
 	Create(ctx context.Context, arg CreateParams) (*models.Product, error)
 	CreateProductMedia(ctx context.Context, arg CreateProductMediaParams) error
+	DeleteAttributesFromProduct(ctx context.Context, productID uuid.UUID) error
 	DeleteProductMedia(ctx context.Context, productID uuid.UUID) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Product, error)

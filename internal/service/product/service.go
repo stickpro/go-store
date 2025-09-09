@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/storage"
@@ -18,12 +19,14 @@ import (
 )
 
 type IProductService interface {
-	CreateProduct(ctx context.Context, dto CreateDTO) (*models.Product, error)
-	GetProductWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
+	CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, error)
+	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 	GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetProductBySlug(ctx context.Context, slug string) (*models.Product, error)
-	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*WithMediumDTO, error)
-	UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Product, error)
+	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error)
+	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error)
+	//
+	SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error
 	// CreateProductIndex Indexing
 	CreateProductIndex(ctx context.Context, reindex bool) error
 }
@@ -44,36 +47,36 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, ss 
 	}
 }
 
-func (s *Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Product, error) {
+func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, error) {
 	params := repository_products.CreateParams{
-		Name:            dto.Name,
-		Model:           dto.Model,
-		Slug:            dto.Slug,
-		Description:     pgtypeutils.EncodeText(dto.Description),
-		MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
-		MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
-		MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
-		MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
-		Sku:             pgtypeutils.EncodeText(dto.Sku),
-		Upc:             pgtypeutils.EncodeText(dto.Upc),
-		Ean:             pgtypeutils.EncodeText(dto.Ean),
-		Jan:             pgtypeutils.EncodeText(dto.Jan),
-		Isbn:            pgtypeutils.EncodeText(dto.Isbn),
-		Mpn:             pgtypeutils.EncodeText(dto.Mpn),
-		Location:        pgtypeutils.EncodeText(dto.Location),
-		Quantity:        dto.Quantity,
-		StockStatus:     dto.StockStatus,
-		Image:           pgtypeutils.EncodeText(dto.Image),
-		ManufacturerID:  dto.ManufacturerID,
-		Price:           dto.Price,
-		Weight:          dto.Weight,
-		Length:          dto.Length,
-		Width:           dto.Width,
-		Height:          dto.Height,
-		Subtract:        dto.Subtract,
-		Minimum:         dto.Minimum,
-		SortOrder:       dto.SortOrder,
-		IsEnable:        dto.IsEnable,
+		Name:            d.Name,
+		Model:           d.Model,
+		Slug:            d.Slug,
+		Description:     pgtypeutils.EncodeText(d.Description),
+		MetaTitle:       pgtypeutils.EncodeText(d.MetaTitle),
+		MetaH1:          pgtypeutils.EncodeText(d.MetaH1),
+		MetaKeyword:     pgtypeutils.EncodeText(d.MetaKeyword),
+		MetaDescription: pgtypeutils.EncodeText(d.MetaDescription),
+		Sku:             pgtypeutils.EncodeText(d.Sku),
+		Upc:             pgtypeutils.EncodeText(d.Upc),
+		Ean:             pgtypeutils.EncodeText(d.Ean),
+		Jan:             pgtypeutils.EncodeText(d.Jan),
+		Isbn:            pgtypeutils.EncodeText(d.Isbn),
+		Mpn:             pgtypeutils.EncodeText(d.Mpn),
+		Location:        pgtypeutils.EncodeText(d.Location),
+		Quantity:        d.Quantity,
+		StockStatus:     d.StockStatus,
+		Image:           pgtypeutils.EncodeText(d.Image),
+		ManufacturerID:  d.ManufacturerID,
+		Price:           d.Price,
+		Weight:          d.Weight,
+		Length:          d.Length,
+		Width:           d.Width,
+		Height:          d.Height,
+		Subtract:        d.Subtract,
+		Minimum:         d.Minimum,
+		SortOrder:       d.SortOrder,
+		IsEnable:        d.IsEnable,
 		Viewed:          0,
 	}
 	prd := &models.Product{}
@@ -84,7 +87,7 @@ func (s *Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Pro
 			s.logger.Error("failed to create product", parsedErr)
 			return parsedErr
 		}
-		for _, mediaID := range dto.MediaIDs {
+		for _, mediaID := range d.MediaIDs {
 			err := s.storage.Products(repository.WithTx(tx)).CreateProductMedia(ctx, repository_products.CreateProductMediaParams{
 				ProductID: prd.ID,
 				MediaID:   *mediaID,
@@ -109,13 +112,13 @@ func (s *Service) CreateProduct(ctx context.Context, dto CreateDTO) (*models.Pro
 	return prd, nil
 }
 
-func (s *Service) GetProductWithPagination(ctx context.Context, dto GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error) {
+func (s *Service) GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error) {
 	commonParams := base.NewCommonFindParams()
-	if dto.PageSize != nil {
-		commonParams.PageSize = dto.PageSize
+	if d.PageSize != nil {
+		commonParams.PageSize = d.PageSize
 	}
-	if dto.Page != nil {
-		commonParams.Page = dto.Page
+	if d.Page != nil {
+		commonParams.Page = d.Page
 	}
 
 	prds, err := s.storage.Products().GetWithPaginate(ctx, repository_products.ProductsWithPaginationParams{
@@ -143,37 +146,37 @@ func (s *Service) GetProductBySlug(ctx context.Context, slug string) (*models.Pr
 	return prd, nil
 }
 
-func (s *Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Product, error) {
+func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error) {
 	params := repository_products.UpdateParams{
-		ID:              dto.ID,
-		Name:            dto.Name,
-		Model:           dto.Model,
-		Slug:            dto.Slug,
-		Description:     pgtypeutils.EncodeText(dto.Description),
-		MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
-		MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
-		MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
-		MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
-		Sku:             pgtypeutils.EncodeText(dto.Sku),
-		Upc:             pgtypeutils.EncodeText(dto.Upc),
-		Ean:             pgtypeutils.EncodeText(dto.Ean),
-		Jan:             pgtypeutils.EncodeText(dto.Jan),
-		Isbn:            pgtypeutils.EncodeText(dto.Isbn),
-		Mpn:             pgtypeutils.EncodeText(dto.Mpn),
-		Location:        pgtypeutils.EncodeText(dto.Location),
-		Quantity:        dto.Quantity,
-		StockStatus:     dto.StockStatus,
-		Image:           pgtypeutils.EncodeText(dto.Image),
-		ManufacturerID:  dto.ManufacturerID,
-		Price:           dto.Price,
-		Weight:          dto.Weight,
-		Length:          dto.Length,
-		Width:           dto.Width,
-		Height:          dto.Height,
-		Subtract:        dto.Subtract,
-		Minimum:         dto.Minimum,
-		SortOrder:       dto.SortOrder,
-		IsEnable:        dto.IsEnable,
+		ID:              d.ID,
+		Name:            d.Name,
+		Model:           d.Model,
+		Slug:            d.Slug,
+		Description:     pgtypeutils.EncodeText(d.Description),
+		MetaTitle:       pgtypeutils.EncodeText(d.MetaTitle),
+		MetaH1:          pgtypeutils.EncodeText(d.MetaH1),
+		MetaKeyword:     pgtypeutils.EncodeText(d.MetaKeyword),
+		MetaDescription: pgtypeutils.EncodeText(d.MetaDescription),
+		Sku:             pgtypeutils.EncodeText(d.Sku),
+		Upc:             pgtypeutils.EncodeText(d.Upc),
+		Ean:             pgtypeutils.EncodeText(d.Ean),
+		Jan:             pgtypeutils.EncodeText(d.Jan),
+		Isbn:            pgtypeutils.EncodeText(d.Isbn),
+		Mpn:             pgtypeutils.EncodeText(d.Mpn),
+		Location:        pgtypeutils.EncodeText(d.Location),
+		Quantity:        d.Quantity,
+		StockStatus:     d.StockStatus,
+		Image:           pgtypeutils.EncodeText(d.Image),
+		ManufacturerID:  d.ManufacturerID,
+		Price:           d.Price,
+		Weight:          d.Weight,
+		Length:          d.Length,
+		Width:           d.Width,
+		Height:          d.Height,
+		Subtract:        d.Subtract,
+		Minimum:         d.Minimum,
+		SortOrder:       d.SortOrder,
+		IsEnable:        d.IsEnable,
 	}
 	prd := &models.Product{}
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
@@ -191,7 +194,7 @@ func (s *Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Pro
 			s.logger.Error("failed to delete product", parsedErr)
 			return parsedErr
 		}
-		for _, mediaID := range dto.MediaIDs {
+		for _, mediaID := range d.MediaIDs {
 			err := s.storage.Products(repository.WithTx(tx)).CreateProductMedia(ctx, repository_products.CreateProductMediaParams{
 				ProductID: prd.ID,
 				MediaID:   *mediaID,
@@ -218,7 +221,7 @@ func (s *Service) UpdateProduct(ctx context.Context, dto UpdateDTO) (*models.Pro
 	return prd, nil
 }
 
-func (s *Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*WithMediumDTO, error) {
+func (s *Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error) {
 	product, err := s.GetProductByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -230,8 +233,40 @@ func (s *Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*
 		return nil, parsedErr
 	}
 
-	return &WithMediumDTO{
+	return &dto.WithMediumProductDTO{
 		Product: product,
 		Medium:  media,
 	}, nil
+}
+
+func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error {
+	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		err := s.storage.Products(repository.WithTx(tx)).DeleteAttributesFromProduct(ctx, d.ProductID)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to delete attributes from product", parsedErr)
+			return parsedErr
+		}
+		if len(d.AttributeIDs) == 0 {
+			return nil
+		}
+
+		err = s.storage.Products(repository.WithTx(tx)).AddAttributesToProduct(ctx, repository_products.AddAttributesToProductParams{
+			ProductID:    d.ProductID,
+			AttributeIds: d.AttributeIDs,
+		})
+
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to add attributes to product", parsedErr)
+			return parsedErr
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
