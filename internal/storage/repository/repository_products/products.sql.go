@@ -12,6 +12,34 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const addAttributesToProduct = `-- name: AddAttributesToProduct :exec
+INSERT INTO attribute_products (attribute_id, product_id)
+SELECT a.id, $1::uuid
+FROM attributes a
+WHERE a.id = ANY($2::uuid[])
+ON CONFLICT DO NOTHING
+`
+
+type AddAttributesToProductParams struct {
+	ProductID    uuid.UUID   `db:"product_id" json:"product_id"`
+	AttributeIds []uuid.UUID `db:"attribute_ids" json:"attribute_ids"`
+}
+
+func (q *Queries) AddAttributesToProduct(ctx context.Context, arg AddAttributesToProductParams) error {
+	_, err := q.db.Exec(ctx, addAttributesToProduct, arg.ProductID, arg.AttributeIds)
+	return err
+}
+
+const deleteAttributesFromProduct = `-- name: DeleteAttributesFromProduct :exec
+DELETE FROM attribute_products
+WHERE product_id = $1
+`
+
+func (q *Queries) DeleteAttributesFromProduct(ctx context.Context, productID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAttributesFromProduct, productID)
+	return err
+}
+
 const getByID = `-- name: GetByID :one
 SELECT id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at FROM products WHERE id = $1 LIMIT 1
 `

@@ -9,7 +9,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
-	"github.com/stickpro/go-store/internal/service/product"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
@@ -85,7 +85,7 @@ func (h Handler) getProducts(c fiber.Ctx) error {
 		return err
 	}
 
-	prds, err := h.services.ProductService.GetProductWithPagination(c.Context(), product.GetDTO{Page: req.Page, PageSize: req.PageSize})
+	prds, err := h.services.ProductService.GetProductWithPagination(c.Context(), dto.GetDTO{Page: req.Page, PageSize: req.PageSize})
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}

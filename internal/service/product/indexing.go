@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/stickpro/go-store/internal/constant"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/tools"
 	utils "github.com/stickpro/go-store/pkg/util"
@@ -29,12 +30,12 @@ func (s *Service) CreateProductIndex(ctx context.Context, reindex bool) error {
 	pageSize := uint32(100)
 
 	for {
-		dto := GetDTO{
+		d := dto.GetDTO{
 			Page:     tools.Pointer(page),
 			PageSize: tools.Pointer(pageSize),
 		}
 
-		res, err := s.GetProductWithPagination(ctx, dto)
+		res, err := s.GetProductWithPagination(ctx, d)
 		if err != nil {
 			s.logger.Error("Failed to get product page", "page", page, "error", err)
 			return err

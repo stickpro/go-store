@@ -1,4 +1,4 @@
-package product
+package dto
 
 import (
 	"github.com/google/uuid"
@@ -8,7 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
-type CreateDTO struct {
+type CreateProductDTO struct {
 	Name            string               `json:"name"`
 	Model           string               `json:"model"`
 	Slug            string               `json:"slug"`
@@ -40,7 +40,7 @@ type CreateDTO struct {
 	MediaIDs        []*uuid.UUID         `json:"media_ids,omitempty"` //nolint:tagliatelle
 }
 
-type UpdateDTO struct {
+type UpdateProductDTO struct {
 	ID              uuid.UUID            `json:"id"`
 	Name            string               `json:"name"`
 	Model           string               `json:"model"`
@@ -73,24 +73,24 @@ type UpdateDTO struct {
 	MediaIDs        []*uuid.UUID         `json:"media_ids,omitempty"` //nolint:tagliatelle
 }
 
-type WithMediumDTO struct {
+type WithMediumProductDTO struct {
 	Product *models.Product  `json:"product"`
 	Medium  []*models.Medium `json:"media"` //nolint:tagliatelle
 }
 
-type GetDTO struct {
-	Page     *uint32 `json:"page" query:"page"`
-	PageSize *uint32 `json:"page_size" query:"page_size"`
+type SyncAttributeProductDTO struct {
+	ProductID    uuid.UUID   `json:"product_id"`
+	AttributeIDs []uuid.UUID `json:"attribute_ids"` //nolint:tagliatelle
 }
 
-func RequestToCreateDTO(req *product_request.CreateProductRequest) CreateDTO {
+func RequestToCreateProductDTO(req *product_request.CreateProductRequest) CreateProductDTO {
 	var manufacturerID uuid.NullUUID
 	if req.ManufacturerID != nil {
 		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
 	} else {
 		manufacturerID = uuid.NullUUID{Valid: true}
 	}
-	return CreateDTO{
+	return CreateProductDTO{
 		Name:            req.Name,
 		Model:           req.Model,
 		Slug:            req.Slug,
@@ -123,14 +123,14 @@ func RequestToCreateDTO(req *product_request.CreateProductRequest) CreateDTO {
 	}
 }
 
-func RequestToUpdateDTO(req *product_request.UpdateProductRequest, id uuid.UUID) UpdateDTO {
+func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uuid.UUID) UpdateProductDTO {
 	var manufacturerID uuid.NullUUID
 	if req.ManufacturerID != nil {
 		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
 	} else {
 		manufacturerID = uuid.NullUUID{Valid: true}
 	}
-	return UpdateDTO{
+	return UpdateProductDTO{
 		ID:              id,
 		Name:            req.Name,
 		Model:           req.Model,

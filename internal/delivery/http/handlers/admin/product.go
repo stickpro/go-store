@@ -6,7 +6,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
-	"github.com/stickpro/go-store/internal/service/product"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 )
 
@@ -28,9 +28,9 @@ func (h *Handler) createProduct(c fiber.Ctx) error {
 	if err := c.Bind().Body(req); err != nil {
 		return err
 	}
-	dto := product.RequestToCreateDTO(req)
+	d := dto.RequestToCreateProductDTO(req)
 
-	prd, err := h.services.ProductService.CreateProduct(c.Context(), dto)
+	prd, err := h.services.ProductService.CreateProduct(c.Context(), d)
 	if err != nil {
 		return h.handleError(err, "product")
 	}
@@ -60,17 +60,54 @@ func (h *Handler) updateProduct(c fiber.Ctx) error {
 	if err := c.Bind().Body(req); err != nil {
 		return err
 	}
-	dto := product.RequestToUpdateDTO(req, id)
+	d := dto.RequestToUpdateProductDTO(req, id)
 
-	prd, err := h.services.ProductService.UpdateProduct(c.Context(), dto)
+	prd, err := h.services.ProductService.UpdateProduct(c.Context(), d)
 	if err != nil {
 		return h.handleError(err, "product")
 	}
 	return c.JSON(response.OkByData(product_response.NewFromModel(prd)))
 }
 
+// syncProductAttribute is a function sync product attribute
+//
+//	@Summary		Sync Product Attribute
+//	@Description	Sync product attribute
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		uuid.UUID									true	"Product ID"
+//	@Param			update	body		product_request.SyncProductAttributeRequest	true	"Sync product attribute"
+//	@Success		200		{object}	response.Result[string]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/:id/sync-attribute [POST]
+func (h *Handler) syncProductAttribute(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	req := &product_request.SyncProductAttributeRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	err = h.services.ProductService.SyncProductAttributes(c.Context(), dto.SyncAttributeProductDTO{
+		ProductID:    id,
+		AttributeIDs: req.AttributeIDs,
+	})
+	if err != nil {
+		return h.handleError(err, "product")
+	}
+
+	return c.JSON(response.OkByMessage("Product attributes synced"))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Post("/", h.createProduct)
 	p.Put("/:id", h.updateProduct)
+	p.Post(":id/sync-attribute", h.syncProductAttribute)
+
 }
