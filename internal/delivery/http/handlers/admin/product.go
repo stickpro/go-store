@@ -109,5 +109,4 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p.Post("/", h.createProduct)
 	p.Put("/:id", h.updateProduct)
 	p.Post(":id/sync-attribute", h.syncProductAttribute)
-
 }

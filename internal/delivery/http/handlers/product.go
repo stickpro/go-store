@@ -30,7 +30,7 @@ import (
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/product/:slug/ [get]
+//	@Router			/v1/product/{slug}/ [get]
 func (h Handler) getProductBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	prd, err := h.services.ProductService.GetProductBySlug(c.Context(), slug)
@@ -53,7 +53,7 @@ func (h Handler) getProductBySlug(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/product/id/:id/ [get]
+//	@Router			/v1/product/id/{id}/ [get]
 func (h Handler) getProductByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -104,7 +104,7 @@ func (h Handler) getProducts(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/product/id/:id/with-medium [get]
+//	@Router			/v1/product/id/{id}/with-medium [get]
 func (h Handler) getProductWithMediumByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -141,11 +141,34 @@ func (h *Handler) findProduct(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(location.Hits))
 }
 
+// getProductAttribute is a function get product attribute
+//
+//	@Summary		Get product attribute
+//	@Description	Get product attribute
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			slug	path		string	true	"Product Slug"
+//	@Success		200		{object}	response.Result[product_response.ProductAttributeResponse]
+//	@Failure		400		{object}	apierror.Errors\
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/{slug}/attributes [get]
+func (h *Handler) getProductAttribute(c fiber.Ctx) error {
+	slug := c.Params("slug")
+	prdAttr, err := h.services.ProductService.GetProductAttributes(c.Context(), slug)
+	if err != nil {
+		return h.handleError(err, "product")
+	}
+	return c.JSON(response.OkByData(product_response.NewFromAttributeWithAttributeGroups(prdAttr)))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Get("/", h.getProducts)
 	p.Get("/find", h.findProduct)
 	p.Get("/:slug", h.getProductBySlug)
+	p.Get("/:slug/attributes", h.getProductAttribute)
 	p.Get("/id/:id", h.getProductByID)
 	p.Get("/id/:id/with-medium", h.getProductWithMediumByID)
 }

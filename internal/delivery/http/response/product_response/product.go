@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/delivery/http/response/medium_response"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
@@ -82,5 +83,15 @@ func NewFromModelWithMedium(product *models.Product, medium []*models.Medium) Pr
 	return ProductWithMediumResponse{
 		Product: NewFromModel(product),
 		Medium:  medium_response.NewFromModels(medium),
+	}
+}
+
+type ProductAttributeResponse struct {
+	Groups []*dto.AttributeGroupDTO `json:"groups"`
+} // @name AttributeGroupsResponse
+
+func NewFromAttributeWithAttributeGroups(attributes []*dto.AttributeGroupDTO) ProductAttributeResponse {
+	return ProductAttributeResponse{
+		Groups: attributes,
 	}
 }

@@ -29,6 +29,22 @@ func RequestToUpdateAttributeGroupDTO(req *attribute_request.UpdateAttributeGrou
 	}
 }
 
+type AttributeDTO struct {
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Value        string    `json:"value"`
+	Type         string    `json:"type"`
+	IsFilterable bool      `json:"is_filterable"`
+	IsVisible    bool      `json:"is_visible"`
+	SortOrder    int       `json:"sort_order"`
+}
+type AttributeGroupDTO struct {
+	GroupID          uuid.UUID      `json:"group_id"`
+	GroupName        string         `json:"group_name"`
+	GroupDescription *string        `json:"group_description,omitempty"`
+	Attributes       []AttributeDTO `json:"attributes"`
+}
+
 type CreateAttributeDTO struct {
 	Name             string        `json:"name"`
 	Value            string        `json:"value"`

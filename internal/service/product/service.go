@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/dto/mapper"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/storage"
@@ -26,6 +27,7 @@ type IProductService interface {
 	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error)
 	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error)
 	//
+	GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupDTO, error)
 	SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error
 	// CreateProductIndex Indexing
 	CreateProductIndex(ctx context.Context, reindex bool) error
@@ -269,4 +271,24 @@ func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttribute
 		return err
 	}
 	return nil
+}
+
+func (s *Service) GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupDTO, error) {
+	prd, err := s.GetProductBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	rawAttributes, err := s.storage.Attributes().GetAttributesProduct(ctx, prd.ID)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to add attributes to product", parsedErr)
+		return nil, parsedErr
+	}
+
+	d, err := mapper.MapProductAttributesToDTO(rawAttributes)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
 }

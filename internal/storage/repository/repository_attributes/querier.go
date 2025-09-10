@@ -16,6 +16,7 @@ type Querier interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByAttributeGroupID(ctx context.Context, dollar_1 uuid.UUID) error
 	GetAll(ctx context.Context, arg GetAllParams) ([]*models.Attribute, error)
+	GetAttributesProduct(ctx context.Context, dollar_1 uuid.UUID) ([]*GetAttributesProductRow, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Attribute, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.Attribute, error)
 }
