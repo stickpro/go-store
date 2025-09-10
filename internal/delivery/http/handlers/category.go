@@ -27,7 +27,7 @@ import (
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/category/:slug/ [get]
+//	@Router			/v1/category/{slug}/ [get]
 func (h Handler) getCategoryBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	cat, err := h.services.CategoryService.GetCategoryBySlug(c.Context(), slug)
@@ -49,7 +49,7 @@ func (h Handler) getCategoryBySlug(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/category/id/:id/ [get]
+//	@Router			/v1/category/id/{id}/ [get]
 func (h Handler) getCategoryByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
