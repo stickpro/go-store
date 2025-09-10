@@ -1,15 +1,13 @@
 package mapper
 
 import (
-	"fmt"
-
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
 
-func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProductsByIDRow) *dto.WithProductsCollectionDTO {
+func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProductsByIDRow) *dto.WithProductsCollectionDTO { //nolint:dupl
 	d := &dto.WithProductsCollectionDTO{
 		ID:        rows[0].ID,
 		Name:      rows[0].Name,
@@ -42,8 +40,7 @@ func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProducts
 	return d
 }
 
-func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithProductsBySlugRow) *dto.WithProductsCollectionDTO {
-	fmt.Println(rows[0].CreatedAt)
+func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithProductsBySlugRow) *dto.WithProductsCollectionDTO { //nolint:dupl
 	d := &dto.WithProductsCollectionDTO{
 		ID:        rows[0].ID,
 		Name:      rows[0].Name,

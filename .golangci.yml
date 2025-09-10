@@ -43,7 +43,6 @@ linters:
     - prealloc
     - promlinter
     - reassign
-    - revive
     - staticcheck
     - tagliatelle
     - testableexamples

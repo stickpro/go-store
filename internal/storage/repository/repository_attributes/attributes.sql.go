@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -19,6 +20,62 @@ DELETE FROM attributes WHERE attribute_group_id = $1::uuid
 func (q *Queries) DeleteByAttributeGroupID(ctx context.Context, dollar_1 uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteByAttributeGroupID, dollar_1)
 	return err
+}
+
+const getAttributesProduct = `-- name: GetAttributesProduct :many
+select
+    ag.id as group_id,
+    ag.name as group_name,
+    ag.description as group_description,
+    json_agg(
+            json_build_object(
+                    'id', a.id,
+                    'name', a.name,
+                    'type', a.type,
+                    'is_filterable', a.is_filterable,
+                    'is_visible', a.is_visible,
+                    'sort_order', a.sort_order,
+                    'value', a.value
+            ) order by a.sort_order
+    ) as attributes
+from attribute_products ap
+         join attributes a on ap.attribute_id = a.id
+         join attribute_groups ag on a.attribute_group_id = ag.id
+where ap.product_id = $1::uuid
+group by ag.id, ag.name, ag.description
+order by ag.name
+`
+
+type GetAttributesProductRow struct {
+	GroupID          uuid.UUID   `db:"group_id" json:"group_id"`
+	GroupName        string      `db:"group_name" json:"group_name"`
+	GroupDescription pgtype.Text `db:"group_description" json:"group_description"`
+	Attributes       []byte      `db:"attributes" json:"attributes"`
+}
+
+func (q *Queries) GetAttributesProduct(ctx context.Context, dollar_1 uuid.UUID) ([]*GetAttributesProductRow, error) {
+	rows, err := q.db.Query(ctx, getAttributesProduct, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetAttributesProductRow{}
+	for rows.Next() {
+		var i GetAttributesProductRow
+		if err := rows.Scan(
+			&i.GroupID,
+			&i.GroupName,
+			&i.GroupDescription,
+			&i.Attributes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getByID = `-- name: GetByID :one
