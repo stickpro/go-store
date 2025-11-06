@@ -41,6 +41,11 @@ func Paginate[R any](
 		cfg.WhereBuilder(countSb)
 	}
 
+	if params.WithDeleted {
+		sb.Where("deleted_at IS NOT NULL")
+		countSb.Where("deleted_at IS NOT NULL")
+	}
+
 	if params.IsAscOrdering {
 		sb.OrderBy(orderBy + " ASC")
 	} else {

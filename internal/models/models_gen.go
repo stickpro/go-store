@@ -176,6 +176,20 @@ type ProductMedium struct {
 	SortOrder int32     `db:"sort_order" json:"sort_order"`
 }
 
+type ProductReview struct {
+	ID        uuid.UUID        `db:"id" json:"id"`
+	ProductID uuid.UUID        `db:"product_id" json:"product_id"`
+	UserID    uuid.UUID        `db:"user_id" json:"user_id"`
+	OrderID   uuid.NullUUID    `db:"order_id" json:"order_id"`
+	Rating    int16            `db:"rating" json:"rating"`
+	Title     pgtype.Text      `db:"title" json:"title"`
+	Body      pgtype.Text      `db:"body" json:"body"`
+	Status    string           `db:"status" json:"status"`
+	CreatedAt pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+	DeletedAt pgtype.Timestamp `db:"deleted_at" json:"deleted_at"`
+}
+
 type User struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
 	Email           string           `db:"email" json:"email" validate:"required,email"`

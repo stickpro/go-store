@@ -81,3 +81,7 @@ func (e *SearchEngine) DeleteDocument(indexName string, id string) error {
 	}
 	return nil
 }
+
+func (e *SearchEngine) Close() {
+	e.client.Close()
+}

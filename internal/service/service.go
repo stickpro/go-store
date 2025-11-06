@@ -10,6 +10,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/service/media"
 	"github.com/stickpro/go-store/internal/service/product"
+	"github.com/stickpro/go-store/internal/service/review"
 	"github.com/stickpro/go-store/internal/service/search"
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/service/user"
@@ -18,16 +19,17 @@ import (
 )
 
 type Services struct {
-	UserService         user.IUserService
-	AuthService         auth.IAuthService
-	CategoryService     category.ICategoryService
-	ProductService      product.IProductService
-	CollectionService   collections.ICollectionsService
-	MediaService        media.IMediaService
-	SearchService       searchtypes.ISearchService
-	ManufacturerService manufacturer.IManufacturerService
-	AttributeService    attribute.IAttributeService
-	GeoService          geo.IGeoService
+	UserService          user.IUserService
+	AuthService          auth.IAuthService
+	CategoryService      category.ICategoryService
+	ProductService       product.IProductService
+	ProductReviewService review.IProductReviewService
+	CollectionService    collections.ICollectionsService
+	MediaService         media.IMediaService
+	SearchService        searchtypes.ISearchService
+	ManufacturerService  manufacturer.IManufacturerService
+	AttributeService     attribute.IAttributeService
+	GeoService           geo.IGeoService
 }
 
 func InitService(
@@ -37,10 +39,14 @@ func InitService(
 ) (*Services, error) {
 	userService := user.New(conf, logger, storage)
 	authService := auth.New(conf, logger, storage, userService)
-	searchService, _ := search.New(conf)
+	searchService, err := search.New(conf)
+	if err != nil {
+		return nil, err
+	}
 
 	categoryService := category.New(conf, logger, storage)
 	productService := product.New(conf, logger, storage, searchService)
+	productReviewService := review.New(conf, logger, storage)
 	collectionServer := collections.New(conf, logger, storage)
 	mediaService := media.New(conf, logger, storage)
 	manufacturerService := manufacturer.New(conf, logger, storage)
@@ -49,20 +55,22 @@ func InitService(
 	geoService := geo.New(conf, logger, storage, searchService)
 
 	return &Services{
-		UserService:         userService,
-		AuthService:         authService,
-		CategoryService:     categoryService,
-		ProductService:      productService,
-		CollectionService:   collectionServer,
-		MediaService:        mediaService,
-		SearchService:       searchService,
-		ManufacturerService: manufacturerService,
-		AttributeService:    attributeService,
-		GeoService:          geoService,
+		UserService:          userService,
+		AuthService:          authService,
+		CategoryService:      categoryService,
+		ProductService:       productService,
+		ProductReviewService: productReviewService,
+		CollectionService:    collectionServer,
+		MediaService:         mediaService,
+		SearchService:        searchService,
+		ManufacturerService:  manufacturerService,
+		AttributeService:     attributeService,
+		GeoService:           geoService,
 	}, nil
 }
 
 func (s *Services) Close() error {
+	s.SearchService.Close()
 	if err := s.GeoService.Close(); err != nil {
 		return err
 	}

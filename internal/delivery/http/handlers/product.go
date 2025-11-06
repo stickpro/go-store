@@ -87,7 +87,7 @@ func (h Handler) getProducts(c fiber.Ctx) error {
 
 	prds, err := h.services.ProductService.GetProductWithPagination(c.Context(), dto.GetDTO{Page: req.Page, PageSize: req.PageSize})
 	if err != nil {
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+		return h.handleError(err, "product")
 	}
 	return c.JSON(response.OkByData(prds))
 }
@@ -150,7 +150,7 @@ func (h *Handler) findProduct(c fiber.Ctx) error {
 //	@Produce		json
 //	@Param			slug	path		string	true	"Product Slug"
 //	@Success		200		{object}	response.Result[product_response.ProductAttributeResponse]
-//	@Failure		400		{object}	apierror.Errors\
+//	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/product/{slug}/attributes [get]

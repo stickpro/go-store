@@ -29,6 +29,13 @@ definitions:
       updated_at:
         type: string
     type: object
+  AttributeGroupsResponse:
+    properties:
+      groups:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.AttributeGroupDTO'
+        type: array
+    type: object
   AuthRequest:
     properties:
       email:
@@ -366,6 +373,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-AttributeGroupsResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/AttributeGroupsResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-AuthResponse:
     properties:
       code:
@@ -435,6 +451,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/ProductResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-ProductReviewResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ProductReviewResponse'
       message:
         type: string
     type: object
@@ -660,6 +685,25 @@ definitions:
         type: number
       width:
         type: number
+    type: object
+  ProductReviewResponse:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      rating:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
     type: object
   ProductWithMediumResponse:
     properties:
@@ -923,6 +967,17 @@ definitions:
     required:
     - attribute_ids
     type: object
+  github_com_stickpro_go-store_internal_delivery_http_request_product_review_request.CreateProductReviewRequest:
+    properties:
+      body:
+        type: string
+      product_id:
+        type: string
+      rating:
+        type: integer
+      title:
+        type: string
+    type: object
   github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse:
     properties:
       attribute_group_id:
@@ -944,6 +999,36 @@ definitions:
       updated_at:
         type: string
       value:
+        type: string
+    type: object
+  github_com_stickpro_go-store_internal_dto.AttributeDTO:
+    properties:
+      id:
+        type: string
+      is_filterable:
+        type: boolean
+      is_visible:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+      type:
+        type: string
+      value:
+        type: string
+    type: object
+  github_com_stickpro_go-store_internal_dto.AttributeGroupDTO:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.AttributeDTO'
+        type: array
+      group_description:
+        type: string
+      group_id:
+        type: string
+      group_name:
         type: string
     type: object
   github_com_stickpro_go-store_internal_models.Category:
@@ -1229,6 +1314,50 @@ info:
   title: GO-store
   version: "1.0"
 paths:
+  /api/v1/product_review/:
+    post:
+      consumes:
+      - application/json
+      description: Create Product Review
+      parameters:
+      - description: Create Product Review Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_product_review_request.CreateProductReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Create Product Review
+      tags:
+      - Product Review
   /v1/attribute-group:
     get:
       consumes:
@@ -1681,7 +1810,7 @@ paths:
       summary: Update Category
       tags:
       - Category
-  /v1/category/:slug/:
+  /v1/category/{slug}/:
     get:
       consumes:
       - application/json
@@ -1714,7 +1843,7 @@ paths:
       summary: Category
       tags:
       - Category
-  /v1/category/id/:id/:
+  /v1/category/id/{id}/:
     get:
       consumes:
       - application/json
@@ -2302,7 +2431,7 @@ paths:
       summary: Sync Product Attribute
       tags:
       - Product
-  /v1/product/:slug/:
+  /v1/product/{slug}/:
     get:
       consumes:
       - application/json
@@ -2335,6 +2464,39 @@ paths:
       summary: Product
       tags:
       - Product
+  /v1/product/{slug}/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Get product attribute
+      parameters:
+      - description: Product Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AttributeGroupsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get product attribute
+      tags:
+      - Product
   /v1/product/find:
     get:
       consumes:
@@ -2364,7 +2526,7 @@ paths:
       summary: Find product
       tags:
       - Geo
-  /v1/product/id/:id/:
+  /v1/product/id/{id}/:
     get:
       consumes:
       - application/json
@@ -2391,7 +2553,7 @@ paths:
       summary: Product
       tags:
       - Product
-  /v1/product/id/:id/with-medium:
+  /v1/product/id/{id}/with-medium:
     get:
       consumes:
       - application/json

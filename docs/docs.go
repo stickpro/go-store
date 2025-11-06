@@ -18,6 +18,75 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/product_review/": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create Product Review",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product Review"
+                ],
+                "summary": "Create Product Review",
+                "parameters": [
+                    {
+                        "description": "Create Product Review Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_product_review_request.CreateProductReviewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ProductReviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/attribute-group": {
             "get": {
                 "security": [
@@ -726,9 +795,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/category/:slug/": {
+        "/v1/category/id/{id}/": {
             "get": {
-                "description": "Get category by slug",
+                "description": "Get category by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -739,15 +808,6 @@ const docTemplate = `{
                     "Category"
                 ],
                 "summary": "Category",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Category Slug",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -776,9 +836,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/category/id/:id/": {
+        "/v1/category/{slug}/": {
             "get": {
-                "description": "Get category by id",
+                "description": "Get category by slug",
                 "consumes": [
                     "application/json"
                 ],
@@ -789,6 +849,15 @@ const docTemplate = `{
                     "Category"
                 ],
                 "summary": "Category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category Slug",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1681,7 +1750,133 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/product/:slug/": {
+        "/v1/product/find": {
+            "get": {
+                "description": "Find product by name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Geo"
+                ],
+                "summary": "Find product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product name",
+                        "name": "product",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_Product"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/product/id/{id}/": {
+            "get": {
+                "description": "Get product by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Product",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ProductResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/product/id/{id}/with-medium": {
+            "get": {
+                "description": "Get product with medium by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Get product with medium by ID",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ProductWithMediumResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/product/{slug}/": {
             "get": {
                 "description": "Get product by slug",
                 "consumes": [
@@ -1731,9 +1926,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/product/find": {
+        "/v1/product/{slug}/attributes": {
             "get": {
-                "description": "Find product by name",
+                "description": "Get product attribute",
                 "consumes": [
                     "application/json"
                 ],
@@ -1741,15 +1936,15 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Geo"
+                    "Product"
                 ],
-                "summary": "Find product",
+                "summary": "Get product attribute",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Product name",
-                        "name": "product",
-                        "in": "query",
+                        "description": "Product Slug",
+                        "name": "slug",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -1757,83 +1952,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_Product"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/product/id/:id/": {
-            "get": {
-                "description": "Get product by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Product"
-                ],
-                "summary": "Product",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/JSONResponse-ProductResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/product/id/:id/with-medium": {
-            "get": {
-                "description": "Get product with medium by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Product"
-                ],
-                "summary": "Get product with medium by ID",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/JSONResponse-ProductWithMediumResponse"
+                            "$ref": "#/definitions/JSONResponse-AttributeGroupsResponse"
                         }
                     },
                     "400": {
@@ -1953,6 +2072,17 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "AttributeGroupsResponse": {
+            "type": "object",
+            "properties": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeGroupDTO"
+                    }
                 }
             }
         },
@@ -2446,6 +2576,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-AttributeGroupsResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/AttributeGroupsResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-AuthResponse": {
             "type": "object",
             "properties": {
@@ -2552,6 +2696,20 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/ProductResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-ProductReviewResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ProductReviewResponse"
                 },
                 "message": {
                     "type": "string"
@@ -2897,6 +3055,35 @@ const docTemplate = `{
                 },
                 "width": {
                     "type": "number"
+                }
+            }
+        },
+        "ProductReviewResponse": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -3279,6 +3466,23 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_stickpro_go-store_internal_delivery_http_request_product_review_request.CreateProductReviewRequest": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse": {
             "type": "object",
             "properties": {
@@ -3310,6 +3514,52 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_dto.AttributeDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_filterable": {
+                    "type": "boolean"
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_dto.AttributeGroupDTO": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeDTO"
+                    }
+                },
+                "group_description": {
+                    "type": "string"
+                },
+                "group_id": {
+                    "type": "string"
+                },
+                "group_name": {
                     "type": "string"
                 }
             }

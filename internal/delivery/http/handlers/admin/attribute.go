@@ -246,6 +246,7 @@ func (h *Handler) getAttributes(c fiber.Ctx) error {
 
 	return c.JSON(response.OkByData(attrs))
 }
+
 func (h *Handler) updateAttribute(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {

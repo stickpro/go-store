@@ -9,6 +9,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_personal_access_tokens"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_product_reviews"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_users"
 	"github.com/stickpro/go-store/pkg/database"
@@ -20,6 +21,7 @@ type IRepository interface {
 	PersonalAccessToken(opts ...Option) repository_personal_access_tokens.Querier
 	Categories(opts ...Option) repository_categories.ICustomQueries
 	Products(opts ...Option) repository_products.ICustomQueries
+	ProductReviews(opts ...Option) repository_product_reviews.ICustomQueries
 	Media(opts ...Option) repository_media.Querier
 	Manufacturers(opts ...Option) repository_manufacturers.ICustomQueries
 	AttributeGroups(opts ...Option) repository_attribute_groups.ICustomQueries
@@ -33,6 +35,7 @@ type repository struct {
 	personalAccessToken *repository_personal_access_tokens.Queries
 	categories          *repository_categories.CustomQueries
 	products            *repository_products.CustomQueries
+	productReviews      *repository_product_reviews.CustomQueries
 	manufacturer        *repository_manufacturers.CustomQueries
 	media               *repository_media.Queries
 	attributeGroups     *repository_attribute_groups.CustomQueries
@@ -47,6 +50,7 @@ func InitRepository(psql *database.PostgresClient, _ key_value.IKeyValue) IRepos
 		personalAccessToken: repository_personal_access_tokens.New(psql.DB),
 		categories:          repository_categories.NewCustom(psql.DB),
 		products:            repository_products.NewCustom(psql.DB),
+		productReviews:      repository_product_reviews.NewCustom(psql.DB),
 		manufacturer:        repository_manufacturers.NewCustom(psql.DB),
 		media:               repository_media.New(psql.DB),
 		attributeGroups:     repository_attribute_groups.NewCustom(psql.DB),
@@ -86,6 +90,14 @@ func (r *repository) Products(opts ...Option) repository_products.ICustomQueries
 		return r.products.WithTx(options.Tx)
 	}
 	return r.products
+}
+
+func (r *repository) ProductReviews(opts ...Option) repository_product_reviews.ICustomQueries {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.productReviews.WithTx(options.Tx)
+	}
+	return r.productReviews
 }
 
 func (r *repository) Manufacturers(opts ...Option) repository_manufacturers.ICustomQueries {

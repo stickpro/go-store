@@ -6,6 +6,7 @@ type ISearchService interface {
 	CheckIndex(nameIndex string) (bool, error)
 	UpsertDocument(indexName string, doc []map[string]interface{}) error
 	DeleteDocument(indexName string, id string) error
+	Close()
 }
 
 type SearchResult struct {

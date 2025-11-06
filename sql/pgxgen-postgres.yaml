@@ -97,6 +97,27 @@ sqlc:
               column_values:
                 updated_at: now()
               returning: "*"
+        # Product reviews
+        product_reviews:
+          output_dir: postgres/queries/product_reviews
+          primary_column: id
+          methods:
+            create:
+              skip_columns:
+                - id
+                - updated_at
+              returning: "*"
+              column_values:
+                created_at: now()
+            update:
+              name: Update
+              skip_columns:
+                - id
+                - created_at
+              column_values:
+                updated_at: now()
+              returning: "*"
+            delete:
         # files
         media:
           output_dir: postgres/queries/media

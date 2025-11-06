@@ -19,8 +19,8 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 		return
 	}
 	defer func() {
-		if storageCloseErr := st.Close(); storageCloseErr != nil {
-			l.Fatal("storage close error", storageCloseErr)
+		if err := st.Close(); err != nil {
+			l.Fatal("storage close error", err)
 		}
 	}()
 
@@ -31,8 +31,8 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 		l.Fatal("error start DI service", err)
 	}
 	defer func() {
-		if serviceCloseErr := services.Close(); serviceCloseErr != nil {
-			l.Fatal("services close error", serviceCloseErr)
+		if err := services.Close(); err != nil {
+			l.Fatal("services close error", err)
 		}
 	}()
 	l.Info("Start DI service")
@@ -40,17 +40,25 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 	srv := server.InitServer(conf, services, l)
 
 	initIndexer(ctx, services, l)
+
+	serverErrCh := make(chan error, 1)
 	go func() {
-		if err := srv.Run(); !errors.Is(err, http.ErrServerClosed) {
+		defer close(serverErrCh)
+		if err := srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			l.Error("error occurred while running http server", err)
+			serverErrCh <- err
 		}
 	}()
 
 	l.Info("Start http server")
 
-	if err := srv.Stop(); err != nil {
-		l.Error("failed to stop server", err)
+	select {
+	case <-ctx.Done():
+		l.Info("Shutdown signal received")
+		if err := srv.Stop(); err != nil {
+			l.Error("failed to stop server", err)
+		}
+	case err := <-serverErrCh:
+		l.Error("Server crashed, shutting down", err)
 	}
-
-	<-ctx.Done()
 }
