@@ -1,0 +1,39 @@
+### Variables
+@productId = 66282daa-8032-41f7-9470-2f4321b41c47
+
+### Create Product Review
+# Note: Run auth.http login/register first to set the token variable
+POST {{baseUrl}}/api/v1/product_review/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "product_id": "{{productId}}",
+  "rating": 5,
+  "title": "Отличный товар!",
+  "body": "Очень доволен покупкой. Качество на высшем уровне, доставка быстрая. Рекомендую!"
+}
+
+### Create Product Review (Negative)
+POST {{baseUrl}}/api/v1/product_review/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "product_id": "{{productId}}",
+  "rating": 2,
+  "title": "Не оправдал ожиданий",
+  "body": "Качество товара оставляет желать лучшего. Не соответствует описанию."
+}
+
+### Get Product Reviews by Product ID (with pagination)
+GET {{baseUrl}}/api/v1/product_review/by_product/{{productId}}?page=1&page_size=10
+Content-Type: application/json
+
+### Get Product Reviews by Product ID (without pagination)
+GET {{baseUrl}}/api/v1/product_review/by_product/{{productId}}
+Content-Type: application/json
+
+### Get Product Reviews by Product ID (page 2)
+GET {{baseUrl}}/api/v1/product_review/by_product/{{productId}}?page=2&page_size=20
+Content-Type: application/json

@@ -28,7 +28,7 @@ import (
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/category/{slug}/ [get]
-func (h Handler) getCategoryBySlug(c fiber.Ctx) error {
+func (h *Handler) getCategoryBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	cat, err := h.services.CategoryService.GetCategoryBySlug(c.Context(), slug)
 	if err != nil {
@@ -50,7 +50,7 @@ func (h Handler) getCategoryBySlug(c fiber.Ctx) error {
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/category/id/{id}/ [get]
-func (h Handler) getCategoryByID(c fiber.Ctx) error {
+func (h *Handler) getCategoryByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
@@ -74,7 +74,7 @@ func (h Handler) getCategoryByID(c fiber.Ctx) error {
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Router			/v1/category/ [get]
-func (h Handler) getCategories(c fiber.Ctx) error {
+func (h *Handler) getCategories(c fiber.Ctx) error {
 	req := &category_request.GetCategoryWithPagination{}
 	if err := c.Bind().Query(req); err != nil {
 		return err

@@ -31,7 +31,7 @@ import (
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/product/{slug}/ [get]
-func (h Handler) getProductBySlug(c fiber.Ctx) error {
+func (h *Handler) getProductBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	prd, err := h.services.ProductService.GetProductBySlug(c.Context(), slug)
 	if err != nil {
@@ -54,7 +54,7 @@ func (h Handler) getProductBySlug(c fiber.Ctx) error {
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/product/id/{id}/ [get]
-func (h Handler) getProductByID(c fiber.Ctx) error {
+func (h *Handler) getProductByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
@@ -79,7 +79,7 @@ func (h Handler) getProductByID(c fiber.Ctx) error {
 //	@Failure		404		{object}	apierror.Errors
 //	@Router			/v1/product/ [get]
 //	@Security		BearerAuth
-func (h Handler) getProducts(c fiber.Ctx) error {
+func (h *Handler) getProducts(c fiber.Ctx) error {
 	req := &product_request.GetProductWithPagination{}
 	if err := c.Bind().Query(req); err != nil {
 		return err
@@ -105,7 +105,7 @@ func (h Handler) getProducts(c fiber.Ctx) error {
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/product/id/{id}/with-medium [get]
-func (h Handler) getProductWithMediumByID(c fiber.Ctx) error {
+func (h *Handler) getProductWithMediumByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)

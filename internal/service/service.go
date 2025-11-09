@@ -46,7 +46,7 @@ func InitService(
 
 	categoryService := category.New(conf, logger, storage)
 	productService := product.New(conf, logger, storage, searchService)
-	productReviewService := review.New(conf, logger, storage)
+	productReviewService := review.New(conf, logger, storage, productService)
 	collectionServer := collections.New(conf, logger, storage)
 	mediaService := media.New(conf, logger, storage)
 	manufacturerService := manufacturer.New(conf, logger, storage)

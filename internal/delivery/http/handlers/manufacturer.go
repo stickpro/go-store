@@ -23,7 +23,7 @@ import (
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/manufacturer/:slug/ [get]
-func (h Handler) getManufacturerBySlug(c fiber.Ctx) error {
+func (h *Handler) getManufacturerBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	mfc, err := h.services.ManufacturerService.GetManufacturerBySlug(c.Context(), slug)
 	if err != nil {
@@ -45,7 +45,7 @@ func (h Handler) getManufacturerBySlug(c fiber.Ctx) error {
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/manufacturer/id/:id/ [get]
-func (h Handler) getManufacturerByID(c fiber.Ctx) error {
+func (h *Handler) getManufacturerByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
@@ -70,7 +70,7 @@ func (h Handler) getManufacturerByID(c fiber.Ctx) error {
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/manufacturer/id/:id/ [get]
-func (h Handler) getManufacturers(c fiber.Ctx) error {
+func (h *Handler) getManufacturers(c fiber.Ctx) error {
 	req := &manufacturer_request.GetManufacturerWithPagination{}
 	if err := c.Bind().Query(req); err != nil {
 		return err

@@ -135,7 +135,9 @@ func (s *Service) GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*
 func (s *Service) GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
 	prd, err := s.storage.Products().GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Debugf("failed to get product by ID", "error", parsedErr)
+		return nil, parsedErr
 	}
 	return prd, nil
 }

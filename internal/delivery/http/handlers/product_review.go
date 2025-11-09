@@ -8,7 +8,8 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/middleware"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools"
-	"github.com/stickpro/go-store/internal/tools/apierror"
+	//swag-gen import
+	_ "github.com/stickpro/go-store/internal/tools/apierror"
 )
 
 // createProductReview
@@ -40,7 +41,7 @@ func (h *Handler) createProductReview(c fiber.Ctx) error {
 	d := dto.RequestToCreateProductReviewDTO(&req, usr.ID)
 	productReview, err := h.services.ProductReviewService.CreateProductReview(c.Context(), d)
 	if err != nil {
-		return h.handleError(err, "product review")
+		return h.handleError(err, "product")
 	}
 	return c.JSON(response.OkByData(product_review_response.NewFromModel(productReview)))
 }
@@ -64,7 +65,7 @@ func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 	}
 
 	req := product_review_request.GetProductReviewsWithPagination{}
-	if err := c.Bind().Query(req); err != nil {
+	if err := c.Bind().Query(&req); err != nil {
 		return err
 	}
 	d := dto.RequestToGetProductReviewDTO(&req)

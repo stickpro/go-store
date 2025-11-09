@@ -1,0 +1,42 @@
+### Variables
+@email = user@example.com
+@password = SecurePass123
+
+### Register User
+POST {{baseUrl}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "location": "Europe/Moscow",
+  "language": "ru"
+}
+
+> {%
+    client.global.set("token", response.body.data.token);
+%}
+
+### Register User (English)
+POST {{baseUrl}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "MyPassword2024",
+  "location": "America/New_York",
+  "language": "en"
+}
+
+### Login User
+POST {{baseUrl}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set("token", response.body.data.token);
+%}

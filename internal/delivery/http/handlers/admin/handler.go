@@ -38,7 +38,7 @@ func (h *Handler) InitAdminHandler(api *fiber.App) {
 	h.initManufacturerRoutes(secured)
 }
 
-func (h Handler) handleError(err error, modelName string) error {
+func (h *Handler) handleError(err error, modelName string) error {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return apierror.New().AddError(errors.New(modelName + " not found")).SetHttpCode(fiber.StatusNotFound)
 	}

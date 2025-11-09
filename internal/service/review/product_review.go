@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/service/product"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_reviews"
@@ -27,16 +28,18 @@ type IProductReviewService interface {
 }
 
 type Service struct {
-	cfg     *config.Config
-	l       logger.Logger
-	storage storage.IStorage
+	cfg            *config.Config
+	l              logger.Logger
+	storage        storage.IStorage
+	productService product.IProductService
 }
 
-func New(cfg *config.Config, log logger.Logger, storage storage.IStorage) *Service {
+func New(cfg *config.Config, log logger.Logger, storage storage.IStorage, pService product.IProductService) *Service {
 	return &Service{
-		cfg:     cfg,
-		l:       log,
-		storage: storage,
+		cfg:            cfg,
+		l:              log,
+		storage:        storage,
+		productService: pService,
 	}
 }
 
@@ -49,9 +52,7 @@ func (s *Service) GetProductReviewsWithPaginate(ctx context.Context, d dto.GetPr
 		commonParams.Page = d.Page
 	}
 
-	if d.WithDeleted != nil {
-		commonParams.WithDeleted = true
-	}
+	commonParams.WithDeleted = true
 
 	productReviews, err := s.storage.ProductReviews().GetWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
 		CommonFindParams: *commonParams,
@@ -97,6 +98,11 @@ func (s *Service) GetProductReviewsByProductID(ctx context.Context, d dto.GetPro
 }
 
 func (s *Service) CreateProductReview(ctx context.Context, d dto.CreateProductReviewDTO) (*models.ProductReview, error) {
+	_, err := s.productService.GetProductByID(ctx, d.ProductID)
+	if err != nil {
+		return nil, err
+	}
+
 	params := repository_product_reviews.CreateParams{
 		ProductID: d.ProductID,
 		UserID:    d.UserID,
