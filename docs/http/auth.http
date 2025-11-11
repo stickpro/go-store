@@ -29,7 +29,7 @@ Content-Type: application/json
 }
 
 ### Login User
-POST {{baseUrl}}/v1/auth/login
+POST {{baseUrl}}api/v1/auth/login
 Content-Type: application/json
 
 {

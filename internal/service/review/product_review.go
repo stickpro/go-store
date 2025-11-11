@@ -20,7 +20,8 @@ import (
 type IProductReviewService interface {
 	GetProductReviewsWithPaginate(ctx context.Context, d dto.GetProductReviewsDTO) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	GetProductReviewByID(ctx context.Context, id uuid.UUID) (*models.ProductReview, error)
-	GetProductReviewsByProductID(ctx context.Context, d dto.GetProductReviewsDTO, productID uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
+	GetProductReviewsByProductID(ctx context.Context, d dto.GetProductReviewsDTO, productID *uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
+	GetUserProductReviews(ctx context.Context, d dto.GetProductReviewsDTO, userID uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	CreateProductReview(ctx context.Context, d dto.CreateProductReviewDTO) (*models.ProductReview, error)
 	UpdateProductReviewStatus(ctx context.Context, d dto.UpdateProductReviewStatusDTO) error
 	DeleteProductReview(ctx context.Context, id uuid.UUID) error
@@ -52,10 +53,30 @@ func (s *Service) GetProductReviewsWithPaginate(ctx context.Context, d dto.GetPr
 		commonParams.Page = d.Page
 	}
 
-	commonParams.WithDeleted = true
+	productReviews, err := s.storage.ProductReviews().GetWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
+		CommonFindParams: *commonParams,
+	})
+
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.l.Debug("error getting product reviews with pagination", parsedErr)
+		return nil, parsedErr
+	}
+	return productReviews, nil
+}
+
+func (s *Service) GetUserProductReviews(ctx context.Context, d dto.GetProductReviewsDTO, userID uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error) {
+	commonParams := base.NewCommonFindParams()
+	if d.PageSize != nil {
+		commonParams.PageSize = d.PageSize
+	}
+	if d.Page != nil {
+		commonParams.Page = d.Page
+	}
 
 	productReviews, err := s.storage.ProductReviews().GetWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
 		CommonFindParams: *commonParams,
+		UserID:           &userID,
 	})
 
 	if err != nil {
@@ -76,7 +97,7 @@ func (s *Service) GetProductReviewByID(ctx context.Context, id uuid.UUID) (*mode
 	return productReview, nil
 }
 
-func (s *Service) GetProductReviewsByProductID(ctx context.Context, d dto.GetProductReviewsDTO, productID uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error) {
+func (s *Service) GetProductReviewsByProductID(ctx context.Context, d dto.GetProductReviewsDTO, productID *uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error) {
 	commonParams := base.NewCommonFindParams()
 	if d.PageSize != nil {
 		commonParams.PageSize = d.PageSize
@@ -87,7 +108,7 @@ func (s *Service) GetProductReviewsByProductID(ctx context.Context, d dto.GetPro
 
 	productReviews, err := s.storage.ProductReviews().GetByProductIDWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
 		CommonFindParams: *commonParams,
-		ProductID:        uuid.NullUUID{UUID: productID, Valid: true},
+		ProductID:        productID,
 	})
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)

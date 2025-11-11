@@ -1,5 +1,5 @@
 ### Variables
-@productId = 66282daa-8032-41f7-9470-2f4321b41c47
+@productId = 7f77531f-6f65-444d-92a4-17761176efe1
 
 ### Create Product Review
 # Note: Run auth.http login/register first to set the token variable
@@ -10,8 +10,8 @@ Authorization: Bearer {{token}}
 {
   "product_id": "{{productId}}",
   "rating": 5,
-  "title": "Отличный товар!",
-  "body": "Очень доволен покупкой. Качество на высшем уровне, доставка быстрая. Рекомендую!"
+  "title": "Great product!",
+  "body": "Very pleased with the purchase. Top quality, fast delivery. I recommend!"
 }
 
 ### Create Product Review (Negative)
@@ -22,18 +22,18 @@ Authorization: Bearer {{token}}
 {
   "product_id": "{{productId}}",
   "rating": 2,
-  "title": "Не оправдал ожиданий",
-  "body": "Качество товара оставляет желать лучшего. Не соответствует описанию."
+  "title": "Didn't live up to expectations",
+  "body": "The quality of the product leaves much to be desired. Doesn't match the description."
 }
 
 ### Get Product Reviews by Product ID (with pagination)
-GET {{baseUrl}}/api/v1/product_review/by_product/{{productId}}?page=1&page_size=10
+GET {{baseUrl}}/api/v1/product-review/by-product/{{productId}}?page=1&page_size=10
 Content-Type: application/json
 
 ### Get Product Reviews by Product ID (without pagination)
-GET {{baseUrl}}/api/v1/product_review/by_product/{{productId}}
+GET {{baseUrl}}/api/v1/product-review/by-product/{{productId}}
 Content-Type: application/json
 
 ### Get Product Reviews by Product ID (page 2)
-GET {{baseUrl}}/api/v1/product_review/by_product/{{productId}}?page=2&page_size=20
+GET {{baseUrl}}/api/v1/product-review/by-product/{{productId}}?page=2&page_size=20
 Content-Type: application/json

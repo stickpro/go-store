@@ -1,0 +1,22 @@
+### Variables
+@productId = 66282daa-8032-41f7-9470-2f4321b41c47
+
+### Get Auth User Info
+GET {{baseUrl}}api/v1/user/info
+Authorization: Bearer {{token}}
+
+### Get User Product Reviews (with pagination)
+GET {{baseUrl}}api/v1/user/product-review?page=1&page_size=10
+Authorization: Bearer {{token}}
+
+### Get User Product Reviews (with product filter)
+GET {{baseUrl}}api/v1/user/product-review?product_id={{productId}}&page=1&page_size=10
+Authorization: Bearer {{token}}
+
+### Get User Product Reviews (first page, 20 items)
+GET {{baseUrl}}api/v1/user/product-review?page=1&page_size=20
+Authorization: Bearer {{token}}
+
+### Get User Product Reviews (second page)
+GET {{baseUrl}}api/v1/user/product-review?page=2&page_size=10
+Authorization: Bearer {{token}}

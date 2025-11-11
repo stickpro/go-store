@@ -58,6 +58,8 @@ func (h *Handler) createProductReview(c fiber.Ctx) error {
 //	@Success		200		{object}	response.Result[product_review_response.ProductReviewResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/api/v1/product_review/by-product/{id} [post]
 func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 	id, err := tools.ValidateUUID(c.Params("id"))
 	if err != nil {
@@ -69,7 +71,7 @@ func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 		return err
 	}
 	d := dto.RequestToGetProductReviewDTO(&req)
-	productReviews, err := h.services.ProductReviewService.GetProductReviewsByProductID(c.Context(), d, id)
+	productReviews, err := h.services.ProductReviewService.GetProductReviewsByProductID(c.Context(), d, &id)
 	if err != nil {
 		return h.handleError(err, "product reviews")
 	}
@@ -77,7 +79,7 @@ func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 }
 
 func (h *Handler) initProductReviewRoutes(v1 fiber.Router) {
-	pr := v1.Group("/product_review")
+	pr := v1.Group("/product-review")
 	pr.Post("/", h.createProductReview, middleware.AuthMiddleware(h.services.AuthService))
-	pr.Get("/by_product/:id", h.getProductReviewsByProductID)
+	pr.Get("/by-product/:id", h.getProductReviewsByProductID)
 }
