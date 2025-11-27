@@ -56,8 +56,8 @@ gen-envs:
 	go run ./cmd/app config genenvs
 
 gen-sql:
-	cd sql && pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml crud
-	cd sql && pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml sqlc generate
+	cd sql && /Users/st/Project/pgxgen/pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml crud
+	cd sql && /Users/st/Project/pgxgen/pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml sqlc generate
 
 gen-swag:
 	swag fmt

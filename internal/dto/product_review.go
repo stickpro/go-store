@@ -7,9 +7,10 @@ import (
 )
 
 type GetProductReviewsDTO struct {
-	Page        *uint32 `json:"page" query:"page"`
-	PageSize    *uint32 `json:"page_size" query:"page_size"`
-	WithDeleted bool    `json:"with_deleted" query:"with_deleted"`
+	Page         *uint32 `json:"page" query:"page"`
+	PageSize     *uint32 `json:"page_size" query:"page_size"`
+	WithDeleted  bool    `json:"with_deleted" query:"with_deleted"`
+	SortByRating *string `json:"sort_by_rating,omitempty" query:"sort_by_rating,omitempty"`
 }
 
 type CreateProductReviewDTO struct {
@@ -33,9 +34,10 @@ func RequestToCreateProductReviewDTO(req *product_review_request.CreateProductRe
 
 func RequestToGetProductReviewDTO(req *product_review_request.GetProductReviewsWithPagination) GetProductReviewsDTO {
 	return GetProductReviewsDTO{
-		Page:        req.Page,
-		PageSize:    req.PageSize,
-		WithDeleted: false,
+		Page:         req.Page,
+		PageSize:     req.PageSize,
+		WithDeleted:  false,
+		SortByRating: req.SortByRating,
 	}
 }
 

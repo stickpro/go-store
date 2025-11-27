@@ -105,6 +105,14 @@ func (s *Service) GetProductReviewsByProductID(ctx context.Context, d dto.GetPro
 	if d.Page != nil {
 		commonParams.Page = d.Page
 	}
+	if d.SortByRating != nil {
+		commonParams.OrderBy = "rating"
+		if *d.SortByRating == "asc" {
+			commonParams.IsAscOrdering = true
+		} else {
+			commonParams.IsAscOrdering = false
+		}
+	}
 
 	productReviews, err := s.storage.ProductReviews().GetByProductIDWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
 		CommonFindParams: *commonParams,

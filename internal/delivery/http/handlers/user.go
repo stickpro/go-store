@@ -10,6 +10,7 @@ import (
 	"github.com/stickpro/go-store/internal/dto"
 
 	// swaggo
+	_ "github.com/stickpro/go-store/internal/delivery/http/response/product_review_response"
 	_ "github.com/stickpro/go-store/internal/tools/apierror"
 )
 
@@ -44,9 +45,9 @@ func (h *Handler) authUser(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	query		product_review_request.GetProductReviewsWithPagination	true	"GetProductReviewsWithPagination"
-//	@Success		200	{object}	response.Result[product_review_response.ProductReviewResponse]
-//	@Failure		400	{object}	apierror.Errors
-//	@Failure		401	{object}	apierror.Errors
+//	@Success		200		{object}	response.Result[product_review_response.ProductReviewResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		401		{object}	apierror.Errors
 func (h *Handler) getUserProductReviews(c fiber.Ctx) error {
 	user, err := loadAuthUser(c)
 	if err != nil {

@@ -40,6 +40,7 @@ func (s *CustomQueries) GetWithPaginate(
 			"id":         true,
 			"title":      true,
 			"created_at": true,
+			"rating":     true,
 		},
 	})
 }
@@ -62,6 +63,7 @@ func (s *CustomQueries) GetByProductIDWithPaginate(
 			"id":         true,
 			"title":      true,
 			"created_at": true,
+			"rating":     true,
 		},
 	})
 }

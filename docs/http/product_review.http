@@ -27,7 +27,7 @@ Authorization: Bearer {{token}}
 }
 
 ### Get Product Reviews by Product ID (with pagination)
-GET {{baseUrl}}/api/v1/product-review/by-product/{{productId}}?page=1&page_size=10
+GET {{baseUrl}}/api/v1/product-review/by-product/{{productId}}?page=1&page_size=10&sort_by_rating=desc
 Content-Type: application/json
 
 ### Get Product Reviews by Product ID (without pagination)

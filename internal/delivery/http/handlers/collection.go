@@ -16,7 +16,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		uuid.UUID	true	"Collection ID"
-//	@Success		200	{object}	response.Result[collection_response.CollectionResponse]
+//	@Success		200	{object}	response.Result[collection_response.CollectionResponseWithProducts]
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
@@ -42,7 +42,7 @@ func (h *Handler) getCollectionByID(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			slug	path		string	true	"Collection Slug"
-//	@Success		200		{object}	response.Result[collection_response.CollectionResponse]
+//	@Success		200		{object}	response.Result[collection_response.CollectionResponseWithProducts]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors

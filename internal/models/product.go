@@ -14,4 +14,4 @@ type ShortProduct struct {
 	Image    pgtype.Text     `db:"image" json:"image"`
 	Price    decimal.Decimal `db:"price" json:"price"`
 	IsEnable bool            `db:"is_enable" json:"is_enable"`
-}
+} // @name ShortProduct

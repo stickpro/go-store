@@ -87,6 +87,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/product_review/by-product/{id}": {
+            "post": {
+                "description": "Get Product Reviews By Product ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product Review"
+                ],
+                "summary": "Get Product Reviews By Product ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "product_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "\"asc\" or \"desc\"",
+                        "name": "sort_by_rating",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ProductReviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/attribute-group": {
             "get": {
                 "security": [
@@ -675,7 +739,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category"
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-Category"
                         }
                     },
                     "401": {
@@ -920,7 +984,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection"
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-Collection"
                         }
                     },
                     "400": {
@@ -1082,7 +1146,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-CollectionResponse"
+                            "$ref": "#/definitions/JSONResponse-CollectionWithProductResponse"
                         }
                     },
                     "400": {
@@ -1123,7 +1187,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-CollectionResponse"
+                            "$ref": "#/definitions/JSONResponse-CollectionWithProductResponse"
                         }
                     },
                     "400": {
@@ -1208,7 +1272,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_City"
+                            "$ref": "#/definitions/JSONResponse-array_City"
                         }
                     },
                     "400": {
@@ -1776,7 +1840,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_Product"
+                            "$ref": "#/definitions/JSONResponse-array_Product"
                         }
                     },
                     "400": {
@@ -2111,6 +2175,50 @@ const docTemplate = `{
                 }
             }
         },
+        "Category": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image_path": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "is_enable": {
+                    "type": "boolean"
+                },
+                "meta_description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_h1": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_keyword": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_title": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                }
+            }
+        },
         "CategoryResponse": {
             "type": "object",
             "properties": {
@@ -2151,6 +2259,86 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "City": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "area": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "area_type": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "capital_marker": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "city_type": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "federal_district": {
+                    "type": "string"
+                },
+                "fias_id": {
+                    "type": "string"
+                },
+                "fias_level": {
+                    "type": "integer"
+                },
+                "foundation_year": {
+                    "type": "integer"
+                },
+                "geo_lat": {
+                    "type": "number"
+                },
+                "geo_lon": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kladr_id": {
+                    "type": "string"
+                },
+                "okato": {
+                    "type": "string"
+                },
+                "oktmo": {
+                    "type": "string"
+                },
+                "population": {
+                    "type": "integer"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "region_type": {
+                    "type": "string"
+                },
+                "settlement": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "settlement_type": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "tax_office": {
+                    "type": "string"
+                },
+                "timezone": {
                     "type": "string"
                 }
             }
@@ -2235,6 +2423,29 @@ const docTemplate = `{
                 }
             }
         },
+        "Collection": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
         "CollectionResponse": {
             "type": "object",
             "properties": {
@@ -2249,6 +2460,35 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "CollectionWithProductResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "products": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ShortProduct"
+                    }
                 },
                 "slug": {
                     "type": "string"
@@ -2646,6 +2886,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-CollectionWithProductResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/CollectionWithProductResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-GeoResponse": {
             "type": "object",
             "properties": {
@@ -2744,28 +2998,28 @@ const docTemplate = `{
                 }
             }
         },
-        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category": {
+        "JSONResponse-ResponseWithFullPagination-Category": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category"
+                    "$ref": "#/definitions/ResponseWithFullPagination-Category"
                 },
                 "message": {
                     "type": "string"
                 }
             }
         },
-        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection": {
+        "JSONResponse-ResponseWithFullPagination-Collection": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection"
+                    "$ref": "#/definitions/ResponseWithFullPagination-Collection"
                 },
                 "message": {
                     "type": "string"
@@ -2817,6 +3071,40 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-array_City": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/City"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-array_Product": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Product"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-array_github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse": {
             "type": "object",
             "properties": {
@@ -2827,40 +3115,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "JSONResponse-array_github_com_stickpro_go-store_internal_models_City": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.City"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "JSONResponse-array_github_com_stickpro_go-store_internal_models_Product": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Product"
                     }
                 },
                 "message": {
@@ -2963,6 +3217,107 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "Product": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "ean": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "is_enable": {
+                    "type": "boolean"
+                },
+                "isbn": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "jan": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "length": {
+                    "type": "number"
+                },
+                "location": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "manufacturer_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "meta_description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_h1": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_keyword": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_title": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "minimum": {
+                    "type": "integer"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "mpn": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "stock_status": {
+                    "$ref": "#/definitions/StockStatus"
+                },
+                "subtract": {
+                    "type": "boolean"
+                },
+                "upc": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "viewed": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "number"
+                },
+                "width": {
+                    "type": "number"
                 }
             }
         },
@@ -3136,13 +3491,13 @@ const docTemplate = `{
                 }
             }
         },
-        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category": {
+        "ResponseWithFullPagination-Category": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Category"
+                        "$ref": "#/definitions/Category"
                     }
                 },
                 "pagination": {
@@ -3150,13 +3505,13 @@ const docTemplate = `{
                 }
             }
         },
-        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection": {
+        "ResponseWithFullPagination-Collection": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Collection"
+                        "$ref": "#/definitions/Collection"
                     }
                 },
                 "pagination": {
@@ -3175,6 +3530,32 @@ const docTemplate = `{
                 },
                 "pagination": {
                     "$ref": "#/definitions/FullPagingData"
+                }
+            }
+        },
+        "ShortProduct": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "is_enable": {
+                    "type": "boolean"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "slug": {
+                    "type": "string"
                 }
             }
         },
@@ -3561,254 +3942,6 @@ const docTemplate = `{
                 },
                 "group_name": {
                     "type": "string"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_models.Category": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "image_path": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "is_enable": {
-                    "type": "boolean"
-                },
-                "meta_description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_h1": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_keyword": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_title": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "parent_id": {
-                    "$ref": "#/definitions/uuid.NullUUID"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_models.City": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "area": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "area_type": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "capital_marker": {
-                    "type": "integer"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "city_type": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "federal_district": {
-                    "type": "string"
-                },
-                "fias_id": {
-                    "type": "string"
-                },
-                "fias_level": {
-                    "type": "integer"
-                },
-                "foundation_year": {
-                    "type": "integer"
-                },
-                "geo_lat": {
-                    "type": "number"
-                },
-                "geo_lon": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "kladr_id": {
-                    "type": "string"
-                },
-                "okato": {
-                    "type": "string"
-                },
-                "oktmo": {
-                    "type": "string"
-                },
-                "population": {
-                    "type": "integer"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "region_type": {
-                    "type": "string"
-                },
-                "settlement": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "settlement_type": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "tax_office": {
-                    "type": "string"
-                },
-                "timezone": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_models.Collection": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_models.Product": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "ean": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "height": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "image": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "is_enable": {
-                    "type": "boolean"
-                },
-                "isbn": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "jan": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "length": {
-                    "type": "number"
-                },
-                "location": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "manufacturer_id": {
-                    "$ref": "#/definitions/uuid.NullUUID"
-                },
-                "meta_description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_h1": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_keyword": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_title": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "minimum": {
-                    "type": "integer"
-                },
-                "model": {
-                    "type": "string"
-                },
-                "mpn": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "sku": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "integer"
-                },
-                "stock_status": {
-                    "$ref": "#/definitions/StockStatus"
-                },
-                "subtract": {
-                    "type": "boolean"
-                },
-                "upc": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "viewed": {
-                    "type": "integer"
-                },
-                "weight": {
-                    "type": "number"
-                },
-                "width": {
-                    "type": "number"
                 }
             }
         },
