@@ -48,6 +48,11 @@ func New(cfg *config.Config, logger logger.Logger, st storage.IStorage, ss searc
 }
 
 func (s *Service) GetCityByIP(ip string) (string, error) {
+	if s.db == nil {
+		s.logger.Error("GeoIP database not initialized")
+		return "", fmt.Errorf("GeoIP database not available")
+	}
+
 	parsedIP := net.ParseIP(ip)
 	if parsedIP == nil {
 		s.logger.Error("Invalid IP address", "ip", ip)
