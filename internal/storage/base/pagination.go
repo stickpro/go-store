@@ -41,7 +41,7 @@ func Paginate[R any](
 		cfg.WhereBuilder(countSb)
 	}
 
-	if !params.WithDeleted {
+	if params.WithDeleted != nil && !*params.WithDeleted {
 		sb.Where("deleted_at IS NULL")
 		countSb.Where("deleted_at IS NULL")
 	}

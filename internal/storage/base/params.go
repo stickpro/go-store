@@ -5,7 +5,7 @@ type CommonFindParams struct {
 	PageSize      *uint32
 	IsAscOrdering bool   `json:"is_asc_ordering"`
 	OrderBy       string `json:"order_by"`
-	WithDeleted   bool   `json:"with_deleted"`
+	WithDeleted   *bool  `json:"with_deleted"`
 } // @name CommonFindParams
 
 func NewCommonFindParams() *CommonFindParams {

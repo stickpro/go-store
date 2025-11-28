@@ -102,7 +102,6 @@ func (s *Service) GetCollectionsWithPagination(ctx context.Context, d dto.GetCol
 	if d.Page != nil {
 		commonParams.Page = d.Page
 	}
-	commonParams.WithDeleted = false
 
 	collections, err := s.storage.Collections().GetWithPaginate(ctx, repository_collections.CollectionWithPaginationParams{
 		CommonFindParams: *commonParams,
