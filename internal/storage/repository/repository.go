@@ -4,6 +4,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attribute_groups"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attributes"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_categories"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_category_paths"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_cities"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
@@ -20,6 +21,7 @@ type IRepository interface {
 	Users(opts ...Option) repository_users.Querier
 	PersonalAccessToken(opts ...Option) repository_personal_access_tokens.Querier
 	Categories(opts ...Option) repository_categories.ICustomQueries
+	CategoryPaths(opts ...Option) repository_category_paths.Querier
 	Products(opts ...Option) repository_products.ICustomQueries
 	ProductReviews(opts ...Option) repository_product_reviews.ICustomQueries
 	Media(opts ...Option) repository_media.Querier
@@ -34,6 +36,7 @@ type repository struct {
 	users               *repository_users.Queries
 	personalAccessToken *repository_personal_access_tokens.Queries
 	categories          *repository_categories.CustomQueries
+	categoryPaths       *repository_category_paths.Queries
 	products            *repository_products.CustomQueries
 	productReviews      *repository_product_reviews.CustomQueries
 	manufacturer        *repository_manufacturers.CustomQueries
@@ -49,6 +52,7 @@ func InitRepository(psql *database.PostgresClient, _ key_value.IKeyValue) IRepos
 		users:               repository_users.New(psql.DB),
 		personalAccessToken: repository_personal_access_tokens.New(psql.DB),
 		categories:          repository_categories.NewCustom(psql.DB),
+		categoryPaths:       repository_category_paths.New(psql.DB),
 		products:            repository_products.NewCustom(psql.DB),
 		productReviews:      repository_product_reviews.NewCustom(psql.DB),
 		manufacturer:        repository_manufacturers.NewCustom(psql.DB),
@@ -82,6 +86,14 @@ func (r *repository) Categories(opts ...Option) repository_categories.ICustomQue
 		return r.categories.WithTx(options.Tx)
 	}
 	return r.categories
+}
+
+func (r *repository) CategoryPaths(opts ...Option) repository_category_paths.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.categoryPaths.WithTx(options.Tx)
+	}
+	return r.categoryPaths
 }
 
 func (r *repository) Products(opts ...Option) repository_products.ICustomQueries {

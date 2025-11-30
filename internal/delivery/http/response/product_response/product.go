@@ -11,6 +11,7 @@ import (
 
 type ProductResponse struct {
 	ID              uuid.UUID       `json:"id"`
+	CategoryID      uuid.NullUUID   `json:"category_id"`
 	Name            string          `json:"name"`
 	Model           string          `json:"model"`
 	Slug            string          `json:"slug"`
@@ -44,6 +45,7 @@ type ProductResponse struct {
 func NewFromModel(product *models.Product) ProductResponse {
 	return ProductResponse{
 		ID:              product.ID,
+		CategoryID:      product.CategoryID,
 		Name:            product.Name,
 		Slug:            product.Slug,
 		Description:     pgtypeutils.DecodeText(product.Description),

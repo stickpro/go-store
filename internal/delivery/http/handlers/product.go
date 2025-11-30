@@ -163,12 +163,35 @@ func (h *Handler) getProductAttribute(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(product_response.NewFromAttributeWithAttributeGroups(prdAttr)))
 }
 
+// getProductBreadcrumbs is a function to get product breadcrumbs by slug
+//
+//	@Summary		Get product breadcrumbs
+//	@Description	Get breadcrumb trail for a product by its slug
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			slug	path		string	true	"Product Slug"
+//	@Success		200		{object}	response.Result[[]dto.BreadcrumbDTO]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/{slug}/breadcrumbs [get]
+func (h *Handler) getProductBreadcrumbs(c fiber.Ctx) error {
+	slug := c.Params("slug")
+	breadcrumbs, err := h.services.CategoryService.GetBreadcrumbsByProductSlug(c.Context(), slug)
+	if err != nil {
+		return h.handleError(err, "product breadcrumbs")
+	}
+	return c.JSON(response.OkByData(breadcrumbs))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Get("/", h.getProducts)
 	p.Get("/find", h.findProduct)
 	p.Get("/:slug", h.getProductBySlug)
 	p.Get("/:slug/attributes", h.getProductAttribute)
+	p.Get("/:slug/breadcrumbs", h.getProductBreadcrumbs)
 	p.Get("/id/:id", h.getProductByID)
 	p.Get("/id/:id/with-medium", h.getProductWithMediumByID)
 }

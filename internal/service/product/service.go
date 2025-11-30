@@ -26,7 +26,7 @@ type IProductService interface {
 	GetProductBySlug(ctx context.Context, slug string) (*models.Product, error)
 	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error)
 	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error)
-	//
+
 	GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupDTO, error)
 	SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error
 	// CreateProductIndex Indexing
@@ -51,6 +51,7 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, ss 
 
 func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, error) {
 	params := repository_products.CreateParams{
+		CategoryID:      d.CategoryID,
 		Name:            d.Name,
 		Model:           d.Model,
 		Slug:            d.Slug,
@@ -153,6 +154,7 @@ func (s *Service) GetProductBySlug(ctx context.Context, slug string) (*models.Pr
 func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error) {
 	params := repository_products.UpdateParams{
 		ID:              d.ID,
+		CategoryID:      d.CategoryID,
 		Name:            d.Name,
 		Model:           d.Model,
 		Slug:            d.Slug,

@@ -41,7 +41,7 @@ func (q *Queries) DeleteAttributesFromProduct(ctx context.Context, productID uui
 }
 
 const getByID = `-- name: GetByID :one
-SELECT id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at FROM products WHERE id = $1 LIMIT 1
+SELECT id, category_id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at FROM products WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
@@ -49,6 +49,7 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 	var i models.Product
 	err := row.Scan(
 		&i.ID,
+		&i.CategoryID,
 		&i.Name,
 		&i.Model,
 		&i.Slug,
@@ -85,7 +86,7 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 }
 
 const getBySlug = `-- name: GetBySlug :one
-SELECT id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at FROM products WHERE slug = $1 LIMIT 1
+SELECT id, category_id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at FROM products WHERE slug = $1 LIMIT 1
 `
 
 func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, error) {
@@ -93,6 +94,7 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 	var i models.Product
 	err := row.Scan(
 		&i.ID,
+		&i.CategoryID,
 		&i.Name,
 		&i.Model,
 		&i.Slug,

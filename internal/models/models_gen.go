@@ -55,6 +55,12 @@ type Category struct {
 	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
 } // @name Category
 
+type CategoryPath struct {
+	AncestorID   uuid.UUID `db:"ancestor_id" json:"ancestor_id"`
+	DescendantID uuid.UUID `db:"descendant_id" json:"descendant_id"`
+	Depth        int32     `db:"depth" json:"depth"`
+} // @name CategoryPath
+
 type City struct {
 	ID              uuid.UUID       `db:"id" json:"id"`
 	Address         string          `db:"address" json:"address"`
@@ -137,6 +143,7 @@ type PersonalAccessToken struct {
 
 type Product struct {
 	ID              uuid.UUID            `db:"id" json:"id"`
+	CategoryID      uuid.NullUUID        `db:"category_id" json:"category_id"`
 	Name            string               `db:"name" json:"name"`
 	Model           string               `db:"model" json:"model"`
 	Slug            string               `db:"slug" json:"slug"`

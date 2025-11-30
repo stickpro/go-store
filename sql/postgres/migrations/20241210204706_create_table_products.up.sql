@@ -2,6 +2,7 @@ create table products
 (
     id               uuid                    default gen_random_uuid() not null
         primary key,
+    category_id      uuid                    default null,
     name             varchar(255)   not null,
     model            varchar(255)   not null unique,
     slug             varchar(255)   not null unique,
@@ -37,3 +38,9 @@ create table products
 
 create index idx_products_slug on products (slug);
 create index idx_products_model on products (model);
+
+alter table products
+    add constraint fk_products_category
+        foreign key (category_id)
+            references categories (id)
+            on delete set null;

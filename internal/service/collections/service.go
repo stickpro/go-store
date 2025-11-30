@@ -146,7 +146,7 @@ func (s *Service) UpdateCollection(ctx context.Context, d dto.UpdateCollectionDT
 
 func (s *Service) DeleteCollection(ctx context.Context, id uuid.UUID) error {
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		err := s.storage.Collections().Delete(ctx, id)
+		err := s.storage.Collections(repository.WithTx(tx)).Delete(ctx, id)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
 			s.l.Error("failed to delete collection", "error", parsedErr)

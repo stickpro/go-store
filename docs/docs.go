@@ -2040,6 +2040,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/product/{slug}/breadcrumbs": {
+            "get": {
+                "description": "Get breadcrumb trail for a product by its slug",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Get product breadcrumbs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_BreadcrumbDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/user/info": {
             "get": {
                 "security": [
@@ -2171,6 +2221,29 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "BreadcrumbDTO": {
+            "type": "object",
+            "properties": {
+                "depth": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "meta_h1": {
+                    "type": "string"
+                },
+                "meta_title": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
                     "type": "string"
                 }
             }
@@ -2685,6 +2758,9 @@ const docTemplate = `{
                 "sort_order"
             ],
             "properties": {
+                "category_id": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -3071,6 +3147,23 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-array_BreadcrumbDTO": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BreadcrumbDTO"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-array_City": {
             "type": "object",
             "properties": {
@@ -3223,6 +3316,9 @@ const docTemplate = `{
         "Product": {
             "type": "object",
             "properties": {
+                "category_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
                 "created_at": {
                     "$ref": "#/definitions/pgtype.Timestamp"
                 },
@@ -3324,6 +3420,9 @@ const docTemplate = `{
         "ProductResponse": {
             "type": "object",
             "properties": {
+                "category_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -3687,6 +3786,9 @@ const docTemplate = `{
         "UpdateProductRequest": {
             "type": "object",
             "properties": {
+                "category_id": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -3948,6 +4050,9 @@ const docTemplate = `{
         "github_com_stickpro_go-store_internal_storage_repository_repository_products.FindRow": {
             "type": "object",
             "properties": {
+                "category_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
                 "created_at": {
                     "$ref": "#/definitions/pgtype.Timestamp"
                 },

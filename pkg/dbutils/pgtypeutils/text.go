@@ -16,7 +16,7 @@ func EncodeText(value *string) pgtype.Text {
 }
 
 func DecodeText(value pgtype.Text) *string {
-	if !value.Valid && value.String != "" {
+	if !value.Valid {
 		return nil
 	}
 	return &value.String

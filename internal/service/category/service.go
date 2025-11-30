@@ -4,10 +4,12 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
+	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_categories"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -20,6 +22,8 @@ type ICategoryService interface {
 	GetCategoryByID(ctx context.Context, id uuid.UUID) (*models.Category, error)
 	GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error)
 	UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error)
+
+	IBreadcrumb
 }
 
 type Service struct {
@@ -37,23 +41,39 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage) *Se
 }
 
 func (s *Service) CreateCategory(ctx context.Context, dto CreateDTO) (*models.Category, error) {
-	params := repository_categories.CreateParams{
-		ParentID:        dto.ParentID,
-		Name:            dto.Name,
-		Slug:            dto.Slug,
-		Description:     pgtypeutils.EncodeText(dto.Description),
-		ImagePath:       pgtypeutils.EncodeText(dto.ImagePath),
-		MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
-		MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
-		MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
-		MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
-		IsEnable:        true,
-	}
-	cat, err := s.storage.Categories().Create(ctx, params)
+	var cat *models.Category
+	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		params := repository_categories.CreateParams{
+			ParentID:        dto.ParentID,
+			Name:            dto.Name,
+			Slug:            dto.Slug,
+			Description:     pgtypeutils.EncodeText(dto.Description),
+			ImagePath:       pgtypeutils.EncodeText(dto.ImagePath),
+			MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
+			MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
+			MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
+			MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
+			IsEnable:        true,
+		}
+		var err error
+		cat, err = s.storage.Categories(repository.WithTx(tx)).Create(ctx, params)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to create category", "error", parsedErr)
+			return parsedErr
+		}
+
+		err = s.rebuildCategoryPathsWithOpts(ctx, cat.ID, repository.WithTx(tx))
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to initialize category paths", "error", parsedErr)
+			return parsedErr
+		}
+		return nil
+	})
+
 	if err != nil {
-		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to create category", "error", parsedErr)
-		return nil, parsedErr
+		return nil, err
 	}
 	return cat, nil
 }
@@ -82,6 +102,7 @@ func (s *Service) GetCategoriesWithPagination(ctx context.Context, dto GetDTO) (
 	if dto.Page != nil {
 		commonParams.Page = dto.Page
 	}
+
 	cats, err := s.storage.Categories().GetWithPaginate(ctx, repository_categories.CategoryWithPaginationParams{
 		CommonFindParams: *commonParams,
 	})
@@ -93,25 +114,41 @@ func (s *Service) GetCategoriesWithPagination(ctx context.Context, dto GetDTO) (
 }
 
 func (s *Service) UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error) {
-	params := repository_categories.UpdateParams{
-		Name:            dto.Name,
-		ParentID:        dto.ParentID,
-		Slug:            dto.Slug,
-		Description:     pgtypeutils.EncodeText(dto.Description),
-		MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
-		MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
-		MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
-		MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
-		IsEnable:        dto.IsEnable,
-		ImagePath:       pgtypeutils.EncodeText(dto.ImagePath),
-		ID:              dto.ID,
-	}
+	var cat *models.Category
+	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		params := repository_categories.UpdateParams{
+			Name:            dto.Name,
+			ParentID:        dto.ParentID,
+			Slug:            dto.Slug,
+			Description:     pgtypeutils.EncodeText(dto.Description),
+			MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
+			MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
+			MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
+			MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
+			IsEnable:        dto.IsEnable,
+			ImagePath:       pgtypeutils.EncodeText(dto.ImagePath),
+			ID:              dto.ID,
+		}
 
-	cat, err := s.storage.Categories().Update(ctx, params)
+		var err error
+		cat, err = s.storage.Categories(repository.WithTx(tx)).Update(ctx, params)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to update category", "error", parsedErr)
+			return parsedErr
+		}
+
+		err = s.rebuildCategoryPathsWithOpts(ctx, cat.ID, repository.WithTx(tx))
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to update category path", "error", parsedErr)
+			return parsedErr
+		}
+		return nil
+	})
+
 	if err != nil {
-		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to update category", "error", parsedErr)
-		return nil, parsedErr
+		return nil, err
 	}
 	return cat, nil
 }

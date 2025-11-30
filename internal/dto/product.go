@@ -38,6 +38,7 @@ type CreateProductDTO struct {
 	SortOrder       int32                `json:"sort_order"`
 	IsEnable        bool                 `json:"is_enable"`
 	MediaIDs        []*uuid.UUID         `json:"media_ids,omitempty"` //nolint:tagliatelle
+	CategoryID      uuid.NullUUID        `json:"category_id"`
 }
 
 type UpdateProductDTO struct {
@@ -71,6 +72,7 @@ type UpdateProductDTO struct {
 	SortOrder       int32                `json:"sort_order"`
 	IsEnable        bool                 `json:"is_enable"`
 	MediaIDs        []*uuid.UUID         `json:"media_ids,omitempty"` //nolint:tagliatelle
+	CategoryID      uuid.NullUUID        `json:"category_id"`
 }
 
 type WithMediumProductDTO struct {
@@ -85,11 +87,17 @@ type SyncAttributeProductDTO struct {
 
 func RequestToCreateProductDTO(req *product_request.CreateProductRequest) CreateProductDTO {
 	var manufacturerID uuid.NullUUID
+	var categoryID uuid.NullUUID
 	if req.ManufacturerID != nil {
 		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
 	} else {
 		manufacturerID = uuid.NullUUID{Valid: true}
 	}
+
+	if req.CategoryID != nil {
+		categoryID = uuid.NullUUID{UUID: *req.CategoryID, Valid: true}
+	}
+
 	return CreateProductDTO{
 		Name:            req.Name,
 		Model:           req.Model,
@@ -120,15 +128,21 @@ func RequestToCreateProductDTO(req *product_request.CreateProductRequest) Create
 		SortOrder:       req.SortOrder,
 		IsEnable:        req.IsEnable,
 		MediaIDs:        req.MediaIDs,
+		CategoryID:      categoryID,
 	}
 }
 
 func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uuid.UUID) UpdateProductDTO {
 	var manufacturerID uuid.NullUUID
+	var categoryID uuid.NullUUID
 	if req.ManufacturerID != nil {
 		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
 	} else {
 		manufacturerID = uuid.NullUUID{Valid: true}
+	}
+
+	if req.CategoryID != nil {
+		categoryID = uuid.NullUUID{UUID: *req.CategoryID, Valid: true}
 	}
 	return UpdateProductDTO{
 		ID:              id,
@@ -161,5 +175,6 @@ func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uui
 		SortOrder:       req.SortOrder,
 		IsEnable:        req.IsEnable,
 		MediaIDs:        req.MediaIDs,
+		CategoryID:      categoryID,
 	}
 }

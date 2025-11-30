@@ -35,4 +35,5 @@ type UpdateProductRequest struct {
 	SortOrder       int32           `json:"sort_order" validate:"omitempty"`
 	IsEnable        bool            `json:"is_enable" validate:"omitempty,boolean"`
 	MediaIDs        []*uuid.UUID    `json:"media_ids,omitempty" validate:"omitempty"` //nolint:tagliatelle
+	CategoryID      *uuid.UUID      `json:"category_id,omitempty" validate:"omitempty,uuid"`
 } // @name UpdateProductRequest
