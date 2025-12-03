@@ -47,6 +47,7 @@ func NewFromModel(product *models.Product) ProductResponse {
 		ID:              product.ID,
 		CategoryID:      product.CategoryID,
 		Name:            product.Name,
+		Model:           product.Model,
 		Slug:            product.Slug,
 		Description:     pgtypeutils.DecodeText(product.Description),
 		MetaTitle:       pgtypeutils.DecodeText(product.MetaTitle),

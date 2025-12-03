@@ -26,19 +26,19 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Product Slug"
-//	@Success		200	{object}	response.Result[product_response.ProductResponse]
+//	@Success		200	{object}	response.Result[product_response.ProductWithMediumResponse]
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/product/{slug}/ [get]
 func (h *Handler) getProductBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
-	prd, err := h.services.ProductService.GetProductBySlug(c.Context(), slug)
+	prd, err := h.services.ProductService.GetProductBySlugWithMedia(c.Context(), slug)
 	if err != nil {
 		return h.handleError(err, "product")
 	}
 
-	return c.JSON(response.OkByData(product_response.NewFromModel(prd)))
+	return c.JSON(response.OkByData(product_response.NewFromModelWithMedium(prd.Product, prd.Medium)))
 }
 
 // getProductByID is a function get user by id

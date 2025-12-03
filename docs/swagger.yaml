@@ -2570,7 +2570,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ProductResponse'
+            $ref: '#/definitions/JSONResponse-ProductWithMediumResponse'
         "400":
           description: Bad Request
           schema:

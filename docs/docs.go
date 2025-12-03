@@ -1966,7 +1966,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ProductResponse"
+                            "$ref": "#/definitions/JSONResponse-ProductWithMediumResponse"
                         }
                     },
                     "400": {

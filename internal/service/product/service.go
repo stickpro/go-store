@@ -24,6 +24,7 @@ type IProductService interface {
 	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 	GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetProductBySlug(ctx context.Context, slug string) (*models.Product, error)
+	GetProductBySlugWithMedia(ctx context.Context, slug string) (*dto.WithMediumProductDTO, error)
 	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error)
 	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error)
 
@@ -149,6 +150,24 @@ func (s *Service) GetProductBySlug(ctx context.Context, slug string) (*models.Pr
 		return nil, err
 	}
 	return prd, nil
+}
+
+func (s *Service) GetProductBySlugWithMedia(ctx context.Context, slug string) (*dto.WithMediumProductDTO, error) {
+	prd, err := s.storage.Products().GetBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+	media, err := s.storage.Products().GetMediaByProductID(ctx, prd.ID)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to get product media", err)
+		return nil, parsedErr
+	}
+
+	return &dto.WithMediumProductDTO{
+		Product: prd,
+		Medium:  media,
+	}, nil
 }
 
 func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error) {
