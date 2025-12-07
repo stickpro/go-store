@@ -19,7 +19,7 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
-type IProductService interface {
+type IProductService interface { //nolint:interfacebloat
 	CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, error)
 	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 	GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
@@ -32,6 +32,9 @@ type IProductService interface {
 	SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error
 	// CreateProductIndex Indexing
 	CreateProductIndex(ctx context.Context, reindex bool) error
+
+	// RelatedProduct
+	IRelatedProduct
 }
 
 type Service struct {

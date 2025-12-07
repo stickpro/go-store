@@ -185,6 +185,31 @@ func (h *Handler) getProductBreadcrumbs(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(breadcrumbs))
 }
 
+// getRelatedProduct is a function to get related product by id
+//
+//	@Summary		Get related product
+//	@Description	Get related product
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Product ID"
+//	@Success		200		{object}	response.Result[[]*models.ShortProduct]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/id/:id/related_product [get]
+func (h *Handler) getRelatedProduct(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	prd, err := h.services.ProductService.GetRelatedProduct(c.Context(), id)
+	if err != nil {
+		return h.handleError(err, "related product")
+	}
+	return c.JSON(response.OkByData(prd))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Get("/", h.getProducts)
@@ -194,4 +219,5 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p.Get("/:slug/breadcrumbs", h.getProductBreadcrumbs)
 	p.Get("/id/:id", h.getProductByID)
 	p.Get("/id/:id/with-medium", h.getProductWithMediumByID)
+	p.Get("/id/:id/related_product", h.getRelatedProduct)
 }

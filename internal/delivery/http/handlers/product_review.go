@@ -8,7 +8,8 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/middleware"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools"
-	//swag-gen import
+
+	// swag-gen import
 	_ "github.com/stickpro/go-store/internal/tools/apierror"
 )
 

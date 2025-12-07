@@ -13,13 +13,17 @@ import (
 
 type Querier interface {
 	AddAttributesToProduct(ctx context.Context, arg AddAttributesToProductParams) error
+	AddRelatedProducts(ctx context.Context, arg AddRelatedProductsParams) error
 	Create(ctx context.Context, arg CreateParams) (*models.Product, error)
 	CreateProductMedia(ctx context.Context, arg CreateProductMediaParams) error
 	DeleteAttributesFromProduct(ctx context.Context, productID uuid.UUID) error
 	DeleteProductMedia(ctx context.Context, productID uuid.UUID) error
+	DeleteRelatedProducts(ctx context.Context, productID uuid.UUID) error
+	DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteSpecificRelatedProductsParams) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Product, error)
 	GetMediaByProductID(ctx context.Context, productID uuid.UUID) ([]*models.Medium, error)
+	GetRelatedProductsByProductID(ctx context.Context, productID uuid.UUID) ([]*GetRelatedProductsByProductIDRow, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.Product, error)
 }
 

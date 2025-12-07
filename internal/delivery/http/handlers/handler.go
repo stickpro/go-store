@@ -44,7 +44,6 @@ func (h *Handler) InitHandler(api *fiber.App) {
 	secured := v1.Group(
 		"/",
 		middleware.AuthMiddleware(h.services.AuthService),
-		//middleware.AdminMiddleware(),
 	)
 	h.initUserRoutes(secured)
 }

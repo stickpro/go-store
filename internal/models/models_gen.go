@@ -197,6 +197,11 @@ type ProductReview struct {
 	DeletedAt pgtype.Timestamp `db:"deleted_at" json:"deleted_at"`
 } // @name ProductReview
 
+type RelatedProduct struct {
+	ProductID        uuid.UUID `db:"product_id" json:"product_id"`
+	RelatedProductID uuid.UUID `db:"related_product_id" json:"related_product_id"`
+} // @name RelatedProduct
+
 type User struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
 	Email           string           `db:"email" json:"email" validate:"required,email"`

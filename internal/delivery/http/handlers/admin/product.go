@@ -104,9 +104,40 @@ func (h *Handler) syncProductAttribute(c fiber.Ctx) error {
 	return c.JSON(response.OkByMessage("Product attributes synced"))
 }
 
+// syncRelatedProduct is a function sync related product
+//
+//	@Summary		Sync Related Product
+//	@Description	Sync Related Product
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		uuid.UUID									true	"Product ID"
+//	@Param			update	body		product_request.SyncRelatedProductRequest	true	"Sync related product"
+//	@Success		200		{object}	response.Result[string]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/:id/sync-related-product [POST]
+func (h *Handler) syncRelatedProduct(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	req := &product_request.SyncRelatedProductRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+	err = h.services.ProductService.SyncRelatedProduct(c.Context(), id, req.ProductIDs)
+	if err != nil {
+		return h.handleError(err, "related product")
+	}
+	return c.JSON(response.OkByMessage("Related product synced"))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Post("/", h.createProduct)
 	p.Put("/:id", h.updateProduct)
-	p.Post(":id/sync-attribute", h.syncProductAttribute)
+	p.Post("/:id/sync-attribute", h.syncProductAttribute)
+	p.Post("/:id/sync-related-product", h.syncRelatedProduct)
 }
