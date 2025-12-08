@@ -193,10 +193,10 @@ func (h *Handler) getProductBreadcrumbs(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Product ID"
-//	@Success		200		{object}	response.Result[[]*models.ShortProduct]
-//	@Failure		400		{object}	apierror.Errors
-//	@Failure		404		{object}	apierror.Errors
-//	@Failure		500		{object}	apierror.Errors
+//	@Success		200	{object}	response.Result[[]models.ShortProduct]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		404	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/product/id/:id/related_product [get]
 func (h *Handler) getRelatedProduct(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))

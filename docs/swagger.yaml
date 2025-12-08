@@ -703,6 +703,17 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_ShortProduct:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/ShortProduct'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse:
     properties:
       code:
@@ -1017,6 +1028,13 @@ definitions:
     - InStock
     - PreOrder
     - OutOfStock
+  SyncRelatedProductRequest:
+    properties:
+      product_ids:
+        items:
+          type: string
+        type: array
+    type: object
   UpdateCategoryRequest:
     properties:
       description:
@@ -2553,6 +2571,40 @@ paths:
       summary: Sync Product Attribute
       tags:
       - Product
+  /v1/product/:id/sync-related-product:
+    post:
+      consumes:
+      - application/json
+      description: Sync Related Product
+      parameters:
+      - description: Sync related product
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/SyncRelatedProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-string'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Sync Related Product
+      tags:
+      - Product
   /v1/product/{slug}/:
     get:
       consumes:
@@ -2681,6 +2733,39 @@ paths:
       summary: Find product
       tags:
       - Geo
+  /v1/product/id/:id/related_product:
+    get:
+      consumes:
+      - application/json
+      description: Get related product
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_ShortProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get related product
+      tags:
+      - Product
   /v1/product/id/{id}/:
     get:
       consumes:
