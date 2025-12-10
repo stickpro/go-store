@@ -12,12 +12,35 @@ import (
 )
 
 type IRelatedProduct interface {
-	GetRelatedProduct(ctx context.Context, productID uuid.UUID) ([]*models.ShortProduct, error)
+	GetRelatedProducts(ctx context.Context, productID uuid.UUID) ([]*models.ShortProduct, error)
+	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*models.ShortProduct, error)
 	SyncRelatedProduct(ctx context.Context, productID uuid.UUID, relatedProductIDs []uuid.UUID) error
 }
 
-func (s *Service) GetRelatedProduct(ctx context.Context, productID uuid.UUID) ([]*models.ShortProduct, error) {
+func (s *Service) GetRelatedProducts(ctx context.Context, productID uuid.UUID) ([]*models.ShortProduct, error) {
 	products, err := s.storage.Products().GetRelatedProductsByProductID(ctx, productID)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to get product media", err)
+		return nil, parsedErr
+	}
+	resp := make([]*models.ShortProduct, 0, len(products))
+	for _, p := range products {
+		resp = append(resp, &models.ShortProduct{
+			ID:       p.ID,
+			Name:     p.Name,
+			Slug:     p.Slug,
+			Model:    p.Model,
+			Price:    p.Price,
+			IsEnable: p.IsEnable,
+			Image:    p.Image,
+		})
+	}
+	return resp, nil
+}
+
+func (s *Service) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*models.ShortProduct, error) {
+	products, err := s.storage.Products().GetRelatedProductsBySlug(ctx, slug)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.logger.Error("failed to get product media", err)

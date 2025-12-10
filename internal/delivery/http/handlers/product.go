@@ -203,7 +203,29 @@ func (h *Handler) getRelatedProduct(c fiber.Ctx) error {
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
-	prd, err := h.services.ProductService.GetRelatedProduct(c.Context(), id)
+	prd, err := h.services.ProductService.GetRelatedProducts(c.Context(), id)
+	if err != nil {
+		return h.handleError(err, "related product")
+	}
+	return c.JSON(response.OkByData(prd))
+}
+
+// getRelatedProductBySlug is a function to get related product by slug
+//
+//	@Summary		Get related product by slug
+//	@Description	Get related product by slug
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			slug	path		string	true	"Product slug"
+//	@Success		200		{object}	response.Result[[]models.ShortProduct]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/:slug/related_product [get]
+func (h *Handler) getRelatedProductBySlug(c fiber.Ctx) error {
+	slug := c.Params("slug")
+	prd, err := h.services.ProductService.GetRelatedProductsBySlug(c.Context(), slug)
 	if err != nil {
 		return h.handleError(err, "related product")
 	}
@@ -217,6 +239,7 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p.Get("/:slug", h.getProductBySlug)
 	p.Get("/:slug/attributes", h.getProductAttribute)
 	p.Get("/:slug/breadcrumbs", h.getProductBreadcrumbs)
+	p.Get("/:slug/related_product", h.getRelatedProductBySlug)
 	p.Get("/id/:id", h.getProductByID)
 	p.Get("/id/:id/with-medium", h.getProductWithMediumByID)
 	p.Get("/id/:id/related_product", h.getRelatedProduct)

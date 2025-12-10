@@ -119,3 +119,59 @@ func (q *Queries) GetRelatedProductsByProductID(ctx context.Context, productID u
 	}
 	return items, nil
 }
+
+const getRelatedProductsBySlug = `-- name: GetRelatedProductsBySlug :many
+SELECT p.id,
+       p.name,
+       p.slug,
+       p.model,
+       p.price,
+       p.image,
+       p.is_enable,
+       p.stock_status
+FROM related_products rp
+         JOIN products p ON rp.related_product_id = p.id
+WHERE rp.product_id = (SELECT id FROM p WHERE slug = $1)
+  AND p.is_enable = true
+ORDER BY p.name
+`
+
+type GetRelatedProductsBySlugRow struct {
+	ID          uuid.UUID            `db:"id" json:"id"`
+	Name        string               `db:"name" json:"name"`
+	Slug        string               `db:"slug" json:"slug"`
+	Model       string               `db:"model" json:"model"`
+	Price       decimal.Decimal      `db:"price" json:"price"`
+	Image       pgtype.Text          `db:"image" json:"image"`
+	IsEnable    bool                 `db:"is_enable" json:"is_enable"`
+	StockStatus constant.StockStatus `db:"stock_status" json:"stock_status"`
+}
+
+func (q *Queries) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error) {
+	rows, err := q.db.Query(ctx, getRelatedProductsBySlug, slug)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetRelatedProductsBySlugRow{}
+	for rows.Next() {
+		var i GetRelatedProductsBySlugRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Model,
+			&i.Price,
+			&i.Image,
+			&i.IsEnable,
+			&i.StockStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

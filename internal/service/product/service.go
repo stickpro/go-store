@@ -86,9 +86,10 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 		IsEnable:        d.IsEnable,
 		Viewed:          0,
 	}
-	prd := &models.Product{}
-	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		prd, err := s.storage.Products(repository.WithTx(tx)).Create(ctx, params)
+	var prd *models.Product
+	var err error
+	err = repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		prd, err = s.storage.Products(repository.WithTx(tx)).Create(ctx, params)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
 			s.logger.Error("failed to create product", parsedErr)
@@ -206,9 +207,10 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 		SortOrder:       d.SortOrder,
 		IsEnable:        d.IsEnable,
 	}
-	prd := &models.Product{}
-	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		prd, err := s.storage.Products(repository.WithTx(tx)).Update(ctx, params)
+	var prd *models.Product
+	var err error
+	err = repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		prd, err = s.storage.Products(repository.WithTx(tx)).Update(ctx, params)
 		if err != nil {
 			if err != nil {
 				parsedErr := pgerror.ParseError(err)

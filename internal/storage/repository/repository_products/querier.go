@@ -24,6 +24,7 @@ type Querier interface {
 	GetBySlug(ctx context.Context, slug string) (*models.Product, error)
 	GetMediaByProductID(ctx context.Context, productID uuid.UUID) ([]*models.Medium, error)
 	GetRelatedProductsByProductID(ctx context.Context, productID uuid.UUID) ([]*GetRelatedProductsByProductIDRow, error)
+	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.Product, error)
 }
 

@@ -2605,6 +2605,39 @@ paths:
       summary: Sync Related Product
       tags:
       - Product
+  /v1/product/:slug/related_product:
+    get:
+      consumes:
+      - application/json
+      description: Get related product by slug
+      parameters:
+      - description: Product slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_ShortProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get related product by slug
+      tags:
+      - Product
   /v1/product/{slug}/:
     get:
       consumes:

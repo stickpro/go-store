@@ -30,6 +30,21 @@ WHERE rp.product_id = $1
   AND p.is_enable = true
 ORDER BY p.name;
 
+-- name: GetRelatedProductsBySlug :many
+SELECT p.id,
+       p.name,
+       p.slug,
+       p.model,
+       p.price,
+       p.image,
+       p.is_enable,
+       p.stock_status
+FROM related_products rp
+         JOIN products p ON rp.related_product_id = p.id
+WHERE rp.product_id = (SELECT id FROM p WHERE slug = $1)
+  AND p.is_enable = true
+ORDER BY p.name;
+
 -- name: DeleteSpecificRelatedProducts :exec
 DELETE FROM related_products
 WHERE product_id = $1
