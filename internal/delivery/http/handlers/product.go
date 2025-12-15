@@ -239,7 +239,7 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p.Get("/:slug", h.getProductBySlug)
 	p.Get("/:slug/attributes", h.getProductAttribute)
 	p.Get("/:slug/breadcrumbs", h.getProductBreadcrumbs)
-	p.Get("/:slug/related_product", h.getRelatedProductBySlug)
+	p.Get("/:slug/related-products", h.getRelatedProductBySlug)
 	p.Get("/id/:id", h.getProductByID)
 	p.Get("/id/:id/with-medium", h.getProductWithMediumByID)
 	p.Get("/id/:id/related_product", h.getRelatedProduct)

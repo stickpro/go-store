@@ -41,7 +41,7 @@ SELECT p.id,
        p.stock_status
 FROM related_products rp
          JOIN products p ON rp.related_product_id = p.id
-WHERE rp.product_id = (SELECT id FROM p WHERE slug = $1)
+WHERE rp.product_id = (SELECT id FROM products as p2 WHERE p2.slug = $1)
   AND p.is_enable = true
 ORDER BY p.name;
 
