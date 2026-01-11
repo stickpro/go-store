@@ -6,17 +6,22 @@ type ISearchService interface {
 	CheckIndex(nameIndex string) (bool, error)
 	UpsertDocument(indexName string, doc []map[string]interface{}) error
 	DeleteDocument(indexName string, id string) error
+	GetFacetDistribution(nameIndex string, facets []string) (map[string]map[string]int64, error)
 	Close()
 }
 
 type SearchResult struct {
-	Hits      []interface{} `json:"hits"`
-	TotalHits int64         `json:"total_hits"`
-	Offset    int64         `json:"offset"`
-	Limit     int64         `json:"limit"`
+	Hits      []interface{}               `json:"hits"`
+	TotalHits int64                       `json:"total_hits"`
+	Offset    int64                       `json:"offset"`
+	Limit     int64                       `json:"limit"`
+	Facets    map[string]map[string]int64 `json:"facets,omitempty"`
 }
 
 type IndexOptions struct {
 	RankingRules         []string
 	SearchableAttributes []string
+	FilterableAttributes []string
+	SortableAttributes   []string
+	DisplayedAttributes  []string
 }

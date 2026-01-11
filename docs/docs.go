@@ -333,7 +333,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.UpdateAttributeGroupRequest"
+                            "$ref": "#/definitions/UpdateAttributeGroupRequest"
                         }
                     }
                 ],
@@ -409,6 +409,210 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/attribute-group/find": {
+            "get": {
+                "description": "Find attribute group by name with pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "Find attribute group",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "attribute",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/attribute-value": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create attribute value",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "Create attribute value",
+                "parameters": [
+                    {
+                        "description": "Create attribute value",
+                        "name": "create",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateAttributeValueRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AttributeValueResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/attribute-value/:id": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update attribute value",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "Update attribute value",
+                "parameters": [
+                    {
+                        "description": "Update attribute value",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateAttributeValueRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AttributeValueResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete attribute value by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "Delete attribute value by ID",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/attribute/": {
             "get": {
                 "security": [
@@ -443,7 +647,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse"
+                            "$ref": "#/definitions/JSONResponse-array_AttributeResponse"
                         }
                     },
                     "400": {
@@ -498,7 +702,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse"
+                            "$ref": "#/definitions/JSONResponse-AttributeResponse"
                         }
                     },
                     "400": {
@@ -509,6 +713,46 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/attribute/:attribute_id/values": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get attribute values by attribute ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "Get attribute values",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeValueDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -544,7 +788,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse"
+                            "$ref": "#/definitions/JSONResponse-AttributeResponse"
                         }
                     },
                     "400": {
@@ -599,6 +843,58 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/attribute/find": {
+            "get": {
+                "description": "Find attribute by name with pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "Find attribute",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "attribute",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -739,7 +1035,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-Category"
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category"
                         }
                     },
                     "401": {
@@ -984,7 +1280,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-Collection"
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection"
                         }
                     },
                     "400": {
@@ -1211,6 +1507,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/filters": {
+            "get": {
+                "description": "Get available filters for category (faceted search)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "Get available filters",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeGroupWithValuesDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/geo/city/": {
             "get": {
                 "description": "Get city by IP address",
@@ -1272,7 +1603,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_City"
+                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_City"
                         }
                     },
                     "400": {
@@ -1926,7 +2257,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Geo"
+                    "Product"
                 ],
                 "summary": "Find product",
                 "parameters": [
@@ -1942,7 +2273,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_Product"
+                            "$ref": "#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_Product"
                         }
                     },
                     "400": {
@@ -2336,6 +2667,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "slug": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -2347,8 +2681,81 @@ const docTemplate = `{
                 "groups": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeGroupDTO"
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeGroupWithValuesDTO"
                     }
+                }
+            }
+        },
+        "AttributeResponse": {
+            "type": "object",
+            "properties": {
+                "attribute_group_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_filterable": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "AttributeValueResponse": {
+            "type": "object",
+            "properties": {
+                "attribute_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_order": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "value_normalized": {
+                    "type": "string"
+                },
+                "value_numeric": {
+                    "type": "number"
                 }
             }
         },
@@ -2400,50 +2807,6 @@ const docTemplate = `{
                 }
             }
         },
-        "Category": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "image_path": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "is_enable": {
-                    "type": "boolean"
-                },
-                "meta_description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_h1": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_keyword": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_title": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "parent_id": {
-                    "$ref": "#/definitions/uuid.NullUUID"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                }
-            }
-        },
         "CategoryResponse": {
             "type": "object",
             "properties": {
@@ -2484,86 +2847,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "City": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "area": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "area_type": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "capital_marker": {
-                    "type": "integer"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "city_type": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "federal_district": {
-                    "type": "string"
-                },
-                "fias_id": {
-                    "type": "string"
-                },
-                "fias_level": {
-                    "type": "integer"
-                },
-                "foundation_year": {
-                    "type": "integer"
-                },
-                "geo_lat": {
-                    "type": "number"
-                },
-                "geo_lon": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "kladr_id": {
-                    "type": "string"
-                },
-                "okato": {
-                    "type": "string"
-                },
-                "oktmo": {
-                    "type": "string"
-                },
-                "population": {
-                    "type": "integer"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "region_type": {
-                    "type": "string"
-                },
-                "settlement": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "settlement_type": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "tax_office": {
-                    "type": "string"
-                },
-                "timezone": {
                     "type": "string"
                 }
             }
@@ -2648,29 +2931,6 @@ const docTemplate = `{
                 }
             }
         },
-        "Collection": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                }
-            }
-        },
         "CollectionResponse": {
             "type": "object",
             "properties": {
@@ -2726,7 +2986,8 @@ const docTemplate = `{
         "CreateAttributeGroupRequest": {
             "type": "object",
             "required": [
-                "name"
+                "name",
+                "slug"
             ],
             "properties": {
                 "description": {
@@ -2736,23 +2997,27 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "slug": {
+                    "type": "string"
                 }
             }
         },
         "CreateAttributeRequest": {
             "type": "object",
             "required": [
-                "is_filterable",
-                "is_visible",
                 "name",
-                "type",
-                "value"
+                "slug",
+                "type"
             ],
             "properties": {
                 "attribute_group_id": {
                     "type": "string"
                 },
                 "is_filterable": {
+                    "type": "boolean"
+                },
+                "is_required": {
                     "type": "boolean"
                 },
                 "is_visible": {
@@ -2763,18 +3028,56 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 1
                 },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
                 "sort_order": {
                     "type": "integer",
                     "minimum": 0
                 },
                 "type": {
                     "type": "string",
-                    "maxLength": 255,
+                    "enum": [
+                        "select",
+                        "number",
+                        "boolean",
+                        "text"
+                    ]
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
+                }
+            }
+        },
+        "CreateAttributeValueRequest": {
+            "type": "object",
+            "required": [
+                "attribute_id",
+                "value"
+            ],
+            "properties": {
+                "attribute_id": {
+                    "type": "string"
+                },
+                "display_order": {
+                    "type": "integer",
+                    "minimum": 0
                 },
                 "value": {
                     "type": "string",
+                    "maxLength": 255,
                     "minLength": 1
+                },
+                "value_normalized": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "value_numeric": {
+                    "type": "number"
                 }
             }
         },
@@ -3058,6 +3361,34 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-AttributeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/AttributeResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-AttributeValueResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/AttributeValueResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-AuthResponse": {
             "type": "object",
             "properties": {
@@ -3226,28 +3557,56 @@ const docTemplate = `{
                 }
             }
         },
-        "JSONResponse-ResponseWithFullPagination-Category": {
+        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/ResponseWithFullPagination-Category"
+                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute"
                 },
                 "message": {
                     "type": "string"
                 }
             }
         },
-        "JSONResponse-ResponseWithFullPagination-Collection": {
+        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/ResponseWithFullPagination-Collection"
+                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection"
                 },
                 "message": {
                     "type": "string"
@@ -3299,6 +3658,23 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-array_AttributeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AttributeResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-array_BreadcrumbDTO": {
             "type": "object",
             "properties": {
@@ -3309,40 +3685,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/BreadcrumbDTO"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "JSONResponse-array_City": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/City"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "JSONResponse-array_Product": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Product"
                     }
                 },
                 "message": {
@@ -3367,7 +3709,7 @@ const docTemplate = `{
                 }
             }
         },
-        "JSONResponse-array_github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse": {
+        "JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeGroupWithValuesDTO": {
             "type": "object",
             "properties": {
                 "code": {
@@ -3376,7 +3718,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse"
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeGroupWithValuesDTO"
                     }
                 },
                 "message": {
@@ -3384,14 +3726,51 @@ const docTemplate = `{
                 }
             }
         },
-        "JSONResponse-github_com_stickpro_go-store_internal_delivery_http_response_attribute_response_AttributeResponse": {
+        "JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeValueDTO": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeValueDTO"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-array_github_com_stickpro_go-store_internal_models_City": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.City"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-array_github_com_stickpro_go-store_internal_models_Product": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Product"
+                    }
                 },
                 "message": {
                     "type": "string"
@@ -3479,110 +3858,6 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
-                }
-            }
-        },
-        "Product": {
-            "type": "object",
-            "properties": {
-                "category_id": {
-                    "$ref": "#/definitions/uuid.NullUUID"
-                },
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "ean": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "height": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "image": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "is_enable": {
-                    "type": "boolean"
-                },
-                "isbn": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "jan": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "length": {
-                    "type": "number"
-                },
-                "location": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "manufacturer_id": {
-                    "$ref": "#/definitions/uuid.NullUUID"
-                },
-                "meta_description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_h1": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_keyword": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "meta_title": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "minimum": {
-                    "type": "integer"
-                },
-                "model": {
-                    "type": "string"
-                },
-                "mpn": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "sku": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "integer"
-                },
-                "stock_status": {
-                    "$ref": "#/definitions/StockStatus"
-                },
-                "subtract": {
-                    "type": "boolean"
-                },
-                "upc": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "viewed": {
-                    "type": "integer"
-                },
-                "weight": {
-                    "type": "number"
-                },
-                "width": {
-                    "type": "number"
                 }
             }
         },
@@ -3759,13 +4034,13 @@ const docTemplate = `{
                 }
             }
         },
-        "ResponseWithFullPagination-Category": {
+        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Category"
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Attribute"
                     }
                 },
                 "pagination": {
@@ -3773,13 +4048,41 @@ const docTemplate = `{
                 }
             }
         },
-        "ResponseWithFullPagination-Collection": {
+        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Collection"
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.AttributeGroup"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/FullPagingData"
+                }
+            }
+        },
+        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Category"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/FullPagingData"
+                }
+            }
+        },
+        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Collection"
                     }
                 },
                 "pagination": {
@@ -3848,6 +4151,53 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "UpdateAttributeGroupRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "slug"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateAttributeValueRequest": {
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "display_order": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "value_normalized": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "value_numeric": {
+                    "type": "number"
                 }
             }
         },
@@ -4099,22 +4449,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_stickpro_go-store_internal_delivery_http_request_attribute_request.UpdateAttributeGroupRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 1
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_stickpro_go-store_internal_delivery_http_request_product_request.SyncProductAttributeRequest": {
             "type": "object",
             "required": [
@@ -4146,74 +4480,13 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_stickpro_go-store_internal_delivery_http_response_attribute_response.AttributeResponse": {
-            "type": "object",
-            "properties": {
-                "attribute_group_id": {
-                    "$ref": "#/definitions/uuid.NullUUID"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_filterable": {
-                    "type": "boolean"
-                },
-                "is_visible": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_dto.AttributeDTO": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "is_filterable": {
-                    "type": "boolean"
-                },
-                "is_visible": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_dto.AttributeGroupDTO": {
+        "github_com_stickpro_go-store_internal_dto.AttributeGroupWithValuesDTO": {
             "type": "object",
             "properties": {
                 "attributes": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeDTO"
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeWithValuesDTO"
                     }
                 },
                 "group_description": {
@@ -4224,6 +4497,373 @@ const docTemplate = `{
                 },
                 "group_name": {
                     "type": "string"
+                },
+                "group_slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_dto.AttributeValueDTO": {
+            "type": "object",
+            "properties": {
+                "display_order": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "usage_count": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "value_numeric": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_dto.AttributeWithValuesDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_filterable": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.AttributeValueDTO"
+                    }
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_models.Attribute": {
+            "type": "object",
+            "properties": {
+                "attribute_group_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_filterable": {
+                    "$ref": "#/definitions/pgtype.Bool"
+                },
+                "is_required": {
+                    "$ref": "#/definitions/pgtype.Bool"
+                },
+                "is_visible": {
+                    "$ref": "#/definitions/pgtype.Bool"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "unit": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_models.AttributeGroup": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_models.Category": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image_path": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "is_enable": {
+                    "type": "boolean"
+                },
+                "meta_description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_h1": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_keyword": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_title": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_models.City": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "area": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "area_type": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "capital_marker": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "city_type": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "federal_district": {
+                    "type": "string"
+                },
+                "fias_id": {
+                    "type": "string"
+                },
+                "fias_level": {
+                    "type": "integer"
+                },
+                "foundation_year": {
+                    "type": "integer"
+                },
+                "geo_lat": {
+                    "type": "number"
+                },
+                "geo_lon": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kladr_id": {
+                    "type": "string"
+                },
+                "okato": {
+                    "type": "string"
+                },
+                "oktmo": {
+                    "type": "string"
+                },
+                "population": {
+                    "type": "integer"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "region_type": {
+                    "type": "string"
+                },
+                "settlement": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "settlement_type": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "tax_office": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_models.Collection": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_models.Product": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "ean": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "is_enable": {
+                    "type": "boolean"
+                },
+                "isbn": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "jan": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "length": {
+                    "type": "number"
+                },
+                "location": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "manufacturer_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "meta_description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_h1": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_keyword": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "meta_title": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "minimum": {
+                    "type": "integer"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "mpn": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "stock_status": {
+                    "$ref": "#/definitions/StockStatus"
+                },
+                "subtract": {
+                    "type": "boolean"
+                },
+                "upc": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "viewed": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "number"
+                },
+                "width": {
+                    "type": "number"
                 }
             }
         },
@@ -4331,6 +4971,17 @@ const docTemplate = `{
                 }
             }
         },
+        "pgtype.Bool": {
+            "type": "object",
+            "properties": {
+                "bool": {
+                    "type": "boolean"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
         "pgtype.InfinityModifier": {
             "type": "integer",
             "enum": [
@@ -4343,6 +4994,17 @@ const docTemplate = `{
                 "Finite",
                 "NegativeInfinity"
             ]
+        },
+        "pgtype.Int4": {
+            "type": "object",
+            "properties": {
+                "int32": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
         },
         "pgtype.Text": {
             "type": "object",

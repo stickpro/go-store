@@ -1,8 +1,8 @@
 package base
 
 type CommonFindParams struct {
-	Page          *uint32
-	PageSize      *uint32
+	Page          *uint64
+	PageSize      *uint64
 	IsAscOrdering bool   `json:"is_asc_ordering"`
 	OrderBy       string `json:"order_by"`
 	WithDeleted   *bool  `json:"with_deleted"`
@@ -22,12 +22,12 @@ func (s *CommonFindParams) SetOrderBy(v string) *CommonFindParams {
 	return s
 }
 
-func (s *CommonFindParams) SetPage(v *uint32) *CommonFindParams {
+func (s *CommonFindParams) SetPage(v *uint64) *CommonFindParams {
 	s.Page = v
 	return s
 }
 
-func (s *CommonFindParams) SetPageSize(v *uint32) *CommonFindParams {
+func (s *CommonFindParams) SetPageSize(v *uint64) *CommonFindParams {
 	s.PageSize = v
 	return s
 }

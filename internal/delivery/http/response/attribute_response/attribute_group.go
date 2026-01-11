@@ -11,6 +11,7 @@ import (
 type AttributeGroupResponse struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
+	Slug        string    `json:"slug"`
 	Description *string   `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -20,6 +21,7 @@ func NewFromGroupModel(aGroup *models.AttributeGroup) AttributeGroupResponse {
 	return AttributeGroupResponse{
 		ID:          aGroup.ID,
 		Name:        aGroup.Name,
+		Slug:        aGroup.Slug,
 		Description: pgtypeutils.DecodeText(aGroup.Description),
 		CreatedAt:   aGroup.CreatedAt.Time,
 		UpdatedAt:   aGroup.UpdatedAt.Time,

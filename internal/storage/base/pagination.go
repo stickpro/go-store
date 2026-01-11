@@ -13,7 +13,7 @@ import (
 type PaginationConfig[R any] struct {
 	TableName         string
 	DefaultOrder      string
-	MaxLimit          uint32
+	MaxLimit          uint64
 	AllowedFieldOrder map[string]bool
 	WhereBuilder      func(sb *sqlbuilder.SelectBuilder)
 }

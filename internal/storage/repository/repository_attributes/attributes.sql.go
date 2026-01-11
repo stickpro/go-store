@@ -22,64 +22,8 @@ func (q *Queries) DeleteByAttributeGroupID(ctx context.Context, dollar_1 uuid.UU
 	return err
 }
 
-const getAttributesProduct = `-- name: GetAttributesProduct :many
-select
-    ag.id as group_id,
-    ag.name as group_name,
-    ag.description as group_description,
-    json_agg(
-            json_build_object(
-                    'id', a.id,
-                    'name', a.name,
-                    'type', a.type,
-                    'is_filterable', a.is_filterable,
-                    'is_visible', a.is_visible,
-                    'sort_order', a.sort_order,
-                    'value', a.value
-            ) order by a.sort_order
-    ) as attributes
-from attribute_products ap
-         join attributes a on ap.attribute_id = a.id
-         join attribute_groups ag on a.attribute_group_id = ag.id
-where ap.product_id = $1::uuid
-group by ag.id, ag.name, ag.description
-order by ag.name
-`
-
-type GetAttributesProductRow struct {
-	GroupID          uuid.UUID   `db:"group_id" json:"group_id"`
-	GroupName        string      `db:"group_name" json:"group_name"`
-	GroupDescription pgtype.Text `db:"group_description" json:"group_description"`
-	Attributes       []byte      `db:"attributes" json:"attributes"`
-}
-
-func (q *Queries) GetAttributesProduct(ctx context.Context, dollar_1 uuid.UUID) ([]*GetAttributesProductRow, error) {
-	rows, err := q.db.Query(ctx, getAttributesProduct, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []*GetAttributesProductRow{}
-	for rows.Next() {
-		var i GetAttributesProductRow
-		if err := rows.Scan(
-			&i.GroupID,
-			&i.GroupName,
-			&i.GroupDescription,
-			&i.Attributes,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getByID = `-- name: GetByID :one
-SELECT id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at FROM attributes WHERE id = $1 LIMIT 1
+SELECT id, attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at, updated_at FROM attributes WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Attribute, error) {
@@ -89,13 +33,113 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Attribute,
 		&i.ID,
 		&i.AttributeGroupID,
 		&i.Name,
-		&i.Value,
+		&i.Slug,
 		&i.Type,
+		&i.Unit,
 		&i.IsFilterable,
 		&i.IsVisible,
+		&i.IsRequired,
 		&i.SortOrder,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return &i, err
+}
+
+const getBySlug = `-- name: GetBySlug :one
+SELECT id, attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at, updated_at FROM attributes WHERE slug = $1 LIMIT 1
+`
+
+func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Attribute, error) {
+	row := q.db.QueryRow(ctx, getBySlug, slug)
+	var i models.Attribute
+	err := row.Scan(
+		&i.ID,
+		&i.AttributeGroupID,
+		&i.Name,
+		&i.Slug,
+		&i.Type,
+		&i.Unit,
+		&i.IsFilterable,
+		&i.IsVisible,
+		&i.IsRequired,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
+}
+
+const getFilterableAttributes = `-- name: GetFilterableAttributes :many
+SELECT
+    a.id,
+    a.attribute_group_id,
+    a.name,
+    a.slug,
+    a.type,
+    a.unit,
+    a.is_filterable,
+    a.is_visible,
+    a.is_required,
+    a.sort_order,
+    a.created_at,
+    a.updated_at,
+    ag.name as group_name,
+    ag.slug as group_slug
+FROM attributes a
+INNER JOIN attribute_groups ag ON a.attribute_group_id = ag.id
+WHERE a.is_filterable = true
+ORDER BY ag.name ASC, a.sort_order ASC, a.name ASC
+`
+
+type GetFilterableAttributesRow struct {
+	ID               uuid.UUID        `db:"id" json:"id"`
+	AttributeGroupID uuid.NullUUID    `db:"attribute_group_id" json:"attribute_group_id"`
+	Name             string           `db:"name" json:"name"`
+	Slug             string           `db:"slug" json:"slug"`
+	Type             string           `db:"type" json:"type"`
+	Unit             pgtype.Text      `db:"unit" json:"unit"`
+	IsFilterable     pgtype.Bool      `db:"is_filterable" json:"is_filterable"`
+	IsVisible        pgtype.Bool      `db:"is_visible" json:"is_visible"`
+	IsRequired       pgtype.Bool      `db:"is_required" json:"is_required"`
+	SortOrder        pgtype.Int4      `db:"sort_order" json:"sort_order"`
+	CreatedAt        pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+	GroupName        string           `db:"group_name" json:"group_name"`
+	GroupSlug        string           `db:"group_slug" json:"group_slug"`
+}
+
+func (q *Queries) GetFilterableAttributes(ctx context.Context) ([]*GetFilterableAttributesRow, error) {
+	rows, err := q.db.Query(ctx, getFilterableAttributes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetFilterableAttributesRow{}
+	for rows.Next() {
+		var i GetFilterableAttributesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.AttributeGroupID,
+			&i.Name,
+			&i.Slug,
+			&i.Type,
+			&i.Unit,
+			&i.IsFilterable,
+			&i.IsVisible,
+			&i.IsRequired,
+			&i.SortOrder,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.GroupName,
+			&i.GroupSlug,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

@@ -90,10 +90,10 @@ func NewFromModelWithMedium(product *models.Product, medium []*models.Medium) Pr
 }
 
 type ProductAttributeResponse struct {
-	Groups []*dto.AttributeGroupDTO `json:"groups"`
+	Groups []*dto.AttributeGroupWithValuesDTO `json:"groups"`
 } // @name AttributeGroupsResponse
 
-func NewFromAttributeWithAttributeGroups(attributes []*dto.AttributeGroupDTO) ProductAttributeResponse {
+func NewFromAttributeWithAttributeGroups(attributes []*dto.AttributeGroupWithValuesDTO) ProductAttributeResponse {
 	return ProductAttributeResponse{
 		Groups: attributes,
 	}

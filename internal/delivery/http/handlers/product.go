@@ -121,7 +121,7 @@ func (h *Handler) getProductWithMediumByID(c fiber.Ctx) error {
 //
 //	@Summary		Find product
 //	@Description	Find product by name
-//	@Tags			Geo
+//	@Tags			Product
 //	@Accept			json
 //	@Produce		json
 //	@Param			product	query		string	true	"Product name"
@@ -130,15 +130,15 @@ func (h *Handler) getProductWithMediumByID(c fiber.Ctx) error {
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/product/find [get]
 func (h *Handler) findProduct(c fiber.Ctx) error {
-	city := c.Query("product")
-	if city == "" {
+	product := c.Query("product")
+	if product == "" {
 		return apierror.New().AddError(fmt.Errorf("product is requered")).SetHttpCode(fiber.StatusBadRequest)
 	}
-	location, err := h.services.SearchService.Search(constant.ProductsIndex, city, 10, 0)
+	products, err := h.services.SearchService.Search(constant.ProductsIndex, product, 10, 0)
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
-	return c.JSON(response.OkByData(location.Hits))
+	return c.JSON(response.OkByData(products.Hits))
 }
 
 // getProductAttribute is a function get product attribute

@@ -7,8 +7,8 @@ import (
 )
 
 type GetProductReviewsDTO struct {
-	Page         *uint32 `json:"page" query:"page"`
-	PageSize     *uint32 `json:"page_size" query:"page_size"`
+	Page         *uint64 `json:"page" query:"page"`
+	PageSize     *uint64 `json:"page_size" query:"page_size"`
 	WithDeleted  bool    `json:"with_deleted" query:"with_deleted"`
 	SortByRating *string `json:"sort_by_rating,omitempty" query:"sort_by_rating,omitempty"`
 }

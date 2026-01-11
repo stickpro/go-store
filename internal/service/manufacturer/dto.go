@@ -30,8 +30,8 @@ type UpdateDTO struct {
 }
 
 type GetDTO struct {
-	Page     *uint32 `json:"page" query:"page"`
-	PageSize *uint32 `json:"page_size" query:"page_size"`
+	Page     *uint64 `json:"page" query:"page"`
+	PageSize *uint64 `json:"page_size" query:"page_size"`
 }
 
 func RequestToCreateDTO(req *manufacturer_request.CreateManufacturerRequest) CreateDTO {

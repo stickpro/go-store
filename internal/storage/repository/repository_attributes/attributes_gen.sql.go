@@ -14,18 +14,20 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO attributes (attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, now())
-	RETURNING id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at
+INSERT INTO attributes (attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
+	RETURNING id, attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at, updated_at
 `
 
 type CreateParams struct {
 	AttributeGroupID uuid.NullUUID `db:"attribute_group_id" json:"attribute_group_id"`
 	Name             string        `db:"name" json:"name"`
-	Value            string        `db:"value" json:"value"`
+	Slug             string        `db:"slug" json:"slug"`
 	Type             string        `db:"type" json:"type"`
+	Unit             pgtype.Text   `db:"unit" json:"unit"`
 	IsFilterable     pgtype.Bool   `db:"is_filterable" json:"is_filterable"`
 	IsVisible        pgtype.Bool   `db:"is_visible" json:"is_visible"`
+	IsRequired       pgtype.Bool   `db:"is_required" json:"is_required"`
 	SortOrder        pgtype.Int4   `db:"sort_order" json:"sort_order"`
 }
 
@@ -33,10 +35,12 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Attribu
 	row := q.db.QueryRow(ctx, create,
 		arg.AttributeGroupID,
 		arg.Name,
-		arg.Value,
+		arg.Slug,
 		arg.Type,
+		arg.Unit,
 		arg.IsFilterable,
 		arg.IsVisible,
+		arg.IsRequired,
 		arg.SortOrder,
 	)
 	var i models.Attribute
@@ -44,10 +48,12 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Attribu
 		&i.ID,
 		&i.AttributeGroupID,
 		&i.Name,
-		&i.Value,
+		&i.Slug,
 		&i.Type,
+		&i.Unit,
 		&i.IsFilterable,
 		&i.IsVisible,
+		&i.IsRequired,
 		&i.SortOrder,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -65,7 +71,7 @@ func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAll = `-- name: GetAll :many
-SELECT id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at FROM attributes ORDER BY sort_order DESC LIMIT $1 OFFSET $2
+SELECT id, attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at, updated_at FROM attributes ORDER BY sort_order DESC LIMIT $1 OFFSET $2
 `
 
 type GetAllParams struct {
@@ -86,10 +92,12 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.Attri
 			&i.ID,
 			&i.AttributeGroupID,
 			&i.Name,
-			&i.Value,
+			&i.Slug,
 			&i.Type,
+			&i.Unit,
 			&i.IsFilterable,
 			&i.IsVisible,
+			&i.IsRequired,
 			&i.SortOrder,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -106,19 +114,21 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.Attri
 
 const update = `-- name: Update :one
 UPDATE attributes
-	SET attribute_group_id=$1, name=$2, value=$3, type=$4, is_filterable=$5, is_visible=$6, 
-		sort_order=$7, updated_at=now()
-	WHERE id=$8
-	RETURNING id, attribute_group_id, name, value, type, is_filterable, is_visible, sort_order, created_at, updated_at
+	SET attribute_group_id=$1, name=$2, slug=$3, type=$4, unit=$5, is_filterable=$6, 
+		is_visible=$7, is_required=$8, sort_order=$9, updated_at=now()
+	WHERE id=$10
+	RETURNING id, attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at, updated_at
 `
 
 type UpdateParams struct {
 	AttributeGroupID uuid.NullUUID `db:"attribute_group_id" json:"attribute_group_id"`
 	Name             string        `db:"name" json:"name"`
-	Value            string        `db:"value" json:"value"`
+	Slug             string        `db:"slug" json:"slug"`
 	Type             string        `db:"type" json:"type"`
+	Unit             pgtype.Text   `db:"unit" json:"unit"`
 	IsFilterable     pgtype.Bool   `db:"is_filterable" json:"is_filterable"`
 	IsVisible        pgtype.Bool   `db:"is_visible" json:"is_visible"`
+	IsRequired       pgtype.Bool   `db:"is_required" json:"is_required"`
 	SortOrder        pgtype.Int4   `db:"sort_order" json:"sort_order"`
 	ID               uuid.UUID     `db:"id" json:"id"`
 }
@@ -127,10 +137,12 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Attribu
 	row := q.db.QueryRow(ctx, update,
 		arg.AttributeGroupID,
 		arg.Name,
-		arg.Value,
+		arg.Slug,
 		arg.Type,
+		arg.Unit,
 		arg.IsFilterable,
 		arg.IsVisible,
+		arg.IsRequired,
 		arg.SortOrder,
 		arg.ID,
 	)
@@ -139,10 +151,12 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Attribu
 		&i.ID,
 		&i.AttributeGroupID,
 		&i.Name,
-		&i.Value,
+		&i.Slug,
 		&i.Type,
+		&i.Unit,
 		&i.IsFilterable,
 		&i.IsVisible,
+		&i.IsRequired,
 		&i.SortOrder,
 		&i.CreatedAt,
 		&i.UpdatedAt,

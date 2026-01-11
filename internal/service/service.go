@@ -50,7 +50,7 @@ func InitService(
 	collectionServer := collections.New(conf, logger, storage)
 	mediaService := media.New(conf, logger, storage)
 	manufacturerService := manufacturer.New(conf, logger, storage)
-	attributeService := attribute.New(conf, logger, storage)
+	attributeService := attribute.New(conf, logger, storage, searchService)
 
 	geoService := geo.New(conf, logger, storage, searchService)
 

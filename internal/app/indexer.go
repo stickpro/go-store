@@ -25,4 +25,16 @@ func initIndexer(ctx context.Context, service *service.Services, l logger.Logger
 			l.Error("failed to create product index", "error", err)
 		}
 	}
+
+	if service.AttributeService != nil {
+		err := service.AttributeService.CreateAttributeGroupIndex(ctx, forceReindex)
+		if err != nil {
+			l.Error("failed to create attribute index", "error", err)
+		}
+
+		err = service.AttributeService.CreateAttributeIndex(ctx, forceReindex)
+		if err != nil {
+			l.Error("failed to create attribute index", "error", err)
+		}
+	}
 }

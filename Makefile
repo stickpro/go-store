@@ -56,15 +56,15 @@ gen-envs:
 	go run ./cmd/app config genenvs
 
 gen-sql:
-	cd sql && /Users/st/Project/pgxgen/pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml crud
-	cd sql && /Users/st/Project/pgxgen/pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml sqlc generate
+	cd sql && pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml crud
+	cd sql && pgxgen -pgxgen-config=pgxgen-postgres.yaml -sqlc-config=sqlc-postgres.yaml sqlc generate
 
 gen-swag:
 	swag fmt
 	swag init --parseDependency --parseInternal -g ./cmd/app/main.go
 
 download-geodb:
-	curl -L -o ./storage/geo/GeoLite2-City.mmdb https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb
+	curl -L -o ./storage/geo/GeoIP2-Connection-Type.mmdb https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoIP2-Connection-Type.mmdb
 
 download-geo-cities:
 	curl -L -o ./storage/geo/city.csv https://github.com/hflabs/city/raw/refs/heads/master/city.csv

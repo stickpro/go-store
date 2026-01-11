@@ -14,22 +14,24 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO attribute_groups (name, description, created_at)
-	VALUES ($1, $2, now())
-	RETURNING id, name, description, created_at, updated_at
+INSERT INTO attribute_groups (name, slug, description, created_at)
+	VALUES ($1, $2, $3, now())
+	RETURNING id, name, slug, description, created_at, updated_at
 `
 
 type CreateParams struct {
 	Name        string      `db:"name" json:"name"`
+	Slug        string      `db:"slug" json:"slug"`
 	Description pgtype.Text `db:"description" json:"description"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.AttributeGroup, error) {
-	row := q.db.QueryRow(ctx, create, arg.Name, arg.Description)
+	row := q.db.QueryRow(ctx, create, arg.Name, arg.Slug, arg.Description)
 	var i models.AttributeGroup
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -47,7 +49,7 @@ func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAll = `-- name: GetAll :many
-SELECT id, name, description, created_at, updated_at FROM attribute_groups ORDER BY name DESC LIMIT $1 OFFSET $2
+SELECT id, name, slug, description, created_at, updated_at FROM attribute_groups ORDER BY name DESC LIMIT $1 OFFSET $2
 `
 
 type GetAllParams struct {
@@ -67,6 +69,7 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.Attri
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Slug,
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -83,23 +86,30 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.Attri
 
 const update = `-- name: Update :one
 UPDATE attribute_groups
-	SET name=$1, description=$2, updated_at=now()
-	WHERE id=$3
-	RETURNING id, name, description, created_at, updated_at
+	SET name=$1, slug=$2, description=$3, updated_at=now()
+	WHERE id=$4
+	RETURNING id, name, slug, description, created_at, updated_at
 `
 
 type UpdateParams struct {
 	Name        string      `db:"name" json:"name"`
+	Slug        string      `db:"slug" json:"slug"`
 	Description pgtype.Text `db:"description" json:"description"`
 	ID          uuid.UUID   `db:"id" json:"id"`
 }
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.AttributeGroup, error) {
-	row := q.db.QueryRow(ctx, update, arg.Name, arg.Description, arg.ID)
+	row := q.db.QueryRow(ctx, update,
+		arg.Name,
+		arg.Slug,
+		arg.Description,
+		arg.ID,
+	)
 	var i models.AttributeGroup
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.CreatedAt,
 		&i.UpdatedAt,

@@ -32,11 +32,6 @@ type UpdateDTO struct {
 	IsEnable        bool          `json:"is_enable"`
 }
 
-type GetDTO struct {
-	Page     *uint32 `json:"page" query:"page"`
-	PageSize *uint32 `json:"page_size" query:"page_size"`
-}
-
 func RequestToCreateDTO(req *category_request.CreateCategoryRequest) CreateDTO {
 	var parentID uuid.NullUUID
 	if req.ParentID != nil {

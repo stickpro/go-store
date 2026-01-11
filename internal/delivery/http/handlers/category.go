@@ -6,7 +6,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/request/category_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/category_response"
-	"github.com/stickpro/go-store/internal/service/category"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
@@ -80,7 +80,7 @@ func (h *Handler) getCategories(c fiber.Ctx) error {
 		return err
 	}
 
-	cats, err := h.services.CategoryService.GetCategoriesWithPagination(c.Context(), category.GetDTO{Page: req.Page, PageSize: req.PageSize})
+	cats, err := h.services.CategoryService.GetCategoriesWithPagination(c.Context(), dto.GetDTO{Page: req.Page, PageSize: req.PageSize})
 	if err != nil {
 		return h.handleError(err, "category")
 	}

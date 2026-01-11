@@ -13,7 +13,7 @@ import (
 )
 
 const getByID = `-- name: GetByID :one
-SELECT id, name, description, created_at, updated_at FROM attribute_groups WHERE id = $1 LIMIT 1
+SELECT id, name, slug, description, created_at, updated_at FROM attribute_groups WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.AttributeGroup, error) {
@@ -22,6 +22,7 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.AttributeG
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.CreatedAt,
 		&i.UpdatedAt,

@@ -117,7 +117,7 @@ func initLogger(opts ...Option) *logger {
 	logLevel := safeLevel(l.config.Level)
 	logTrace := safeLevel(l.config.Trace)
 
-	l.zapConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	l.zapConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 
 	encoder := zapcore.NewJSONEncoder(l.zapConfig)
 	if l.config.Format == LoggerFormatConsole {

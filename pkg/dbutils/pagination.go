@@ -5,16 +5,16 @@ import "fmt"
 type PaginationOption func(*paginationOptions)
 
 type paginationOptions struct {
-	MaxLimit uint32
+	MaxLimit uint64
 }
 
-func WithMaxLimit(v uint32) PaginationOption {
+func WithMaxLimit(v uint64) PaginationOption {
 	return func(o *paginationOptions) {
 		o.MaxLimit = v
 	}
 }
 
-func Pagination(page, pageSize *uint32, opts ...PaginationOption) (limit, offset uint32, err error) {
+func Pagination(page, pageSize *uint64, opts ...PaginationOption) (limit, offset uint64, err error) {
 	options := paginationOptions{
 		MaxLimit: 100,
 	}

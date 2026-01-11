@@ -13,6 +13,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_product_attribute_values"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -28,7 +29,7 @@ type IProductService interface { //nolint:interfacebloat
 	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error)
 	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error)
 
-	GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupDTO, error)
+	GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupWithValuesDTO, error)
 	SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error
 	// CreateProductIndex Indexing
 	CreateProductIndex(ctx context.Context, reindex bool) error
@@ -271,24 +272,26 @@ func (s *Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*
 
 func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error {
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		err := s.storage.Products(repository.WithTx(tx)).DeleteAttributesFromProduct(ctx, d.ProductID)
+		// Remove all existing attribute values for this product
+		err := s.storage.ProductAttributeValues(repository.WithTx(tx)).RemoveAll(ctx, d.ProductID)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to delete attributes from product", parsedErr)
+			s.logger.Error("failed to remove product attribute values", parsedErr)
 			return parsedErr
 		}
+
 		if len(d.AttributeIDs) == 0 {
 			return nil
 		}
 
-		err = s.storage.Products(repository.WithTx(tx)).AddAttributesToProduct(ctx, repository_products.AddAttributesToProductParams{
-			ProductID:    d.ProductID,
-			AttributeIds: d.AttributeIDs,
+		// Add new attribute values (AttributeIDs should now be AttributeValueIDs)
+		err = s.storage.ProductAttributeValues(repository.WithTx(tx)).AddBatch(ctx, repository_product_attribute_values.AddBatchParams{
+			ProductID:        d.ProductID,
+			AttributeValueID: d.AttributeIDs,
 		})
-
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to add attributes to product", parsedErr)
+			s.logger.Error("failed to add product attribute values", parsedErr)
 			return parsedErr
 		}
 
@@ -301,22 +304,18 @@ func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttribute
 	return nil
 }
 
-func (s *Service) GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupDTO, error) {
+func (s *Service) GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupWithValuesDTO, error) {
 	prd, err := s.GetProductBySlug(ctx, slug)
 	if err != nil {
 		return nil, err
 	}
 
-	rawAttributes, err := s.storage.Attributes().GetAttributesProduct(ctx, prd.ID)
+	rawAttributes, err := s.storage.ProductAttributeValues().GetByProductID(ctx, prd.ID)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to add attributes to product", parsedErr)
+		s.logger.Error("failed to get product attributes", parsedErr)
 		return nil, parsedErr
 	}
 
-	d, err := mapper.MapProductAttributesToDTO(rawAttributes)
-	if err != nil {
-		return nil, err
-	}
-	return d, nil
+	return mapper.MapProductAttributesToGroupedDTO(rawAttributes), nil
 }
