@@ -39,7 +39,7 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 
 	srv := server.InitServer(conf, services, l)
 
-	initIndexer(ctx, services, l)
+	initIndexer(ctx, services, l, true)
 
 	serverErrCh := make(chan error, 1)
 	go func() {

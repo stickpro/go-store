@@ -156,7 +156,7 @@ func (h *Handler) findProduct(c fiber.Ctx) error {
 //	@Router			/v1/product/{slug}/attributes [get]
 func (h *Handler) getProductAttribute(c fiber.Ctx) error {
 	slug := c.Params("slug")
-	prdAttr, err := h.services.ProductService.GetProductAttributes(c.Context(), slug)
+	prdAttr, err := h.services.ProductService.GetProductAttributesBySlug(c.Context(), slug)
 	if err != nil {
 		return h.handleError(err, "product")
 	}
@@ -232,15 +232,46 @@ func (h *Handler) getRelatedProductBySlug(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(prd))
 }
 
+// getProductAttributeByID is a function get product attribute
+//
+//	@Summary		Get product attribute
+//	@Description	Get product attribute
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			slug	path		string	true	"Product Slug"
+//	@Success		200		{object}	response.Result[product_response.ProductAttributeResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/{id}/attributes [get]
+func (h *Handler) getProductAttributeByID(c fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	prdAttr, err := h.services.ProductService.GetProductAttributesById(c.Context(), id)
+	if err != nil {
+		return h.handleError(err, "product")
+	}
+	return c.JSON(response.OkByData(product_response.NewFromAttributeWithAttributeGroups(prdAttr)))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Get("/", h.getProducts)
 	p.Get("/find", h.findProduct)
+	//slug
 	p.Get("/:slug", h.getProductBySlug)
 	p.Get("/:slug/attributes", h.getProductAttribute)
 	p.Get("/:slug/breadcrumbs", h.getProductBreadcrumbs)
 	p.Get("/:slug/related-products", h.getRelatedProductBySlug)
+	p.Get("/:slug/reviews", h.getProductReviewsBySlug)
+	//id
 	p.Get("/id/:id", h.getProductByID)
 	p.Get("/id/:id/with-medium", h.getProductWithMediumByID)
 	p.Get("/id/:id/related_product", h.getRelatedProduct)
+	p.Get("/id/:id/attributes", h.getProductAttributeByID)
+	p.Get("/id/:id/reviews", h.getProductReviewsByProductID)
+
 }

@@ -87,9 +87,28 @@ func (h *Handler) getCategories(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(cats))
 }
 
+// getCategoryTree returns full category hierarchy as a tree
+//
+//	@Summary		Get category tree
+//	@Description	Get all categories as a hierarchical tree structure
+//	@Tags			Category
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	response.Result[[]dto.CategoryTreeDTO]
+//	@Failure		500	{object}	apierror.Errors
+//	@Router			/v1/category/tree [get]
+func (h *Handler) getCategoryTree(c fiber.Ctx) error {
+	tree, err := h.services.CategoryService.GetCategoryTree(c.Context())
+	if err != nil {
+		return h.handleError(err, "category")
+	}
+	return c.JSON(response.OkByData(tree))
+}
+
 func (h *Handler) initCategoryRoutes(v1 fiber.Router) {
 	c := v1.Group("/category")
 	c.Get("/", h.getCategories)
+	c.Get("/tree", h.getCategoryTree)
 	c.Get("/:slug", h.getCategoryBySlug)
 	c.Get("/id/:id", h.getCategoryByID)
 }

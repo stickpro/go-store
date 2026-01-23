@@ -13,6 +13,7 @@ import (
 
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.Category, error)
+	GetAllForTree(ctx context.Context) ([]*models.Category, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Category, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Category, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.Category, error)

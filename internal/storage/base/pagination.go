@@ -47,9 +47,9 @@ func Paginate[R any](
 	}
 
 	if params.IsAscOrdering {
-		sb.OrderBy(orderBy + " ASC")
+		sb.OrderBy(orderBy+" ASC", "id ASC")
 	} else {
-		sb.OrderBy(orderBy + " DESC")
+		sb.OrderBy(orderBy+" DESC", "id DESC")
 	}
 
 	sb.Limit(int(limit)).Offset(int(offset))

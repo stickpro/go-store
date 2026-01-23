@@ -21,6 +21,7 @@ type IProductReviewService interface {
 	GetProductReviewsWithPaginate(ctx context.Context, d dto.GetProductReviewsDTO) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	GetProductReviewByID(ctx context.Context, id uuid.UUID) (*models.ProductReview, error)
 	GetProductReviewsByProductID(ctx context.Context, d dto.GetProductReviewsDTO, productID *uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
+	GetProductReviewsByProductSlug(ctx context.Context, d dto.GetProductReviewsDTO, slug string) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	GetUserProductReviews(ctx context.Context, d dto.GetProductReviewsDTO, userID uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	CreateProductReview(ctx context.Context, d dto.CreateProductReviewDTO) (*models.ProductReview, error)
 	UpdateProductReviewStatus(ctx context.Context, d dto.UpdateProductReviewStatusDTO) error
@@ -117,6 +118,40 @@ func (s *Service) GetProductReviewsByProductID(ctx context.Context, d dto.GetPro
 	productReviews, err := s.storage.ProductReviews().GetByProductIDWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
 		CommonFindParams: *commonParams,
 		ProductID:        productID,
+	})
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.l.Debug("error getting product reviews with pagination", parsedErr)
+		return nil, parsedErr
+	}
+	return productReviews, nil
+}
+
+func (s *Service) GetProductReviewsByProductSlug(ctx context.Context, d dto.GetProductReviewsDTO, slug string) (*base.FindResponseWithFullPagination[*models.ProductReview], error) {
+	prd, err := s.productService.GetProductBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	commonParams := base.NewCommonFindParams()
+	if d.PageSize != nil {
+		commonParams.PageSize = d.PageSize
+	}
+	if d.Page != nil {
+		commonParams.Page = d.Page
+	}
+	if d.SortByRating != nil {
+		commonParams.OrderBy = "rating"
+		if *d.SortByRating == "asc" {
+			commonParams.IsAscOrdering = true
+		} else {
+			commonParams.IsAscOrdering = false
+		}
+	}
+
+	productReviews, err := s.storage.ProductReviews().GetByProductIDWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
+		CommonFindParams: *commonParams,
+		ProductID:        &prd.ID,
 	})
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)

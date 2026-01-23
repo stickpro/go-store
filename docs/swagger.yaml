@@ -16,6 +16,48 @@ definitions:
           $ref: '#/definitions/APIError'
         type: array
     type: object
+  Attribute:
+    properties:
+      attribute_group_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      id:
+        type: string
+      is_filterable:
+        $ref: '#/definitions/pgtype.Bool'
+      is_required:
+        $ref: '#/definitions/pgtype.Bool'
+      is_visible:
+        $ref: '#/definitions/pgtype.Bool'
+      name:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        $ref: '#/definitions/pgtype.Int4'
+      type:
+        type: string
+      unit:
+        $ref: '#/definitions/pgtype.Text'
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+    type: object
+  AttributeGroup:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+    type: object
   AttributeGroupResponse:
     properties:
       created_at:
@@ -31,11 +73,26 @@ definitions:
       updated_at:
         type: string
     type: object
+  AttributeGroupWithValuesDTO:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/AttributeWithValuesDTO'
+        type: array
+      group_description:
+        type: string
+      group_id:
+        type: string
+      group_name:
+        type: string
+      group_slug:
+        type: string
+    type: object
   AttributeGroupsResponse:
     properties:
       groups:
         items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.AttributeGroupWithValuesDTO'
+          $ref: '#/definitions/AttributeGroupWithValuesDTO'
         type: array
     type: object
   AttributeResponse:
@@ -86,6 +143,25 @@ definitions:
       value_numeric:
         type: number
     type: object
+  AttributeWithValuesDTO:
+    properties:
+      id:
+        type: string
+      is_filterable:
+        type: boolean
+      name:
+        type: string
+      slug:
+        type: string
+      type:
+        type: string
+      unit:
+        type: string
+      values:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.AttributeValueDTO'
+        type: array
+    type: object
   AuthRequest:
     properties:
       email:
@@ -118,6 +194,35 @@ definitions:
       slug:
         type: string
     type: object
+  Category:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      id:
+        type: string
+      image_path:
+        $ref: '#/definitions/pgtype.Text'
+      is_enable:
+        type: boolean
+      meta_description:
+        $ref: '#/definitions/pgtype.Text'
+      meta_h1:
+        $ref: '#/definitions/pgtype.Text'
+      meta_keyword:
+        $ref: '#/definitions/pgtype.Text'
+      meta_title:
+        $ref: '#/definitions/pgtype.Text'
+      name:
+        type: string
+      parent_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      slug:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+    type: object
   CategoryResponse:
     properties:
       created_at:
@@ -145,6 +250,59 @@ definitions:
       slug:
         type: string
       updated_at:
+        type: string
+    type: object
+  City:
+    properties:
+      address:
+        type: string
+      area:
+        $ref: '#/definitions/pgtype.Text'
+      area_type:
+        $ref: '#/definitions/pgtype.Text'
+      capital_marker:
+        type: integer
+      city:
+        type: string
+      city_type:
+        type: string
+      country:
+        type: string
+      federal_district:
+        type: string
+      fias_id:
+        type: string
+      fias_level:
+        type: integer
+      foundation_year:
+        type: integer
+      geo_lat:
+        type: number
+      geo_lon:
+        type: number
+      id:
+        type: string
+      kladr_id:
+        type: string
+      okato:
+        type: string
+      oktmo:
+        type: string
+      population:
+        type: integer
+      postal_code:
+        type: string
+      region:
+        type: string
+      region_type:
+        type: string
+      settlement:
+        $ref: '#/definitions/pgtype.Text'
+      settlement_type:
+        $ref: '#/definitions/pgtype.Text'
+      tax_office:
+        type: string
+      timezone:
         type: string
     type: object
   CityResponse:
@@ -199,6 +357,21 @@ definitions:
         type: string
       timezone:
         type: string
+    type: object
+  Collection:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
     type: object
   CollectionResponse:
     properties:
@@ -625,39 +798,39 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute:
+  JSONResponse-ResponseWithFullPagination-Attribute:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute'
+        $ref: '#/definitions/ResponseWithFullPagination-Attribute'
       message:
         type: string
     type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup:
+  JSONResponse-ResponseWithFullPagination-AttributeGroup:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup'
+        $ref: '#/definitions/ResponseWithFullPagination-AttributeGroup'
       message:
         type: string
     type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category:
+  JSONResponse-ResponseWithFullPagination-Category:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category'
+        $ref: '#/definitions/ResponseWithFullPagination-Category'
       message:
         type: string
     type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection:
+  JSONResponse-ResponseWithFullPagination-Collection:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection'
+        $ref: '#/definitions/ResponseWithFullPagination-Collection'
       message:
         type: string
     type: object
@@ -690,6 +863,17 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_AttributeGroupWithValuesDTO:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/AttributeGroupWithValuesDTO'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_AttributeResponse:
     properties:
       code:
@@ -712,6 +896,39 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_CategoryTreeDTO:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/CategoryTreeDTO'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_City:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/City'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_Product:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/Product'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_ShortProduct:
     properties:
       code:
@@ -723,17 +940,6 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeGroupWithValuesDTO:
-    properties:
-      code:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.AttributeGroupWithValuesDTO'
-        type: array
-      message:
-        type: string
-    type: object
   JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeValueDTO:
     properties:
       code:
@@ -741,28 +947,6 @@ definitions:
       data:
         items:
           $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.AttributeValueDTO'
-        type: array
-      message:
-        type: string
-    type: object
-  JSONResponse-array_github_com_stickpro_go-store_internal_models_City:
-    properties:
-      code:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.City'
-        type: array
-      message:
-        type: string
-    type: object
-  JSONResponse-array_github_com_stickpro_go-store_internal_models_Product:
-    properties:
-      code:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Product'
         type: array
       message:
         type: string
@@ -821,6 +1005,75 @@ definitions:
         type: string
       size:
         type: integer
+    type: object
+  Product:
+    properties:
+      category_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      ean:
+        $ref: '#/definitions/pgtype.Text'
+      height:
+        type: number
+      id:
+        type: string
+      image:
+        $ref: '#/definitions/pgtype.Text'
+      is_enable:
+        type: boolean
+      isbn:
+        $ref: '#/definitions/pgtype.Text'
+      jan:
+        $ref: '#/definitions/pgtype.Text'
+      length:
+        type: number
+      location:
+        $ref: '#/definitions/pgtype.Text'
+      manufacturer_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      meta_description:
+        $ref: '#/definitions/pgtype.Text'
+      meta_h1:
+        $ref: '#/definitions/pgtype.Text'
+      meta_keyword:
+        $ref: '#/definitions/pgtype.Text'
+      meta_title:
+        $ref: '#/definitions/pgtype.Text'
+      minimum:
+        type: integer
+      model:
+        type: string
+      mpn:
+        $ref: '#/definitions/pgtype.Text'
+      name:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+      sku:
+        $ref: '#/definitions/pgtype.Text'
+      slug:
+        type: string
+      sort_order:
+        type: integer
+      stock_status:
+        $ref: '#/definitions/StockStatus'
+      subtract:
+        type: boolean
+      upc:
+        $ref: '#/definitions/pgtype.Text'
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      viewed:
+        type: integer
+      weight:
+        type: number
+      width:
+        type: number
     type: object
   ProductResponse:
     properties:
@@ -938,38 +1191,38 @@ definitions:
       token:
         type: string
     type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute:
+  ResponseWithFullPagination-Attribute:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Attribute'
+          $ref: '#/definitions/Attribute'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup:
+  ResponseWithFullPagination-AttributeGroup:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.AttributeGroup'
+          $ref: '#/definitions/AttributeGroup'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category:
+  ResponseWithFullPagination-Category:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Category'
+          $ref: '#/definitions/Category'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection:
+  ResponseWithFullPagination-Collection:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Collection'
+          $ref: '#/definitions/Collection'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
@@ -1223,14 +1476,21 @@ definitions:
     - email
     - location
     type: object
+  decimal.NullDecimal:
+    properties:
+      decimal:
+        type: number
+      valid:
+        type: boolean
+    type: object
   github_com_stickpro_go-store_internal_delivery_http_request_product_request.SyncProductAttributeRequest:
     properties:
-      attribute_ids:
+      attribute_value_ids:
         items:
           type: string
         type: array
     required:
-    - attribute_ids
+    - attribute_value_ids
     type: object
   github_com_stickpro_go-store_internal_delivery_http_request_product_review_request.CreateProductReviewRequest:
     properties:
@@ -1243,21 +1503,6 @@ definitions:
       title:
         type: string
     type: object
-  github_com_stickpro_go-store_internal_dto.AttributeGroupWithValuesDTO:
-    properties:
-      attributes:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.AttributeWithValuesDTO'
-        type: array
-      group_description:
-        type: string
-      group_id:
-        type: string
-      group_name:
-        type: string
-      group_slug:
-        type: string
-    type: object
   github_com_stickpro_go-store_internal_dto.AttributeValueDTO:
     properties:
       display_order:
@@ -1268,235 +1513,23 @@ definitions:
         type: integer
       value:
         type: string
+      value_normalized:
+        type: string
       value_numeric:
-        type: number
+        $ref: '#/definitions/decimal.NullDecimal'
     type: object
-  github_com_stickpro_go-store_internal_dto.AttributeWithValuesDTO:
+  github_com_stickpro_go-store_internal_dto.CategoryTreeDTO:
     properties:
-      id:
-        type: string
-      is_filterable:
-        type: boolean
-      name:
-        type: string
-      slug:
-        type: string
-      type:
-        type: string
-      unit:
-        type: string
-      values:
+      children:
         items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.AttributeValueDTO'
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryTreeDTO'
         type: array
-    type: object
-  github_com_stickpro_go-store_internal_models.Attribute:
-    properties:
-      attribute_group_id:
-        $ref: '#/definitions/uuid.NullUUID'
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      id:
-        type: string
-      is_filterable:
-        $ref: '#/definitions/pgtype.Bool'
-      is_required:
-        $ref: '#/definitions/pgtype.Bool'
-      is_visible:
-        $ref: '#/definitions/pgtype.Bool'
-      name:
-        type: string
-      slug:
-        type: string
-      sort_order:
-        $ref: '#/definitions/pgtype.Int4'
-      type:
-        type: string
-      unit:
-        $ref: '#/definitions/pgtype.Text'
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-    type: object
-  github_com_stickpro_go-store_internal_models.AttributeGroup:
-    properties:
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      description:
-        $ref: '#/definitions/pgtype.Text'
       id:
         type: string
       name:
         type: string
       slug:
         type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-    type: object
-  github_com_stickpro_go-store_internal_models.Category:
-    properties:
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      description:
-        $ref: '#/definitions/pgtype.Text'
-      id:
-        type: string
-      image_path:
-        $ref: '#/definitions/pgtype.Text'
-      is_enable:
-        type: boolean
-      meta_description:
-        $ref: '#/definitions/pgtype.Text'
-      meta_h1:
-        $ref: '#/definitions/pgtype.Text'
-      meta_keyword:
-        $ref: '#/definitions/pgtype.Text'
-      meta_title:
-        $ref: '#/definitions/pgtype.Text'
-      name:
-        type: string
-      parent_id:
-        $ref: '#/definitions/uuid.NullUUID'
-      slug:
-        type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-    type: object
-  github_com_stickpro_go-store_internal_models.City:
-    properties:
-      address:
-        type: string
-      area:
-        $ref: '#/definitions/pgtype.Text'
-      area_type:
-        $ref: '#/definitions/pgtype.Text'
-      capital_marker:
-        type: integer
-      city:
-        type: string
-      city_type:
-        type: string
-      country:
-        type: string
-      federal_district:
-        type: string
-      fias_id:
-        type: string
-      fias_level:
-        type: integer
-      foundation_year:
-        type: integer
-      geo_lat:
-        type: number
-      geo_lon:
-        type: number
-      id:
-        type: string
-      kladr_id:
-        type: string
-      okato:
-        type: string
-      oktmo:
-        type: string
-      population:
-        type: integer
-      postal_code:
-        type: string
-      region:
-        type: string
-      region_type:
-        type: string
-      settlement:
-        $ref: '#/definitions/pgtype.Text'
-      settlement_type:
-        $ref: '#/definitions/pgtype.Text'
-      tax_office:
-        type: string
-      timezone:
-        type: string
-    type: object
-  github_com_stickpro_go-store_internal_models.Collection:
-    properties:
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-      description:
-        $ref: '#/definitions/pgtype.Text'
-      id:
-        type: string
-      name:
-        type: string
-      slug:
-        type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-    type: object
-  github_com_stickpro_go-store_internal_models.Product:
-    properties:
-      category_id:
-        $ref: '#/definitions/uuid.NullUUID'
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      description:
-        $ref: '#/definitions/pgtype.Text'
-      ean:
-        $ref: '#/definitions/pgtype.Text'
-      height:
-        type: number
-      id:
-        type: string
-      image:
-        $ref: '#/definitions/pgtype.Text'
-      is_enable:
-        type: boolean
-      isbn:
-        $ref: '#/definitions/pgtype.Text'
-      jan:
-        $ref: '#/definitions/pgtype.Text'
-      length:
-        type: number
-      location:
-        $ref: '#/definitions/pgtype.Text'
-      manufacturer_id:
-        $ref: '#/definitions/uuid.NullUUID'
-      meta_description:
-        $ref: '#/definitions/pgtype.Text'
-      meta_h1:
-        $ref: '#/definitions/pgtype.Text'
-      meta_keyword:
-        $ref: '#/definitions/pgtype.Text'
-      meta_title:
-        $ref: '#/definitions/pgtype.Text'
-      minimum:
-        type: integer
-      model:
-        type: string
-      mpn:
-        $ref: '#/definitions/pgtype.Text'
-      name:
-        type: string
-      price:
-        type: number
-      quantity:
-        type: integer
-      sku:
-        $ref: '#/definitions/pgtype.Text'
-      slug:
-        type: string
-      sort_order:
-        type: integer
-      stock_status:
-        $ref: '#/definitions/StockStatus'
-      subtract:
-        type: boolean
-      upc:
-        $ref: '#/definitions/pgtype.Text'
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      viewed:
-        type: integer
-      weight:
-        type: number
-      width:
-        type: number
     type: object
   github_com_stickpro_go-store_internal_storage_repository_repository_products.FindRow:
     properties:
@@ -1902,7 +1935,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-AttributeGroup'
         "400":
           description: Bad Request
           schema:
@@ -2184,7 +2217,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-Attribute'
         "400":
           description: Bad Request
           schema:
@@ -2278,7 +2311,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-Category'
         "401":
           description: Unauthorized
           schema:
@@ -2417,6 +2450,25 @@ paths:
       summary: Category
       tags:
       - Category
+  /v1/category/tree:
+    get:
+      consumes:
+      - application/json
+      description: Get all categories as a hierarchical tree structure
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_CategoryTreeDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get category tree
+      tags:
+      - Category
   /v1/collection/:
     get:
       consumes:
@@ -2435,7 +2487,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-Collection'
         "400":
           description: Bad Request
           schema:
@@ -2595,7 +2647,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeGroupWithValuesDTO'
+            $ref: '#/definitions/JSONResponse-array_AttributeGroupWithValuesDTO'
         "400":
           description: Bad Request
           schema:
@@ -2647,7 +2699,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_City'
+            $ref: '#/definitions/JSONResponse-array_City'
         "400":
           description: Bad Request
           schema:
@@ -3068,6 +3120,39 @@ paths:
       summary: Get related product by slug
       tags:
       - Product
+  /v1/product/{id}/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Get product attribute
+      parameters:
+      - description: Product Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AttributeGroupsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get product attribute
+      tags:
+      - Product
   /v1/product/{slug}/:
     get:
       consumes:
@@ -3167,6 +3252,47 @@ paths:
       summary: Get product breadcrumbs
       tags:
       - Product
+  /v1/product/{slug}/reviews:
+    get:
+      consumes:
+      - application/json
+      description: Get Product Reviews By Product ID
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: product_id
+        type: string
+      - description: '"asc" or "desc"'
+        in: query
+        name: sort_by_rating
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get Product Reviews By Product ID
+      tags:
+      - Product Review
   /v1/product/find:
     get:
       consumes:
@@ -3184,7 +3310,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_Product'
+            $ref: '#/definitions/JSONResponse-array_Product'
         "400":
           description: Bad Request
           schema:

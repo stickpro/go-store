@@ -79,8 +79,36 @@ func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(productReviews))
 }
 
+// getProductReviewsBySlug
+//
+//	@Summary		Get Product Reviews By Product ID
+//	@Tags			Product Review
+//	@Description	Get Product Reviews By Product ID
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		uuid.UUID												true	"Product ID"
+//	@Param			request	query		product_review_request.GetProductReviewsWithPagination	true	"GetProductReviewsWithPagination"
+//	@Success		200		{object}	response.Result[product_review_response.ProductReviewResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/{slug}/reviews [get]
+func (h *Handler) getProductReviewsBySlug(c fiber.Ctx) error {
+	slug := c.Params("slug")
+
+	req := product_review_request.GetProductReviewsWithPagination{}
+	if err := c.Bind().Query(&req); err != nil {
+		return err
+	}
+	d := dto.RequestToGetProductReviewDTO(&req)
+	productReviews, err := h.services.ProductReviewService.GetProductReviewsByProductSlug(c.Context(), d, slug)
+	if err != nil {
+		return h.handleError(err, "product reviews")
+	}
+	return c.JSON(response.OkByData(productReviews))
+}
+
 func (h *Handler) initProductReviewRoutes(v1 fiber.Router) {
 	pr := v1.Group("/product-review")
 	pr.Post("/", h.createProductReview, middleware.AuthMiddleware(h.services.AuthService))
-	pr.Get("/by-product/:id", h.getProductReviewsByProductID)
 }

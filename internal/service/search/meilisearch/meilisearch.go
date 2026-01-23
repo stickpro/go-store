@@ -18,6 +18,10 @@ func NewMeiliSearchSearchEngine(cfg config.SearchEngine) *SearchEngine {
 }
 
 func (e *SearchEngine) CreateIndex(nameIndex string, data []map[string]interface{}, opts ...searchtypes.IndexOptions) error {
+	_, err := e.client.DeleteIndex(nameIndex)
+	if err != nil {
+		return err
+	}
 	index := e.client.Index(nameIndex)
 
 	if len(opts) > 0 {
@@ -45,7 +49,7 @@ func (e *SearchEngine) CreateIndex(nameIndex string, data []map[string]interface
 		}
 	}
 
-	_, err := index.AddDocuments(data, "id")
+	_, err = index.AddDocuments(data, "id")
 	if err != nil {
 		return fmt.Errorf("failed to add documents: %w", err)
 	}

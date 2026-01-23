@@ -81,8 +81,8 @@ type WithMediumProductDTO struct {
 }
 
 type SyncAttributeProductDTO struct {
-	ProductID    uuid.UUID   `json:"product_id"`
-	AttributeIDs []uuid.UUID `json:"attribute_ids"` //nolint:tagliatelle
+	ProductID         uuid.UUID   `json:"product_id"`
+	AttributeValueIDs []uuid.UUID `json:"attribute_value_ids"` //nolint:tagliatelle
 }
 
 func RequestToCreateProductDTO(req *product_request.CreateProductRequest) CreateProductDTO {

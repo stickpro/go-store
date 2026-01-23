@@ -94,8 +94,8 @@ func (h *Handler) syncProductAttribute(c fiber.Ctx) error {
 	}
 
 	err = h.services.ProductService.SyncProductAttributes(c.Context(), dto.SyncAttributeProductDTO{
-		ProductID:    id,
-		AttributeIDs: req.AttributeIDs,
+		ProductID:         id,
+		AttributeValueIDs: req.AttributeValueIDs,
 	})
 	if err != nil {
 		return h.handleError(err, "product")

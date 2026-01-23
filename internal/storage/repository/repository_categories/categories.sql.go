@@ -12,6 +12,46 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const getAllForTree = `-- name: GetAllForTree :many
+SELECT id, parent_id, name, slug, description, image_path, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at FROM categories
+WHERE is_enable = true
+ORDER BY id ASC
+`
+
+func (q *Queries) GetAllForTree(ctx context.Context) ([]*models.Category, error) {
+	rows, err := q.db.Query(ctx, getAllForTree)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*models.Category{}
+	for rows.Next() {
+		var i models.Category
+		if err := rows.Scan(
+			&i.ID,
+			&i.ParentID,
+			&i.Name,
+			&i.Slug,
+			&i.Description,
+			&i.ImagePath,
+			&i.MetaTitle,
+			&i.MetaH1,
+			&i.MetaDescription,
+			&i.MetaKeyword,
+			&i.IsEnable,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getByID = `-- name: GetByID :one
 SELECT id, parent_id, name, slug, description, image_path, meta_title, meta_h1, meta_description, meta_keyword, is_enable, created_at, updated_at FROM categories WHERE id = $1 LIMIT 1
 `

@@ -18,3 +18,10 @@ type CategoryChildDTO struct {
 	Slug     string        `json:"slug"`
 	IsEnable bool          `json:"is_enable"`
 } // @name CategoryChildDTO
+
+type CategoryTreeDTO struct {
+	ID       uuid.UUID          `json:"id"`
+	Name     string             `json:"name"`
+	Slug     string             `json:"slug"`
+	Children []*CategoryTreeDTO `json:"children,omitempty"`
+} // @name CategoryTreeDTO

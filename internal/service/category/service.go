@@ -23,6 +23,7 @@ type ICategoryService interface {
 	GetCategoryByID(ctx context.Context, id uuid.UUID) (*models.Category, error)
 	GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error)
 	UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error)
+	GetCategoryTree(ctx context.Context) ([]*dto.CategoryTreeDTO, error)
 
 	IBreadcrumb
 }
@@ -114,21 +115,21 @@ func (s *Service) GetCategoriesWithPagination(ctx context.Context, d dto.GetDTO)
 	return cats, nil
 }
 
-func (s *Service) UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error) {
+func (s *Service) UpdateCategory(ctx context.Context, d UpdateDTO) (*models.Category, error) {
 	var cat *models.Category
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
 		params := repository_categories.UpdateParams{
-			Name:            dto.Name,
-			ParentID:        dto.ParentID,
-			Slug:            dto.Slug,
-			Description:     pgtypeutils.EncodeText(dto.Description),
-			MetaTitle:       pgtypeutils.EncodeText(dto.MetaTitle),
-			MetaH1:          pgtypeutils.EncodeText(dto.MetaH1),
-			MetaKeyword:     pgtypeutils.EncodeText(dto.MetaKeyword),
-			MetaDescription: pgtypeutils.EncodeText(dto.MetaDescription),
-			IsEnable:        dto.IsEnable,
-			ImagePath:       pgtypeutils.EncodeText(dto.ImagePath),
-			ID:              dto.ID,
+			Name:            d.Name,
+			ParentID:        d.ParentID,
+			Slug:            d.Slug,
+			Description:     pgtypeutils.EncodeText(d.Description),
+			MetaTitle:       pgtypeutils.EncodeText(d.MetaTitle),
+			MetaH1:          pgtypeutils.EncodeText(d.MetaH1),
+			MetaKeyword:     pgtypeutils.EncodeText(d.MetaKeyword),
+			MetaDescription: pgtypeutils.EncodeText(d.MetaDescription),
+			IsEnable:        d.IsEnable,
+			ImagePath:       pgtypeutils.EncodeText(d.ImagePath),
+			ID:              d.ID,
 		}
 
 		var err error
@@ -152,4 +153,43 @@ func (s *Service) UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Ca
 		return nil, err
 	}
 	return cat, nil
+}
+
+func (s *Service) GetCategoryTree(ctx context.Context) ([]*dto.CategoryTreeDTO, error) {
+	categories, err := s.storage.Categories().GetAllForTree(ctx)
+	if err != nil {
+		s.logger.Error("failed to get categories for tree", "error", err)
+		return nil, err
+	}
+
+	return s.buildTree(categories), nil
+}
+
+func (s *Service) buildTree(categories []*models.Category) []*dto.CategoryTreeDTO {
+	nodeMap := make(map[uuid.UUID]*dto.CategoryTreeDTO)
+	var roots []*dto.CategoryTreeDTO
+
+	// Create all nodes
+	for _, cat := range categories {
+		nodeMap[cat.ID] = &dto.CategoryTreeDTO{
+			ID:       cat.ID,
+			Name:     cat.Name,
+			Slug:     cat.Slug,
+			Children: make([]*dto.CategoryTreeDTO, 0),
+		}
+	}
+
+	// Build tree by linking children to parents
+	for _, cat := range categories {
+		node := nodeMap[cat.ID]
+		if cat.ParentID.Valid {
+			if parent, ok := nodeMap[cat.ParentID.UUID]; ok {
+				parent.Children = append(parent.Children, node)
+			}
+		} else {
+			roots = append(roots, node)
+		}
+	}
+
+	return roots
 }

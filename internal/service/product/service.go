@@ -29,7 +29,8 @@ type IProductService interface { //nolint:interfacebloat
 	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error)
 	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error)
 
-	GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupWithValuesDTO, error)
+	GetProductAttributesBySlug(ctx context.Context, slug string) ([]*dto.AttributeGroupWithValuesDTO, error)
+	GetProductAttributesById(ctx context.Context, uuid uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error)
 	SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error
 	// CreateProductIndex Indexing
 	CreateProductIndex(ctx context.Context, reindex bool) error
@@ -280,14 +281,14 @@ func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttribute
 			return parsedErr
 		}
 
-		if len(d.AttributeIDs) == 0 {
+		if len(d.AttributeValueIDs) == 0 {
 			return nil
 		}
 
 		// Add new attribute values (AttributeIDs should now be AttributeValueIDs)
 		err = s.storage.ProductAttributeValues(repository.WithTx(tx)).AddBatch(ctx, repository_product_attribute_values.AddBatchParams{
 			ProductID:        d.ProductID,
-			AttributeValueID: d.AttributeIDs,
+			AttributeValueID: d.AttributeValueIDs,
 		})
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
@@ -304,13 +305,24 @@ func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttribute
 	return nil
 }
 
-func (s *Service) GetProductAttributes(ctx context.Context, slug string) ([]*dto.AttributeGroupWithValuesDTO, error) {
+func (s *Service) GetProductAttributesBySlug(ctx context.Context, slug string) ([]*dto.AttributeGroupWithValuesDTO, error) {
 	prd, err := s.GetProductBySlug(ctx, slug)
 	if err != nil {
 		return nil, err
 	}
 
 	rawAttributes, err := s.storage.ProductAttributeValues().GetByProductID(ctx, prd.ID)
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.logger.Error("failed to get product attributes", parsedErr)
+		return nil, parsedErr
+	}
+
+	return mapper.MapProductAttributesToGroupedDTO(rawAttributes), nil
+}
+
+func (s *Service) GetProductAttributesById(ctx context.Context, id uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error) {
+	rawAttributes, err := s.storage.ProductAttributeValues().GetByProductID(ctx, id)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.logger.Error("failed to get product attributes", parsedErr)

@@ -1,6 +1,6 @@
 module github.com/stickpro/go-store
 
-go 1.24.4
+go 1.25.0
 
 require (
 	github.com/cristalhq/aconfig v0.18.6

@@ -11,7 +11,7 @@ JOIN categories c_product ON p.category_id = c_product.id
 JOIN category_paths cp ON cp.descendant_id = c_product.id
 JOIN categories c ON c.id = cp.ancestor_id
 WHERE p.slug = $1
-ORDER BY cp.depth ASC;
+ORDER BY cp.depth DESC;
 
 -- name: GetBreadcrumbsByCategoryID :many
 SELECT
@@ -24,7 +24,7 @@ SELECT
 FROM category_paths cp
 JOIN categories c ON c.id = cp.ancestor_id
 WHERE cp.descendant_id = $1
-ORDER BY cp.depth ASC;
+ORDER BY cp.depth DESC;
 
 -- name: GetBreadcrumbsByCategorySlug :many
 SELECT
@@ -38,7 +38,7 @@ FROM categories target_cat
 JOIN category_paths cp ON cp.descendant_id = target_cat.id
 JOIN categories c ON c.id = cp.ancestor_id
 WHERE target_cat.slug = $1
-ORDER BY cp.depth ASC;
+ORDER BY cp.depth DESC;
 
 -- name: GetAllDescendants :many
 SELECT
