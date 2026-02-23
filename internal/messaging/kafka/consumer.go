@@ -39,7 +39,7 @@ func (c *Consumer) Run(ctx context.Context, onProduct HandlerFunc[contracts.Prod
 		fetches := c.client.PollFetches(ctx)
 
 		if ctx.Err() != nil {
-			return nil
+			return ctx.Err()
 		}
 
 		if errs := fetches.Errors(); len(errs) > 0 {
