@@ -118,7 +118,7 @@ func (s *Service) RebuildCategoryPaths(ctx context.Context, categoryID uuid.UUID
 }
 
 func (s *Service) rebuildCategoryPathsWithOpts(ctx context.Context, categoryID uuid.UUID, opts ...repository.Option) error {
-	category, err := s.GetCategoryByID(ctx, categoryID)
+	category, err := s.storage.Categories(opts...).GetByID(ctx, categoryID)
 	if err != nil {
 		s.logger.Error("failed to get category for rebuild", "id", categoryID, "error", err)
 		return err

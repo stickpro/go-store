@@ -12,7 +12,7 @@ import (
 
 type ProductReviewWithPaginationParams struct {
 	base.CommonFindParams
-	ProductID *uuid.UUID
+	VariantID *uuid.UUID
 	UserID    *uuid.UUID
 }
 
@@ -32,8 +32,8 @@ func (s *CustomQueries) GetWithPaginate(
 			if params.UserID != nil {
 				sb.Where(sb.Equal("user_id", params.UserID))
 			}
-			if params.ProductID != nil {
-				sb.Where(sb.Equal("product_id", params.ProductID))
+			if params.VariantID != nil {
+				sb.Where(sb.Equal("variant_id", params.VariantID))
 			}
 		},
 		AllowedFieldOrder: map[string]bool{
@@ -56,7 +56,7 @@ func (s *CustomQueries) GetByProductIDWithPaginate(
 		WhereBuilder: func(sb *sqlbuilder.SelectBuilder) {
 			sb.Where(
 				sb.Equal("status", constant.ReviewApproved.String()),
-				sb.Equal("product_id", params.ProductID),
+				sb.Equal("variant_id", params.VariantID),
 			)
 		},
 		AllowedFieldOrder: map[string]bool{

@@ -1,0 +1,94 @@
+### Variables
+@categoryId = 00000000-0000-0000-0000-000000000000
+@parentCategoryId = 00000000-0000-0000-0000-000000000000
+@categorySlug = electronics
+
+
+### ─── PUBLIC ────────────────────────────────────────────────────────────────
+
+### Get categories (paginated)
+GET {{baseUrl}}v1/category/?page=1&page_size=20
+Content-Type: application/json
+
+### Get category tree (full hierarchy)
+GET {{baseUrl}}v1/category/tree
+Content-Type: application/json
+
+### Get category by slug
+GET {{baseUrl}}v1/category/{{categorySlug}}
+Content-Type: application/json
+
+### Get category by ID
+GET {{baseUrl}}v1/category/id/{{categoryId}}
+Content-Type: application/json
+
+
+### ─── ADMIN ──────────────────────────────────────────────────────────────────
+
+### Create root category (no parent)
+POST {{baseUrl}}v1/category/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Электроника",
+  "slug": "electronics",
+  "description": "Электроника и техника",
+  "image_path": "/images/categories/electronics.jpg",
+  "meta_title": "Электроника — купить в интернет-магазине",
+  "meta_h1": "Электроника",
+  "meta_description": "Большой выбор электроники по лучшим ценам",
+  "meta_keyword": "электроника, техника, купить",
+  "is_enable": true
+}
+
+> {%
+    client.global.set("categoryId", response.body.data.id);
+%}
+
+### Create child category (with parent)
+POST {{baseUrl}}v1/category/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "parent_id": "{{parentCategoryId}}",
+  "name": "Процессоры",
+  "slug": "cpu",
+  "description": "Процессоры для компьютеров",
+  "image_path": "/images/categories/cpu.jpg",
+  "meta_title": "Процессоры — купить",
+  "meta_h1": "Процессоры",
+  "meta_description": "Купить процессор по лучшей цене",
+  "meta_keyword": "процессор, CPU, купить",
+  "is_enable": true
+}
+
+### Update category
+PUT {{baseUrl}}v1/category/{{categoryId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Электроника и гаджеты",
+  "slug": "electronics",
+  "description": "Электроника, гаджеты и аксессуары",
+  "image_path": "/images/categories/electronics-v2.jpg",
+  "meta_title": "Электроника и гаджеты — купить",
+  "meta_h1": "Электроника и гаджеты",
+  "meta_description": "Большой выбор электроники и гаджетов",
+  "meta_keyword": "электроника, гаджеты, купить",
+  "is_enable": true
+}
+
+### Move category to another parent
+PUT {{baseUrl}}v1/category/{{categoryId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "parent_id": "{{parentCategoryId}}",
+  "name": "Процессоры",
+  "slug": "cpu",
+  "is_enable": true
+}

@@ -28,8 +28,8 @@ func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProducts
 		}
 		d.Products = append(d.Products, &models.ShortProduct{
 			ID:       row.ProductID.UUID,
-			Name:     row.ProductName.String,
-			Slug:     row.ProductSlug.String,
+			Name:     row.ProductName,
+			Slug:     row.ProductSlug,
 			Model:    row.ProductModel.String,
 			Price:    row.ProductPrice.Decimal,
 			IsEnable: row.ProductIsEnable.Bool,
@@ -61,8 +61,8 @@ func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithPr
 		}
 		d.Products = append(d.Products, &models.ShortProduct{
 			ID:       row.ProductID.UUID,
-			Name:     row.ProductName.String,
-			Slug:     row.ProductSlug.String,
+			Name:     row.ProductName,
+			Slug:     row.ProductSlug,
 			Model:    row.ProductModel.String,
 			Price:    row.ProductPrice.Decimal,
 			IsEnable: row.ProductIsEnable.Bool,

@@ -13,4 +13,4 @@ type CreateCategoryRequest struct {
 	MetaDescription *string    `json:"meta_description,omitempty" validate:"omitempty,min=1"`
 	MetaKeyword     *string    `json:"meta_keyword,omitempty" validate:"omitempty,min=1"`
 	IsEnabled       bool       `json:"is_enabled"`
-} // @name CreateCategoryRequest
+} //	@name	CreateCategoryRequest

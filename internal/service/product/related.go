@@ -12,16 +12,16 @@ import (
 )
 
 type IRelatedProduct interface {
-	GetRelatedProducts(ctx context.Context, productID uuid.UUID) ([]*models.ShortProduct, error)
+	GetRelatedProducts(ctx context.Context, variantID uuid.UUID) ([]*models.ShortProduct, error)
 	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*models.ShortProduct, error)
-	SyncRelatedProduct(ctx context.Context, productID uuid.UUID, relatedProductIDs []uuid.UUID) error
+	SyncRelatedProducts(ctx context.Context, variantID uuid.UUID, relatedVariantIDs []uuid.UUID) error
 }
 
-func (s *Service) GetRelatedProducts(ctx context.Context, productID uuid.UUID) ([]*models.ShortProduct, error) {
-	products, err := s.storage.Products().GetRelatedProductsByProductID(ctx, productID)
+func (s *Service) GetRelatedProducts(ctx context.Context, variantID uuid.UUID) ([]*models.ShortProduct, error) {
+	products, err := s.storage.Products().GetRelatedProductsByVariantID(ctx, variantID)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to get product media", err)
+		s.logger.Error("failed to get related products", err)
 		return nil, parsedErr
 	}
 	resp := make([]*models.ShortProduct, 0, len(products))
@@ -43,7 +43,7 @@ func (s *Service) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]
 	products, err := s.storage.Products().GetRelatedProductsBySlug(ctx, slug)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to get product media", err)
+		s.logger.Error("failed to get related products by slug", err)
 		return nil, parsedErr
 	}
 	resp := make([]*models.ShortProduct, 0, len(products))
@@ -61,22 +61,22 @@ func (s *Service) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]
 	return resp, nil
 }
 
-func (s *Service) SyncRelatedProduct(ctx context.Context, productID uuid.UUID, relatedProductIDs []uuid.UUID) error {
+func (s *Service) SyncRelatedProducts(ctx context.Context, variantID uuid.UUID, relatedVariantIDs []uuid.UUID) error {
 	return repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		err := s.storage.Products(repository.WithTx(tx)).DeleteRelatedProducts(ctx, productID)
+		err := s.storage.Products(repository.WithTx(tx)).DeleteRelatedProducts(ctx, variantID)
 		if err != nil {
 			return err
 		}
-		if len(relatedProductIDs) == 0 {
+		if len(relatedVariantIDs) == 0 {
 			return nil
 		}
 		err = s.storage.Products(repository.WithTx(tx)).AddRelatedProducts(ctx, repository_products.AddRelatedProductsParams{
-			ProductID:         productID,
-			RelatedProductIds: relatedProductIDs,
+			VariantID:         variantID,
+			RelatedVariantIds: relatedVariantIDs,
 		})
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to update related product", err)
+			s.logger.Error("failed to sync related products", err)
 			return parsedErr
 		}
 		return nil

@@ -16,7 +16,7 @@ type UserInfoResponse struct {
 	IsAdmin         bool       `json:"is_admin"`
 	CreatedAt       time.Time  `json:"created_at" format:"date-time"`
 	UpdatedAt       *time.Time `json:"updated_at" format:"date-time"`
-} // @name UserInfoResponse
+} //	@name	UserInfoResponse
 
 func NewFromModel(user *models.User) UserInfoResponse {
 	var emailVerifiedAt *time.Time

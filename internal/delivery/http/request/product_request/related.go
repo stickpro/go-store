@@ -3,5 +3,5 @@ package product_request
 import "github.com/google/uuid"
 
 type SyncRelatedProductRequest struct {
-	ProductIDs []uuid.UUID `json:"product_ids"`
-} // @name SyncRelatedProductRequest
+	VariantIDs []uuid.UUID `json:"variant_ids"`
+} //	@name	SyncRelatedProductRequest

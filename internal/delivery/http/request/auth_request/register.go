@@ -5,4 +5,4 @@ type RegisterRequest struct {
 	Password string `db:"password" json:"password" validate:"required,min=8,max=32"`
 	Location string `db:"location" json:"location" validate:"required,timezone"`
 	Language string `db:"language" json:"language" validate:"required,min=2,max=2"`
-} // @name RegisterRequest
+} //	@name	RegisterRequest

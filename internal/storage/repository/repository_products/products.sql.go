@@ -13,7 +13,7 @@ import (
 )
 
 const getByID = `-- name: GetByID :one
-SELECT id, category_id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at FROM products WHERE id = $1 LIMIT 1
+SELECT id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at FROM products WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
@@ -21,15 +21,8 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 	var i models.Product
 	err := row.Scan(
 		&i.ID,
-		&i.CategoryID,
-		&i.Name,
+		&i.ManufacturerID,
 		&i.Model,
-		&i.Slug,
-		&i.Description,
-		&i.MetaTitle,
-		&i.MetaH1,
-		&i.MetaDescription,
-		&i.MetaKeyword,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -39,8 +32,6 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Image,
-		&i.ManufacturerID,
 		&i.Price,
 		&i.Weight,
 		&i.Length,
@@ -50,7 +41,6 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 		&i.Minimum,
 		&i.SortOrder,
 		&i.IsEnable,
-		&i.Viewed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -58,7 +48,9 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 }
 
 const getBySlug = `-- name: GetBySlug :one
-SELECT id, category_id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at FROM products WHERE slug = $1 LIMIT 1
+SELECT p.id, p.manufacturer_id, p.model, p.sku, p.upc, p.ean, p.jan, p.isbn, p.mpn, p.location, p.quantity, p.stock_status, p.price, p.weight, p.length, p.width, p.height, p.subtract, p.minimum, p.sort_order, p.is_enable, p.created_at, p.updated_at FROM products p
+INNER JOIN product_variants pv ON pv.product_id = p.id
+WHERE pv.slug = $1 LIMIT 1
 `
 
 func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, error) {
@@ -66,15 +58,8 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 	var i models.Product
 	err := row.Scan(
 		&i.ID,
-		&i.CategoryID,
-		&i.Name,
+		&i.ManufacturerID,
 		&i.Model,
-		&i.Slug,
-		&i.Description,
-		&i.MetaTitle,
-		&i.MetaH1,
-		&i.MetaDescription,
-		&i.MetaKeyword,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -84,8 +69,6 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Image,
-		&i.ManufacturerID,
 		&i.Price,
 		&i.Weight,
 		&i.Length,
@@ -95,7 +78,6 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 		&i.Minimum,
 		&i.SortOrder,
 		&i.IsEnable,
-		&i.Viewed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

@@ -16,7 +16,7 @@ type MediumResponse struct {
 	DiskType  string    `db:"disk_type" json:"disk_type"`
 	Size      int64     `db:"size" json:"size"`
 	CreatedAt time.Time `json:"created_at"`
-} // @name MediumResponse
+} //	@name	MediumResponse
 
 func NewFromModel(medium *models.Medium) MediumResponse {
 	return MediumResponse{

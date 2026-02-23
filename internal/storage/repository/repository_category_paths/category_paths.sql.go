@@ -232,11 +232,11 @@ SELECT
     c.meta_title,
     c.meta_h1,
     cp.depth
-FROM products p
-JOIN categories c_product ON p.category_id = c_product.id
+FROM product_variants pv
+JOIN categories c_product ON pv.category_id = c_product.id
 JOIN category_paths cp ON cp.descendant_id = c_product.id
 JOIN categories c ON c.id = cp.ancestor_id
-WHERE p.slug = $1
+WHERE pv.slug = $1
 ORDER BY cp.depth DESC
 `
 

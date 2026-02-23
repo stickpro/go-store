@@ -17,7 +17,7 @@ type UpdateCategoryRequest struct {
 	MetaDescription *string    `json:"meta_description" validate:"omitempty,min=1"`
 	MetaKeyword     *string    `json:"meta_keyword" validate:"omitempty,min=1"`
 	IsEnabled       bool       `json:"is_enabled"`
-} // @name UpdateCategoryRequest
+} //	@name	UpdateCategoryRequest
 
 // Manual validate
 func (req *UpdateCategoryRequest) Validate(id uuid.UUID) error {

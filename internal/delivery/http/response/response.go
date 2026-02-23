@@ -8,7 +8,7 @@ type Result[T any] struct {
 	Code    int    `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
 	Data    T      `json:"data"`
-} // @name JSONResponse
+} //	@name	JSONResponse
 
 func OkByMessage(message string) *Result[any] {
 	return &Result[any]{

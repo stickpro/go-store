@@ -89,7 +89,7 @@ type AttributeValueDTO struct {
 type AssignProductAttributesDTO struct {
 	ProductID         uuid.UUID   `json:"product_id"`
 	AttributeValueIDs []uuid.UUID `json:"attribute_value_ids"`
-} // @name AssignProductAttributesDTO
+} //	@name	AssignProductAttributesDTO
 
 type ProductAttributeDTO struct {
 	AttributeID   uuid.UUID `json:"attribute_id"`
@@ -103,7 +103,7 @@ type ProductAttributeDTO struct {
 	ValueID       uuid.UUID `json:"value_id"`
 	Value         string    `json:"value"`
 	ValueNumeric  *float64  `json:"value_numeric,omitempty"`
-} // @name ProductAttributeDTO
+} //	@name	ProductAttributeDTO
 
 // Filter DTOs (for frontend)
 type AttributeGroupWithValuesDTO struct {
@@ -112,7 +112,7 @@ type AttributeGroupWithValuesDTO struct {
 	GroupSlug        string                   `json:"group_slug"`
 	GroupDescription *string                  `json:"group_description,omitempty"`
 	Attributes       []AttributeWithValuesDTO `json:"attributes"`
-} // @name AttributeGroupWithValuesDTO
+} //	@name	AttributeGroupWithValuesDTO
 
 type AttributeWithValuesDTO struct {
 	ID           uuid.UUID           `json:"id"`
@@ -122,14 +122,14 @@ type AttributeWithValuesDTO struct {
 	Unit         *string             `json:"unit,omitempty"`
 	IsFilterable bool                `json:"is_filterable"`
 	Values       []AttributeValueDTO `json:"values"`
-} // @name AttributeWithValuesDTO
+} //	@name	AttributeWithValuesDTO
 
 // Facet Distribution DTO (для фильтров из Meilisearch)
 type FacetDistributionDTO struct {
 	AttributeSlug string           `json:"attribute_slug"`
 	AttributeName string           `json:"attribute_name"`
 	Values        map[string]int64 `json:"values"` // value -> count
-} // @name FacetDistributionDTO
+} //	@name	FacetDistributionDTO
 
 func RequestToCreateAttributeDTO(req *attribute_request.CreateAttributeRequest) CreateAttributeDTO {
 	var aGroupID uuid.NullUUID

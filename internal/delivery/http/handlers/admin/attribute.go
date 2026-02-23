@@ -10,6 +10,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response/attribute_response"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
+
 	// swag-gen
 	_ "github.com/stickpro/go-store/internal/models"
 	_ "github.com/stickpro/go-store/internal/storage/base"

@@ -7,11 +7,11 @@ type CreateCollectionRequest struct {
 	Description *string     `json:"description,omitempty" validate:"omitempty,max=500"`
 	Slug        string      `json:"slug" validate:"required,slug"`
 	ProductIDs  []uuid.UUID `json:"product_ids,omitempty" validate:"omitempty,dive,uuid"` //nolint:tagliatelle
-} // @name CreateCollectionRequest
+} //	@name	CreateCollectionRequest
 
 type UpdateCollectionRequest struct {
 	Name        string      `json:"name" validate:"required"`
 	Description *string     `json:"description,omitempty" validate:"omitempty,max=500"`
 	Slug        string      `json:"slug" validate:"required,slug"`
 	ProductIDs  []uuid.UUID `json:"product_ids,omitempty" validate:"omitempty,dive,uuid"` //nolint:tagliatelle
-} // @name UpdateCollectionRequest
+} //	@name	UpdateCollectionRequest

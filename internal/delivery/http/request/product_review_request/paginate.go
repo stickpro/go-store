@@ -7,4 +7,4 @@ type GetProductReviewsWithPagination struct {
 	Page         *uint64    `json:"page" query:"page"`
 	PageSize     *uint64    `json:"page_size" query:"page_size"`
 	SortByRating *string    `json:"sort_by_rating,omitempty" query:"sort_by_rating,omitempty"` // "asc" or "desc"
-} // @name GetProductReviewsWithPagination
+} //	@name	GetProductReviewsWithPagination

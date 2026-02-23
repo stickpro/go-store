@@ -72,7 +72,7 @@ func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 		return err
 	}
 	d := dto.RequestToGetProductReviewDTO(&req)
-	productReviews, err := h.services.ProductReviewService.GetProductReviewsByProductID(c.Context(), d, &id)
+	productReviews, err := h.services.ProductReviewService.GetProductReviewsByVariantID(c.Context(), d, &id)
 	if err != nil {
 		return h.handleError(err, "product reviews")
 	}
@@ -101,7 +101,7 @@ func (h *Handler) getProductReviewsBySlug(c fiber.Ctx) error {
 		return err
 	}
 	d := dto.RequestToGetProductReviewDTO(&req)
-	productReviews, err := h.services.ProductReviewService.GetProductReviewsByProductSlug(c.Context(), d, slug)
+	productReviews, err := h.services.ProductReviewService.GetProductReviewsByVariantSlug(c.Context(), d, slug)
 	if err != nil {
 		return h.handleError(err, "product reviews")
 	}

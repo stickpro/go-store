@@ -14,7 +14,7 @@ type GetProductReviewsDTO struct {
 }
 
 type CreateProductReviewDTO struct {
-	ProductID uuid.UUID `json:"product_id"`
+	VariantID uuid.UUID `json:"variant_id"`
 	UserID    uuid.UUID `json:"user_id"`
 	OrderID   uuid.UUID `json:"order_id"`
 	Rating    int16     `json:"rating"`
@@ -24,7 +24,7 @@ type CreateProductReviewDTO struct {
 
 func RequestToCreateProductReviewDTO(req *product_review_request.CreateProductReviewRequest, usrID uuid.UUID) CreateProductReviewDTO {
 	return CreateProductReviewDTO{
-		ProductID: req.ProductID,
+		VariantID: req.VariantID,
 		UserID:    usrID,
 		Rating:    req.Rating,
 		Title:     req.Title,

@@ -18,7 +18,7 @@ type AttributeResponse struct {
 	SortOrder        int32         `json:"sort_order,omitempty"`
 	CreatedAt        string        `json:"created_at"`
 	UpdatedAt        string        `json:"updated_at"`
-} // @name AttributeResponse
+} //	@name	AttributeResponse
 
 func NewFromAttributeModel(attr *models.Attribute) AttributeResponse {
 	var unit *string
@@ -52,7 +52,7 @@ type AttributeValueResponse struct {
 	IsActive        bool      `json:"is_active"`
 	CreatedAt       string    `json:"created_at"`
 	UpdatedAt       string    `json:"updated_at"`
-} // @name AttributeValueResponse
+} //	@name	AttributeValueResponse
 
 func NewFromAttributeValueModel(value *models.AttributeValue) AttributeValueResponse {
 	var valueNormalized *string

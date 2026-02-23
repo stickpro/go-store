@@ -1,0 +1,179 @@
+### Variables
+@productId = 55555555-5555-5555-5555-555555555501
+@variantId = 00000000-0000-0000-0000-000000000000
+@productSlug = cooler-x-asus
+@manufacturerId = 00000000-0000-0000-0000-000000000000
+@categoryId = bdcbe266-f47b-4a80-ae6a-eded7127e55a
+
+
+### ─── PUBLIC ────────────────────────────────────────────────────────────────
+
+### Get products (paginated)
+GET {{baseUrl}}v1/product/?page=1&page_size=20
+Content-Type: application/json
+
+### Find product by name (search)
+GET {{baseUrl}}v1/product/find?product=кулер
+Content-Type: application/json
+
+### Get product by slug
+GET {{baseUrl}}v1/product/{{productSlug}}
+Content-Type: application/json
+
+### Get product attributes by slug
+GET {{baseUrl}}v1/product/{{productSlug}}/attributes
+Content-Type: application/json
+
+### Get product breadcrumbs by slug
+GET {{baseUrl}}v1/product/{{productSlug}}/breadcrumbs
+Content-Type: application/json
+
+### Get related products by slug
+GET {{baseUrl}}v1/product/{{productSlug}}/related-products
+Content-Type: application/json
+
+### Get product reviews by slug (paginated)
+GET {{baseUrl}}v1/product/{{productSlug}}/reviews?page=1&page_size=10&sort_by_rating=desc
+Content-Type: application/json
+
+### Get product by ID
+GET {{baseUrl}}v1/product/id/{{productId}}
+Content-Type: application/json
+
+### Get product with media by ID
+GET {{baseUrl}}v1/product/id/{{productId}}/with-media
+Content-Type: application/json
+
+### Get product attributes by ID
+GET {{baseUrl}}v1/product/id/{{productId}}/attributes
+Content-Type: application/json
+
+### Get related products by ID
+GET {{baseUrl}}v1/product/id/{{productId}}/related-products
+Content-Type: application/json
+
+### Get product reviews by variant ID (paginated)
+GET {{baseUrl}}v1/product/id/{{variantId}}/reviews?page=1&page_size=10
+Content-Type: application/json
+
+
+### ─── ADMIN ──────────────────────────────────────────────────────────────────
+
+### Create product (base + first variant in one request)
+POST {{baseUrl}}v1/product/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "model": "cooler-x-333",
+  "sku": "333",
+  "manufacturer_id": "{{manufacturerId}}",
+  "price": "1500.00",
+  "weight": "0.35000000",
+  "length": "0.00000000",
+  "width": "0.00000000",
+  "height": "0.00000000",
+  "quantity": 100,
+  "stock_status": "in_stock",
+  "subtract": true,
+  "minimum": 1,
+  "sort_order": 0,
+  "is_enable": true,
+  "variant": {
+    "name": "Кулер для ASUS",
+    "slug": "cooler-x-asus",
+    "category_id": "{{categoryId}}",
+    "description": "Кулер подходит для материнских плат ASUS",
+    "meta_title": "Кулер для ASUS",
+    "meta_h1": "Кулер для ASUS — купить",
+    "meta_description": "Купить кулер для ASUS по лучшей цене",
+    "meta_keyword": "кулер, ASUS, охлаждение",
+    "image": "/images/cooler-x-asus.jpg",
+    "sort_order": 0,
+    "is_enable": true
+  }
+}
+
+> {%
+    client.global.set("productId", response.body.data.id);
+    client.global.set("variantId", response.body.data.variant.id);
+%}
+
+### Create additional variant for existing product
+POST {{baseUrl}}v1/product/{{productId}}/variants
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Кулер для ACER",
+  "slug": "cooler-x-acer",
+  "category_id": "{{categoryId}}",
+  "description": "Кулер подходит для материнских плат ACER",
+  "meta_title": "Кулер для ACER",
+  "meta_h1": "Кулер для ACER — купить",
+  "meta_description": "Купить кулер для ACER по лучшей цене",
+  "meta_keyword": "кулер, ACER, охлаждение",
+  "image": "/images/cooler-x-acer.jpg",
+  "sort_order": 1,
+  "is_enable": true
+}
+
+### Update product (base fields + specific variant)
+PUT {{baseUrl}}v1/product/{{productId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "model": "cooler-x-333",
+  "sku": "333",
+  "manufacturer_id": "{{manufacturerId}}",
+  "price": "1799.00",
+  "weight": "0.35000000",
+  "length": "0.00000000",
+  "width": "0.00000000",
+  "height": "0.00000000",
+  "quantity": 50,
+  "stock_status": "in_stock",
+  "subtract": true,
+  "minimum": 1,
+  "sort_order": 0,
+  "is_enable": true,
+  "variant": {
+    "id": "{{variantId}}",
+    "name": "Кулер для ASUS (обновлённый)",
+    "slug": "cooler-x-asus",
+    "category_id": "{{categoryId}}",
+    "description": "Обновлённое описание",
+    "meta_title": "Кулер для ASUS",
+    "meta_h1": "Кулер для ASUS — купить",
+    "meta_description": "Купить кулер для ASUS по лучшей цене",
+    "meta_keyword": "кулер, ASUS",
+    "image": "/images/cooler-x-asus-v2.jpg",
+    "sort_order": 0,
+    "is_enable": true
+  }
+}
+
+### Sync product attributes
+POST {{baseUrl}}v1/product/{{productId}}/sync-attribute
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "attribute_value_ids": [
+    "00000000-0000-0000-0000-000000000001",
+    "00000000-0000-0000-0000-000000000002"
+  ]
+}
+
+### Sync related products (by variant ID)
+POST {{baseUrl}}v1/product/{{variantId}}/sync-related-products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "variant_ids": [
+    "00000000-0000-0000-0000-000000000003",
+    "00000000-0000-0000-0000-000000000004"
+  ]
+}

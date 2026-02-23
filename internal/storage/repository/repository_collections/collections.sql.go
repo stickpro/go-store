@@ -68,15 +68,22 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Collectio
 const getCollectionWithProductsByID = `-- name: GetCollectionWithProductsByID :many
 SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
        p.id        AS product_id,
-       p.name      AS product_name,
-       p.slug      AS product_slug,
+       pv.name     AS product_name,
+       pv.slug     AS product_slug,
        p.model     AS product_model,
        p.price     AS product_price,
        p.is_enable AS product_is_enable,
-       p.image     AS product_image
+       pv.image    AS product_image
 FROM collections c
          LEFT JOIN collection_products cp ON cp.collection_id = c.id
          LEFT JOIN products p ON p.id = cp.product_id
+         LEFT JOIN LATERAL (
+             SELECT name, slug, image
+             FROM product_variants pv2
+             WHERE pv2.product_id = p.id
+             ORDER BY pv2.sort_order ASC, pv2.created_at ASC
+             LIMIT 1
+         ) pv ON true
 WHERE c.id = $1
 `
 
@@ -88,8 +95,8 @@ type GetCollectionWithProductsByIDRow struct {
 	CreatedAt       pgtype.Timestamptz  `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
 	ProductID       uuid.NullUUID       `db:"product_id" json:"product_id"`
-	ProductName     pgtype.Text         `db:"product_name" json:"product_name"`
-	ProductSlug     pgtype.Text         `db:"product_slug" json:"product_slug"`
+	ProductName     string              `db:"product_name" json:"product_name"`
+	ProductSlug     string              `db:"product_slug" json:"product_slug"`
 	ProductModel    pgtype.Text         `db:"product_model" json:"product_model"`
 	ProductPrice    decimal.NullDecimal `db:"product_price" json:"product_price"`
 	ProductIsEnable pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
@@ -133,15 +140,22 @@ func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUI
 const getCollectionWithProductsBySlug = `-- name: GetCollectionWithProductsBySlug :many
 SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
        p.id        AS product_id,
-       p.name      AS product_name,
-       p.slug      AS product_slug,
+       pv.name     AS product_name,
+       pv.slug     AS product_slug,
        p.model     AS product_model,
        p.price     AS product_price,
        p.is_enable AS product_is_enable,
-       p.image     AS product_image
+       pv.image    AS product_image
 FROM collections c
          LEFT JOIN collection_products cp ON cp.collection_id = c.id
          LEFT JOIN products p ON p.id = cp.product_id
+         LEFT JOIN LATERAL (
+             SELECT name, slug, image
+             FROM product_variants pv2
+             WHERE pv2.product_id = p.id
+             ORDER BY pv2.sort_order ASC, pv2.created_at ASC
+             LIMIT 1
+         ) pv ON true
 WHERE c.slug = $1
 `
 
@@ -153,8 +167,8 @@ type GetCollectionWithProductsBySlugRow struct {
 	CreatedAt       pgtype.Timestamptz  `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
 	ProductID       uuid.NullUUID       `db:"product_id" json:"product_id"`
-	ProductName     pgtype.Text         `db:"product_name" json:"product_name"`
-	ProductSlug     pgtype.Text         `db:"product_slug" json:"product_slug"`
+	ProductName     string              `db:"product_name" json:"product_name"`
+	ProductSlug     string              `db:"product_slug" json:"product_slug"`
 	ProductModel    pgtype.Text         `db:"product_model" json:"product_model"`
 	ProductPrice    decimal.NullDecimal `db:"product_price" json:"product_price"`
 	ProductIsEnable pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`

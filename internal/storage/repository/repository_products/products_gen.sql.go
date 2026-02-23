@@ -16,55 +16,38 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO products (category_id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, now())
-	RETURNING id, category_id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at
+INSERT INTO products (manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, now())
+	RETURNING id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at
 `
 
 type CreateParams struct {
-	CategoryID      uuid.NullUUID        `db:"category_id" json:"category_id"`
-	Name            string               `db:"name" json:"name"`
-	Model           string               `db:"model" json:"model"`
-	Slug            string               `db:"slug" json:"slug"`
-	Description     pgtype.Text          `db:"description" json:"description"`
-	MetaTitle       pgtype.Text          `db:"meta_title" json:"meta_title"`
-	MetaH1          pgtype.Text          `db:"meta_h1" json:"meta_h1"`
-	MetaDescription pgtype.Text          `db:"meta_description" json:"meta_description"`
-	MetaKeyword     pgtype.Text          `db:"meta_keyword" json:"meta_keyword"`
-	Sku             pgtype.Text          `db:"sku" json:"sku"`
-	Upc             pgtype.Text          `db:"upc" json:"upc"`
-	Ean             pgtype.Text          `db:"ean" json:"ean"`
-	Jan             pgtype.Text          `db:"jan" json:"jan"`
-	Isbn            pgtype.Text          `db:"isbn" json:"isbn"`
-	Mpn             pgtype.Text          `db:"mpn" json:"mpn"`
-	Location        pgtype.Text          `db:"location" json:"location"`
-	Quantity        int64                `db:"quantity" json:"quantity"`
-	StockStatus     constant.StockStatus `db:"stock_status" json:"stock_status"`
-	Image           pgtype.Text          `db:"image" json:"image"`
-	ManufacturerID  uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
-	Price           decimal.Decimal      `db:"price" json:"price"`
-	Weight          decimal.Decimal      `db:"weight" json:"weight"`
-	Length          decimal.Decimal      `db:"length" json:"length"`
-	Width           decimal.Decimal      `db:"width" json:"width"`
-	Height          decimal.Decimal      `db:"height" json:"height"`
-	Subtract        bool                 `db:"subtract" json:"subtract"`
-	Minimum         int64                `db:"minimum" json:"minimum"`
-	SortOrder       int32                `db:"sort_order" json:"sort_order"`
-	IsEnable        bool                 `db:"is_enable" json:"is_enable"`
-	Viewed          int64                `db:"viewed" json:"viewed"`
+	ManufacturerID uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
+	Model          string               `db:"model" json:"model"`
+	Sku            pgtype.Text          `db:"sku" json:"sku"`
+	Upc            pgtype.Text          `db:"upc" json:"upc"`
+	Ean            pgtype.Text          `db:"ean" json:"ean"`
+	Jan            pgtype.Text          `db:"jan" json:"jan"`
+	Isbn           pgtype.Text          `db:"isbn" json:"isbn"`
+	Mpn            pgtype.Text          `db:"mpn" json:"mpn"`
+	Location       pgtype.Text          `db:"location" json:"location"`
+	Quantity       int64                `db:"quantity" json:"quantity"`
+	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
+	Price          decimal.Decimal      `db:"price" json:"price"`
+	Weight         decimal.Decimal      `db:"weight" json:"weight"`
+	Length         decimal.Decimal      `db:"length" json:"length"`
+	Width          decimal.Decimal      `db:"width" json:"width"`
+	Height         decimal.Decimal      `db:"height" json:"height"`
+	Subtract       bool                 `db:"subtract" json:"subtract"`
+	Minimum        int64                `db:"minimum" json:"minimum"`
+	SortOrder      int32                `db:"sort_order" json:"sort_order"`
+	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product, error) {
 	row := q.db.QueryRow(ctx, create,
-		arg.CategoryID,
-		arg.Name,
+		arg.ManufacturerID,
 		arg.Model,
-		arg.Slug,
-		arg.Description,
-		arg.MetaTitle,
-		arg.MetaH1,
-		arg.MetaDescription,
-		arg.MetaKeyword,
 		arg.Sku,
 		arg.Upc,
 		arg.Ean,
@@ -74,8 +57,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		arg.Location,
 		arg.Quantity,
 		arg.StockStatus,
-		arg.Image,
-		arg.ManufacturerID,
 		arg.Price,
 		arg.Weight,
 		arg.Length,
@@ -85,20 +66,12 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		arg.Minimum,
 		arg.SortOrder,
 		arg.IsEnable,
-		arg.Viewed,
 	)
 	var i models.Product
 	err := row.Scan(
 		&i.ID,
-		&i.CategoryID,
-		&i.Name,
+		&i.ManufacturerID,
 		&i.Model,
-		&i.Slug,
-		&i.Description,
-		&i.MetaTitle,
-		&i.MetaH1,
-		&i.MetaDescription,
-		&i.MetaKeyword,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -108,8 +81,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Image,
-		&i.ManufacturerID,
 		&i.Price,
 		&i.Weight,
 		&i.Length,
@@ -119,7 +90,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		&i.Minimum,
 		&i.SortOrder,
 		&i.IsEnable,
-		&i.Viewed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -128,61 +98,42 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 
 const update = `-- name: Update :one
 UPDATE products
-	SET category_id=$1, name=$2, model=$3, slug=$4, description=$5, meta_title=$6, 
-		meta_h1=$7, meta_description=$8, meta_keyword=$9, sku=$10, upc=$11, ean=$12, 
-		jan=$13, isbn=$14, mpn=$15, location=$16, quantity=$17, stock_status=$18, 
-		image=$19, manufacturer_id=$20, price=$21, weight=$22, length=$23, width=$24, 
-		height=$25, subtract=$26, minimum=$27, sort_order=$28, is_enable=$29, viewed=$30, 
-		updated_at=now()
-	WHERE id=$31
-	RETURNING id, category_id, name, model, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, image, manufacturer_id, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, viewed, created_at, updated_at
+	SET manufacturer_id=$1, model=$2, sku=$3, upc=$4, ean=$5, jan=$6, 
+		isbn=$7, mpn=$8, location=$9, quantity=$10, stock_status=$11, price=$12, 
+		weight=$13, length=$14, width=$15, height=$16, subtract=$17, minimum=$18, 
+		sort_order=$19, is_enable=$20, updated_at=now()
+	WHERE id=$21
+	RETURNING id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at
 `
 
 type UpdateParams struct {
-	CategoryID      uuid.NullUUID        `db:"category_id" json:"category_id"`
-	Name            string               `db:"name" json:"name"`
-	Model           string               `db:"model" json:"model"`
-	Slug            string               `db:"slug" json:"slug"`
-	Description     pgtype.Text          `db:"description" json:"description"`
-	MetaTitle       pgtype.Text          `db:"meta_title" json:"meta_title"`
-	MetaH1          pgtype.Text          `db:"meta_h1" json:"meta_h1"`
-	MetaDescription pgtype.Text          `db:"meta_description" json:"meta_description"`
-	MetaKeyword     pgtype.Text          `db:"meta_keyword" json:"meta_keyword"`
-	Sku             pgtype.Text          `db:"sku" json:"sku"`
-	Upc             pgtype.Text          `db:"upc" json:"upc"`
-	Ean             pgtype.Text          `db:"ean" json:"ean"`
-	Jan             pgtype.Text          `db:"jan" json:"jan"`
-	Isbn            pgtype.Text          `db:"isbn" json:"isbn"`
-	Mpn             pgtype.Text          `db:"mpn" json:"mpn"`
-	Location        pgtype.Text          `db:"location" json:"location"`
-	Quantity        int64                `db:"quantity" json:"quantity"`
-	StockStatus     constant.StockStatus `db:"stock_status" json:"stock_status"`
-	Image           pgtype.Text          `db:"image" json:"image"`
-	ManufacturerID  uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
-	Price           decimal.Decimal      `db:"price" json:"price"`
-	Weight          decimal.Decimal      `db:"weight" json:"weight"`
-	Length          decimal.Decimal      `db:"length" json:"length"`
-	Width           decimal.Decimal      `db:"width" json:"width"`
-	Height          decimal.Decimal      `db:"height" json:"height"`
-	Subtract        bool                 `db:"subtract" json:"subtract"`
-	Minimum         int64                `db:"minimum" json:"minimum"`
-	SortOrder       int32                `db:"sort_order" json:"sort_order"`
-	IsEnable        bool                 `db:"is_enable" json:"is_enable"`
-	Viewed          int64                `db:"viewed" json:"viewed"`
-	ID              uuid.UUID            `db:"id" json:"id"`
+	ManufacturerID uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
+	Model          string               `db:"model" json:"model"`
+	Sku            pgtype.Text          `db:"sku" json:"sku"`
+	Upc            pgtype.Text          `db:"upc" json:"upc"`
+	Ean            pgtype.Text          `db:"ean" json:"ean"`
+	Jan            pgtype.Text          `db:"jan" json:"jan"`
+	Isbn           pgtype.Text          `db:"isbn" json:"isbn"`
+	Mpn            pgtype.Text          `db:"mpn" json:"mpn"`
+	Location       pgtype.Text          `db:"location" json:"location"`
+	Quantity       int64                `db:"quantity" json:"quantity"`
+	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
+	Price          decimal.Decimal      `db:"price" json:"price"`
+	Weight         decimal.Decimal      `db:"weight" json:"weight"`
+	Length         decimal.Decimal      `db:"length" json:"length"`
+	Width          decimal.Decimal      `db:"width" json:"width"`
+	Height         decimal.Decimal      `db:"height" json:"height"`
+	Subtract       bool                 `db:"subtract" json:"subtract"`
+	Minimum        int64                `db:"minimum" json:"minimum"`
+	SortOrder      int32                `db:"sort_order" json:"sort_order"`
+	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
+	ID             uuid.UUID            `db:"id" json:"id"`
 }
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product, error) {
 	row := q.db.QueryRow(ctx, update,
-		arg.CategoryID,
-		arg.Name,
+		arg.ManufacturerID,
 		arg.Model,
-		arg.Slug,
-		arg.Description,
-		arg.MetaTitle,
-		arg.MetaH1,
-		arg.MetaDescription,
-		arg.MetaKeyword,
 		arg.Sku,
 		arg.Upc,
 		arg.Ean,
@@ -192,8 +143,6 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		arg.Location,
 		arg.Quantity,
 		arg.StockStatus,
-		arg.Image,
-		arg.ManufacturerID,
 		arg.Price,
 		arg.Weight,
 		arg.Length,
@@ -203,21 +152,13 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		arg.Minimum,
 		arg.SortOrder,
 		arg.IsEnable,
-		arg.Viewed,
 		arg.ID,
 	)
 	var i models.Product
 	err := row.Scan(
 		&i.ID,
-		&i.CategoryID,
-		&i.Name,
+		&i.ManufacturerID,
 		&i.Model,
-		&i.Slug,
-		&i.Description,
-		&i.MetaTitle,
-		&i.MetaH1,
-		&i.MetaDescription,
-		&i.MetaKeyword,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -227,8 +168,6 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Image,
-		&i.ManufacturerID,
 		&i.Price,
 		&i.Weight,
 		&i.Length,
@@ -238,7 +177,6 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		&i.Minimum,
 		&i.SortOrder,
 		&i.IsEnable,
-		&i.Viewed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

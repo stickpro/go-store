@@ -15,7 +15,7 @@ type AttributeGroupResponse struct {
 	Description *string   `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-} // @name AttributeGroupResponse
+} //	@name	AttributeGroupResponse
 
 func NewFromGroupModel(aGroup *models.AttributeGroup) AttributeGroupResponse {
 	return AttributeGroupResponse{

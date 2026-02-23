@@ -1,6 +1,6 @@
 package constant
 
-type ProductReviewStatus string // @name ProductReviewStatus
+type ProductReviewStatus string //	@name	ProductReviewStatus
 
 const (
 	ReviewPending  ProductReviewStatus = "PENDING"

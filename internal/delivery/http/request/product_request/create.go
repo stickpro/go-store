@@ -5,35 +5,41 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type CreateProductVariantRequest struct {
+	Name            string     `json:"name" validate:"required"`
+	Slug            string     `json:"slug" validate:"required,slug"`
+	CategoryID      *uuid.UUID `json:"category_id,omitempty" validate:"omitempty,uuid"`
+	Description     *string    `json:"description,omitempty"`
+	MetaTitle       *string    `json:"meta_title,omitempty"`
+	MetaH1          *string    `json:"meta_h1,omitempty"`
+	MetaDescription *string    `json:"meta_description,omitempty"`
+	MetaKeyword     *string    `json:"meta_keyword,omitempty"`
+	Image           *string    `json:"image,omitempty"`
+	SortOrder       int32      `json:"sort_order"`
+	IsEnable        bool       `json:"is_enable"`
+} //	@name	CreateProductVariantRequest
+
 type CreateProductRequest struct {
-	Name            string          `json:"name" validate:"required"`
-	Model           string          `json:"model" validate:"required"`
-	Slug            string          `json:"slug" validate:"required,slug"`
-	Description     *string         `json:"description,omitempty"`
-	MetaTitle       *string         `json:"meta_title,omitempty"`
-	MetaH1          *string         `json:"meta_h1,omitempty"`
-	MetaDescription *string         `json:"meta_description,omitempty"`
-	MetaKeyword     *string         `json:"meta_keyword,omitempty"`
-	Sku             *string         `json:"sku,omitempty"`
-	Upc             *string         `json:"upc,omitempty"`
-	Ean             *string         `json:"ean,omitempty"`
-	Jan             *string         `json:"jan,omitempty"`
-	Isbn            *string         `json:"isbn,omitempty"`
-	Mpn             *string         `json:"mpn,omitempty"`
-	Location        *string         `json:"location,omitempty"`
-	Quantity        int64           `json:"quantity"`
-	StockStatus     string          `json:"stock_status"`
-	Image           *string         `json:"image"`
-	ManufacturerID  *uuid.UUID      `json:"manufacturer_id,omitempty" validate:"omitempty,uuid"`
-	Price           decimal.Decimal `json:"price" validate:"required,numeric"`
-	Weight          decimal.Decimal `json:"weight" validate:"numeric"`
-	Length          decimal.Decimal `json:"length" validate:"numeric"`
-	Width           decimal.Decimal `json:"width" validate:"numeric"`
-	Height          decimal.Decimal `json:"height" validate:"numeric"`
-	Subtract        bool            `json:"subtract" validate:"boolean"`
-	Minimum         int64           `json:"minimum" validate:"required"`
-	SortOrder       int32           `json:"sort_order" validate:"required"`
-	IsEnable        bool            `json:"is_enable" validate:"required,boolean"`
-	MediaIDs        []*uuid.UUID    `json:"media_ids,omitempty" validate:"omitempty"` //nolint:tagliatelle
-	CategoryID      *uuid.UUID      `json:"category_id,omitempty" validate:"omitempty,uuid"`
-} // @name CreateProductRequest
+	Model          string                      `json:"model" validate:"required"`
+	Sku            *string                     `json:"sku,omitempty"`
+	Upc            *string                     `json:"upc,omitempty"`
+	Ean            *string                     `json:"ean,omitempty"`
+	Jan            *string                     `json:"jan,omitempty"`
+	Isbn           *string                     `json:"isbn,omitempty"`
+	Mpn            *string                     `json:"mpn,omitempty"`
+	Location       *string                     `json:"location,omitempty"`
+	Quantity       int64                       `json:"quantity"`
+	StockStatus    string                      `json:"stock_status"`
+	ManufacturerID *uuid.UUID                  `json:"manufacturer_id,omitempty" validate:"omitempty,uuid"`
+	Price          decimal.Decimal             `json:"price" validate:"required,numeric"`
+	Weight         decimal.Decimal             `json:"weight" validate:"numeric"`
+	Length         decimal.Decimal             `json:"length" validate:"numeric"`
+	Width          decimal.Decimal             `json:"width" validate:"numeric"`
+	Height         decimal.Decimal             `json:"height" validate:"numeric"`
+	Subtract       bool                        `json:"subtract"`
+	Minimum        int64                       `json:"minimum" validate:"required"`
+	SortOrder      int32                       `json:"sort_order"`
+	IsEnable       bool                        `json:"is_enable"`
+	MediaIDs       []*uuid.UUID                `json:"media_ids,omitempty" validate:"omitempty"` //nolint:tagliatelle
+	Variant        CreateProductVariantRequest `json:"variant" validate:"required"`
+} //	@name	CreateProductRequest

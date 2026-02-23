@@ -10,3 +10,4 @@ configs/config.yaml
 .tmp
 /tmp
 storage/*/*
+!storage/geo/.gitkeep

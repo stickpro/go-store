@@ -14,6 +14,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_attribute_values"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_product_variants"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -21,22 +22,25 @@ import (
 )
 
 type IProductService interface { //nolint:interfacebloat
-	CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, error)
-	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
+	// Base product CRUD
+	CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, *models.ProductVariant, error)
+	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, *models.ProductVariant, error)
 	GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
-	GetProductBySlug(ctx context.Context, slug string) (*models.Product, error)
-	GetProductBySlugWithMedia(ctx context.Context, slug string) (*dto.WithMediumProductDTO, error)
-	GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error)
-	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error)
+	GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*dto.ProductWithMediaDTO, error)
+	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 
-	GetProductAttributesBySlug(ctx context.Context, slug string) ([]*dto.AttributeGroupWithValuesDTO, error)
-	GetProductAttributesById(ctx context.Context, uuid uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error)
+	// Attributes (by product ID)
+	GetProductAttributesByID(ctx context.Context, id uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error)
 	SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error
-	// CreateProductIndex Indexing
+
+	// Indexing
 	CreateProductIndex(ctx context.Context, reindex bool) error
 
-	// RelatedProduct
+	// Related products
 	IRelatedProduct
+
+	// Variant operations (slug-based lookups + variant CRUD)
+	IVariantProductService
 }
 
 type Service struct {
@@ -55,48 +59,64 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, ss 
 	}
 }
 
-func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, error) {
-	params := repository_products.CreateParams{
-		CategoryID:      d.CategoryID,
-		Name:            d.Name,
-		Model:           d.Model,
-		Slug:            d.Slug,
-		Description:     pgtypeutils.EncodeText(d.Description),
-		MetaTitle:       pgtypeutils.EncodeText(d.MetaTitle),
-		MetaH1:          pgtypeutils.EncodeText(d.MetaH1),
-		MetaKeyword:     pgtypeutils.EncodeText(d.MetaKeyword),
-		MetaDescription: pgtypeutils.EncodeText(d.MetaDescription),
-		Sku:             pgtypeutils.EncodeText(d.Sku),
-		Upc:             pgtypeutils.EncodeText(d.Upc),
-		Ean:             pgtypeutils.EncodeText(d.Ean),
-		Jan:             pgtypeutils.EncodeText(d.Jan),
-		Isbn:            pgtypeutils.EncodeText(d.Isbn),
-		Mpn:             pgtypeutils.EncodeText(d.Mpn),
-		Location:        pgtypeutils.EncodeText(d.Location),
-		Quantity:        d.Quantity,
-		StockStatus:     d.StockStatus,
-		Image:           pgtypeutils.EncodeText(d.Image),
-		ManufacturerID:  d.ManufacturerID,
-		Price:           d.Price,
-		Weight:          d.Weight,
-		Length:          d.Length,
-		Width:           d.Width,
-		Height:          d.Height,
-		Subtract:        d.Subtract,
-		Minimum:         d.Minimum,
-		SortOrder:       d.SortOrder,
-		IsEnable:        d.IsEnable,
-		Viewed:          0,
+func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, *models.ProductVariant, error) {
+	productParams := repository_products.CreateParams{
+		ManufacturerID: d.ManufacturerID,
+		Model:          d.Model,
+		Sku:            pgtypeutils.EncodeText(d.Sku),
+		Upc:            pgtypeutils.EncodeText(d.Upc),
+		Ean:            pgtypeutils.EncodeText(d.Ean),
+		Jan:            pgtypeutils.EncodeText(d.Jan),
+		Isbn:           pgtypeutils.EncodeText(d.Isbn),
+		Mpn:            pgtypeutils.EncodeText(d.Mpn),
+		Location:       pgtypeutils.EncodeText(d.Location),
+		Quantity:       d.Quantity,
+		StockStatus:    d.StockStatus,
+		Price:          d.Price,
+		Weight:         d.Weight,
+		Length:         d.Length,
+		Width:          d.Width,
+		Height:         d.Height,
+		Subtract:       d.Subtract,
+		Minimum:        d.Minimum,
+		SortOrder:      d.SortOrder,
+		IsEnable:       d.IsEnable,
 	}
+
 	var prd *models.Product
+	var variant *models.ProductVariant
 	var err error
+
 	err = repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		prd, err = s.storage.Products(repository.WithTx(tx)).Create(ctx, params)
+		prd, err = s.storage.Products(repository.WithTx(tx)).Create(ctx, productParams)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
 			s.logger.Error("failed to create product", parsedErr)
 			return parsedErr
 		}
+
+		variantParams := repository_product_variants.CreateParams{
+			ProductID:       prd.ID,
+			CategoryID:      d.Variant.CategoryID,
+			Name:            d.Variant.Name,
+			Slug:            d.Variant.Slug,
+			Description:     pgtypeutils.EncodeText(d.Variant.Description),
+			MetaTitle:       pgtypeutils.EncodeText(d.Variant.MetaTitle),
+			MetaH1:          pgtypeutils.EncodeText(d.Variant.MetaH1),
+			MetaDescription: pgtypeutils.EncodeText(d.Variant.MetaDescription),
+			MetaKeyword:     pgtypeutils.EncodeText(d.Variant.MetaKeyword),
+			Image:           pgtypeutils.EncodeText(d.Variant.Image),
+			SortOrder:       d.Variant.SortOrder,
+			IsEnable:        d.Variant.IsEnable,
+			Viewed:          0,
+		}
+		variant, err = s.storage.ProductVariants(repository.WithTx(tx)).Create(ctx, variantParams)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to create product variant", parsedErr)
+			return parsedErr
+		}
+
 		for _, mediaID := range d.MediaIDs {
 			err := s.storage.Products(repository.WithTx(tx)).CreateProductMedia(ctx, repository_products.CreateProductMediaParams{
 				ProductID: prd.ID,
@@ -108,6 +128,7 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 				return parsedErr
 			}
 		}
+
 		err = s.IndexProduct(ctx, prd)
 		if err != nil {
 			s.logger.Error("failed to index product", "error", err)
@@ -116,10 +137,10 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return prd, nil
+	return prd, variant, nil
 }
 
 func (s *Service) GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error) {
@@ -150,80 +171,70 @@ func (s *Service) GetProductByID(ctx context.Context, id uuid.UUID) (*models.Pro
 	return prd, nil
 }
 
-func (s *Service) GetProductBySlug(ctx context.Context, slug string) (*models.Product, error) {
-	prd, err := s.storage.Products().GetBySlug(ctx, slug)
-	if err != nil {
-		return nil, err
+func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, *models.ProductVariant, error) {
+	productParams := repository_products.UpdateParams{
+		ID:             d.ID,
+		ManufacturerID: d.ManufacturerID,
+		Model:          d.Model,
+		Sku:            pgtypeutils.EncodeText(d.Sku),
+		Upc:            pgtypeutils.EncodeText(d.Upc),
+		Ean:            pgtypeutils.EncodeText(d.Ean),
+		Jan:            pgtypeutils.EncodeText(d.Jan),
+		Isbn:           pgtypeutils.EncodeText(d.Isbn),
+		Mpn:            pgtypeutils.EncodeText(d.Mpn),
+		Location:       pgtypeutils.EncodeText(d.Location),
+		Quantity:       d.Quantity,
+		StockStatus:    d.StockStatus,
+		Price:          d.Price,
+		Weight:         d.Weight,
+		Length:         d.Length,
+		Width:          d.Width,
+		Height:         d.Height,
+		Subtract:       d.Subtract,
+		Minimum:        d.Minimum,
+		SortOrder:      d.SortOrder,
+		IsEnable:       d.IsEnable,
 	}
-	return prd, nil
-}
 
-func (s *Service) GetProductBySlugWithMedia(ctx context.Context, slug string) (*dto.WithMediumProductDTO, error) {
-	prd, err := s.storage.Products().GetBySlug(ctx, slug)
-	if err != nil {
-		return nil, err
-	}
-	media, err := s.storage.Products().GetMediaByProductID(ctx, prd.ID)
-	if err != nil {
-		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to get product media", err)
-		return nil, parsedErr
-	}
-
-	return &dto.WithMediumProductDTO{
-		Product: prd,
-		Medium:  media,
-	}, nil
-}
-
-func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error) {
-	params := repository_products.UpdateParams{
-		ID:              d.ID,
-		CategoryID:      d.CategoryID,
-		Name:            d.Name,
-		Model:           d.Model,
-		Slug:            d.Slug,
-		Description:     pgtypeutils.EncodeText(d.Description),
-		MetaTitle:       pgtypeutils.EncodeText(d.MetaTitle),
-		MetaH1:          pgtypeutils.EncodeText(d.MetaH1),
-		MetaKeyword:     pgtypeutils.EncodeText(d.MetaKeyword),
-		MetaDescription: pgtypeutils.EncodeText(d.MetaDescription),
-		Sku:             pgtypeutils.EncodeText(d.Sku),
-		Upc:             pgtypeutils.EncodeText(d.Upc),
-		Ean:             pgtypeutils.EncodeText(d.Ean),
-		Jan:             pgtypeutils.EncodeText(d.Jan),
-		Isbn:            pgtypeutils.EncodeText(d.Isbn),
-		Mpn:             pgtypeutils.EncodeText(d.Mpn),
-		Location:        pgtypeutils.EncodeText(d.Location),
-		Quantity:        d.Quantity,
-		StockStatus:     d.StockStatus,
-		Image:           pgtypeutils.EncodeText(d.Image),
-		ManufacturerID:  d.ManufacturerID,
-		Price:           d.Price,
-		Weight:          d.Weight,
-		Length:          d.Length,
-		Width:           d.Width,
-		Height:          d.Height,
-		Subtract:        d.Subtract,
-		Minimum:         d.Minimum,
-		SortOrder:       d.SortOrder,
-		IsEnable:        d.IsEnable,
-	}
 	var prd *models.Product
+	var variant *models.ProductVariant
 	var err error
+
 	err = repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		prd, err = s.storage.Products(repository.WithTx(tx)).Update(ctx, params)
+		prd, err = s.storage.Products(repository.WithTx(tx)).Update(ctx, productParams)
 		if err != nil {
-			if err != nil {
-				parsedErr := pgerror.ParseError(err)
-				s.logger.Error("failed to update product ", parsedErr)
-				return parsedErr
-			}
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to update product", parsedErr)
+			return parsedErr
 		}
+
+		variantParams := repository_product_variants.UpdateParams{
+			ID:              d.Variant.ID,
+			ProductID:       prd.ID,
+			CategoryID:      d.Variant.CategoryID,
+			Name:            d.Variant.Name,
+			Slug:            d.Variant.Slug,
+			Description:     pgtypeutils.EncodeText(d.Variant.Description),
+			MetaTitle:       pgtypeutils.EncodeText(d.Variant.MetaTitle),
+			MetaH1:          pgtypeutils.EncodeText(d.Variant.MetaH1),
+			MetaDescription: pgtypeutils.EncodeText(d.Variant.MetaDescription),
+			MetaKeyword:     pgtypeutils.EncodeText(d.Variant.MetaKeyword),
+			Image:           pgtypeutils.EncodeText(d.Variant.Image),
+			SortOrder:       d.Variant.SortOrder,
+			IsEnable:        d.Variant.IsEnable,
+			Viewed:          0,
+		}
+		variant, err = s.storage.ProductVariants(repository.WithTx(tx)).Update(ctx, variantParams)
+		if err != nil {
+			parsedErr := pgerror.ParseError(err)
+			s.logger.Error("failed to update product variant", parsedErr)
+			return parsedErr
+		}
+
 		err = s.storage.Products(repository.WithTx(tx)).DeleteProductMedia(ctx, prd.ID)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to delete product", parsedErr)
+			s.logger.Error("failed to delete product media", parsedErr)
 			return parsedErr
 		}
 		for _, mediaID := range d.MediaIDs {
@@ -247,16 +258,20 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return prd, nil
+	return prd, variant, nil
 }
 
-func (s *Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*dto.WithMediumProductDTO, error) {
+func (s *Service) GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*dto.ProductWithMediaDTO, error) {
 	product, err := s.GetProductByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	variants, err := s.storage.ProductVariants().GetByProductID(ctx, id)
+	if err != nil {
+		return nil, pgerror.ParseError(err)
 	}
 	media, err := s.storage.Products().GetMediaByProductID(ctx, id)
 	if err != nil {
@@ -265,15 +280,20 @@ func (s *Service) GetProductWithMediumByID(ctx context.Context, id uuid.UUID) (*
 		return nil, parsedErr
 	}
 
-	return &dto.WithMediumProductDTO{
+	var primaryVariant *models.ProductVariant
+	if len(variants) > 0 {
+		primaryVariant = variants[0]
+	}
+
+	return &dto.ProductWithMediaDTO{
 		Product: product,
+		Variant: primaryVariant,
 		Medium:  media,
 	}, nil
 }
 
 func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error {
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
-		// Remove all existing attribute values for this product
 		err := s.storage.ProductAttributeValues(repository.WithTx(tx)).RemoveAll(ctx, d.ProductID)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
@@ -285,7 +305,6 @@ func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttribute
 			return nil
 		}
 
-		// Add new attribute values (AttributeIDs should now be AttributeValueIDs)
 		err = s.storage.ProductAttributeValues(repository.WithTx(tx)).AddBatch(ctx, repository_product_attribute_values.AddBatchParams{
 			ProductID:        d.ProductID,
 			AttributeValueID: d.AttributeValueIDs,
@@ -305,23 +324,7 @@ func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttribute
 	return nil
 }
 
-func (s *Service) GetProductAttributesBySlug(ctx context.Context, slug string) ([]*dto.AttributeGroupWithValuesDTO, error) {
-	prd, err := s.GetProductBySlug(ctx, slug)
-	if err != nil {
-		return nil, err
-	}
-
-	rawAttributes, err := s.storage.ProductAttributeValues().GetByProductID(ctx, prd.ID)
-	if err != nil {
-		parsedErr := pgerror.ParseError(err)
-		s.logger.Error("failed to get product attributes", parsedErr)
-		return nil, parsedErr
-	}
-
-	return mapper.MapProductAttributesToGroupedDTO(rawAttributes), nil
-}
-
-func (s *Service) GetProductAttributesById(ctx context.Context, id uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error) {
+func (s *Service) GetProductAttributesByID(ctx context.Context, id uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error) {
 	rawAttributes, err := s.storage.ProductAttributeValues().GetByProductID(ctx, id)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)

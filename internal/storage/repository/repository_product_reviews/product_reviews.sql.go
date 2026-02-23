@@ -13,7 +13,7 @@ import (
 )
 
 const getByID = `-- name: GetByID :one
-SELECT id, product_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at FROM product_reviews
+SELECT id, variant_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at FROM product_reviews
 WHERE id=$1 LIMIT 1
 `
 
@@ -22,7 +22,7 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.ProductRev
 	var i models.ProductReview
 	err := row.Scan(
 		&i.ID,
-		&i.ProductID,
+		&i.VariantID,
 		&i.UserID,
 		&i.OrderID,
 		&i.Rating,
@@ -40,7 +40,7 @@ const restore = `-- name: Restore :one
 UPDATE product_reviews
 SET deleted_at= null, updated_at=now()
 WHERE id=$1
-RETURNING id, product_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at
+RETURNING id, variant_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) Restore(ctx context.Context, id uuid.UUID) (*models.ProductReview, error) {
@@ -48,7 +48,7 @@ func (q *Queries) Restore(ctx context.Context, id uuid.UUID) (*models.ProductRev
 	var i models.ProductReview
 	err := row.Scan(
 		&i.ID,
-		&i.ProductID,
+		&i.VariantID,
 		&i.UserID,
 		&i.OrderID,
 		&i.Rating,

@@ -16,13 +16,13 @@ type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.Product, error)
 	CreateProductMedia(ctx context.Context, arg CreateProductMediaParams) error
 	DeleteProductMedia(ctx context.Context, productID uuid.UUID) error
-	DeleteRelatedProducts(ctx context.Context, productID uuid.UUID) error
+	DeleteRelatedProducts(ctx context.Context, variantID uuid.UUID) error
 	DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteSpecificRelatedProductsParams) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Product, error)
 	GetMediaByProductID(ctx context.Context, productID uuid.UUID) ([]*models.Medium, error)
-	GetRelatedProductsByProductID(ctx context.Context, productID uuid.UUID) ([]*GetRelatedProductsByProductIDRow, error)
 	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error)
+	GetRelatedProductsByVariantID(ctx context.Context, variantID uuid.UUID) ([]*GetRelatedProductsByVariantIDRow, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.Product, error)
 }
 

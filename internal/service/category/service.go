@@ -61,14 +61,14 @@ func (s *Service) CreateCategory(ctx context.Context, dto CreateDTO) (*models.Ca
 		cat, err = s.storage.Categories(repository.WithTx(tx)).Create(ctx, params)
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to create category", "error", parsedErr)
+			s.logger.Errorw("failed to create category", "error", parsedErr)
 			return parsedErr
 		}
 
 		err = s.rebuildCategoryPathsWithOpts(ctx, cat.ID, repository.WithTx(tx))
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to initialize category paths", "error", parsedErr)
+			s.logger.Errorw("failed to initialize category paths", "error", parsedErr)
 			return parsedErr
 		}
 		return nil

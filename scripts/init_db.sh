@@ -5,7 +5,7 @@
 DATABASE="postgres"
 DB_USER="${DATABASE_USER:=username}"
 DB_PASSWORD="${DATABASE_PASSWORD:=password}"
-DB_NAME="${DATABASE_NAME:=database_name}"
+DB_NAME="${DATABASE_NAME:=gostore}"
 DB_PORT="${DATABASE_PORT:=5432}"
 DB_HOST="${DATABASE_HOST:=localhost}"
 CONTAINER_NAME="${DATABASE}_container"
@@ -57,9 +57,3 @@ if [[ "$DB_EXISTS" != "1" ]]; then
 else
   echo >&2 "Database ${DB_NAME} already exists."
 fi
-
-echo >&2 "Database is up and running on port ${DB_PORT} - running migrations now!"
-
-DATABASE_URL=${DATABASE}://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}
-
-migrate -path "$(MIGRATIONS_DIR)" -database "$(DATABASE_URL)" $(filter-out $@,$(MAKECMDGOALS))

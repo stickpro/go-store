@@ -16,7 +16,7 @@ type CollectionResponse struct {
 	Slug        string    `json:"slug"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-} // @name CollectionResponse
+} //	@name	CollectionResponse
 
 type CollectionResponseWithProducts struct {
 	ID          uuid.UUID              `json:"id"`
@@ -26,7 +26,7 @@ type CollectionResponseWithProducts struct {
 	CreatedAt   time.Time              `json:"created_at"`
 	UpdatedAt   *time.Time             `json:"updated_at"`
 	Products    []*models.ShortProduct `json:"products"`
-} // @name CollectionWithProductResponse
+} //	@name	CollectionWithProductResponse
 
 func NewFromModel(collection *models.Collection) *CollectionResponse {
 	return &CollectionResponse{

@@ -1,51 +1,53 @@
 -- name: AddRelatedProducts :exec
-INSERT INTO related_products (product_id, related_product_id)
-SELECT sqlc.arg(product_id)::uuid, p.id
-FROM products p
-WHERE p.id = any(sqlc.arg(related_product_ids)::uuid[])
-  AND p.id != sqlc.arg(product_id)::uuid
+INSERT INTO related_products (variant_id, related_variant_id)
+SELECT sqlc.arg(variant_id)::uuid, pv.id
+FROM product_variants pv
+WHERE pv.id = any(sqlc.arg(related_variant_ids)::uuid[])
+  AND pv.id != sqlc.arg(variant_id)::uuid
   AND NOT EXISTS (
     SELECT 1
     FROM related_products rp
-    WHERE rp.product_id = sqlc.arg(product_id)
-      AND rp.related_product_id = p.id
+    WHERE rp.variant_id = sqlc.arg(variant_id)
+      AND rp.related_variant_id = pv.id
     );
 
 -- name: DeleteRelatedProducts :exec
 DELETE FROM related_products
-WHERE product_id = $1;
+WHERE variant_id = $1;
 
--- name: GetRelatedProductsByProductID :many
-SELECT p.id,
-       p.name,
-       p.slug,
+-- name: GetRelatedProductsByVariantID :many
+SELECT pv.id,
+       pv.name,
+       pv.slug,
+       pv.image,
+       pv.is_enable,
        p.model,
        p.price,
-       p.image,
-       p.is_enable,
        p.stock_status
 FROM related_products rp
-         JOIN products p ON rp.related_product_id = p.id
-WHERE rp.product_id = $1
-  AND p.is_enable = true
-ORDER BY p.name;
+         JOIN product_variants pv ON rp.related_variant_id = pv.id
+         JOIN products p ON pv.product_id = p.id
+WHERE rp.variant_id = $1
+  AND pv.is_enable = true
+ORDER BY pv.name;
 
 -- name: GetRelatedProductsBySlug :many
-SELECT p.id,
-       p.name,
-       p.slug,
+SELECT pv.id,
+       pv.name,
+       pv.slug,
+       pv.image,
+       pv.is_enable,
        p.model,
        p.price,
-       p.image,
-       p.is_enable,
        p.stock_status
 FROM related_products rp
-         JOIN products p ON rp.related_product_id = p.id
-WHERE rp.product_id = (SELECT id FROM products as p2 WHERE p2.slug = $1)
-  AND p.is_enable = true
-ORDER BY p.name;
+         JOIN product_variants pv ON rp.related_variant_id = pv.id
+         JOIN products p ON pv.product_id = p.id
+WHERE rp.variant_id = (SELECT id FROM product_variants pv2 WHERE pv2.slug = $1)
+  AND pv.is_enable = true
+ORDER BY pv.name;
 
 -- name: DeleteSpecificRelatedProducts :exec
 DELETE FROM related_products
-WHERE product_id = $1
-  AND related_product_id = any($2::uuid[]);
+WHERE variant_id = $1
+  AND related_variant_id = any($2::uuid[]);

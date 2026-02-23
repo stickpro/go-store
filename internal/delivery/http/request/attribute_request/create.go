@@ -6,7 +6,7 @@ type CreateAttributeGroupRequest struct {
 	Name        string  `json:"name" validate:"required"`
 	Slug        string  `json:"slug" validate:"required"`
 	Description *string `json:"description" validate:"omitempty,min=1,max=100"`
-} // @name CreateAttributeGroupRequest
+} //	@name	CreateAttributeGroupRequest
 
 type CreateAttributeRequest struct {
 	Name             string     `json:"name" validate:"required,min=1,max=255"`
@@ -18,4 +18,4 @@ type CreateAttributeRequest struct {
 	IsVisible        bool       `json:"is_visible"`
 	IsRequired       bool       `json:"is_required"`
 	SortOrder        *int32     `json:"sort_order" validate:"omitempty,min=0"`
-} // @name CreateAttributeRequest
+} //	@name	CreateAttributeRequest

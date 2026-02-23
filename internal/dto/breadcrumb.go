@@ -9,7 +9,7 @@ type BreadcrumbDTO struct {
 	MetaTitle *string   `json:"meta_title,omitempty"`
 	MetaH1    *string   `json:"meta_h1,omitempty"`
 	Depth     int32     `json:"depth"`
-} // @name BreadcrumbDTO
+} //	@name	BreadcrumbDTO
 
 type CategoryChildDTO struct {
 	ID       uuid.UUID     `json:"id"`
@@ -17,11 +17,11 @@ type CategoryChildDTO struct {
 	Name     string        `json:"name"`
 	Slug     string        `json:"slug"`
 	IsEnable bool          `json:"is_enable"`
-} // @name CategoryChildDTO
+} //	@name	CategoryChildDTO
 
 type CategoryTreeDTO struct {
 	ID       uuid.UUID          `json:"id"`
 	Name     string             `json:"name"`
 	Slug     string             `json:"slug"`
 	Children []*CategoryTreeDTO `json:"children,omitempty"`
-} // @name CategoryTreeDTO
+} //	@name	CategoryTreeDTO

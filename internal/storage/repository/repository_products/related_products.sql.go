@@ -15,135 +15,80 @@ import (
 )
 
 const addRelatedProducts = `-- name: AddRelatedProducts :exec
-INSERT INTO related_products (product_id, related_product_id)
-SELECT $1::uuid, p.id
-FROM products p
-WHERE p.id = any($2::uuid[])
-  AND p.id != $1::uuid
+INSERT INTO related_products (variant_id, related_variant_id)
+SELECT $1::uuid, pv.id
+FROM product_variants pv
+WHERE pv.id = any($2::uuid[])
+  AND pv.id != $1::uuid
   AND NOT EXISTS (
     SELECT 1
     FROM related_products rp
-    WHERE rp.product_id = $1
-      AND rp.related_product_id = p.id
+    WHERE rp.variant_id = $1
+      AND rp.related_variant_id = pv.id
     )
 `
 
 type AddRelatedProductsParams struct {
-	ProductID         uuid.UUID   `db:"product_id" json:"product_id"`
-	RelatedProductIds []uuid.UUID `db:"related_product_ids" json:"related_product_ids"`
+	VariantID         uuid.UUID   `db:"variant_id" json:"variant_id"`
+	RelatedVariantIds []uuid.UUID `db:"related_variant_ids" json:"related_variant_ids"`
 }
 
 func (q *Queries) AddRelatedProducts(ctx context.Context, arg AddRelatedProductsParams) error {
-	_, err := q.db.Exec(ctx, addRelatedProducts, arg.ProductID, arg.RelatedProductIds)
+	_, err := q.db.Exec(ctx, addRelatedProducts, arg.VariantID, arg.RelatedVariantIds)
 	return err
 }
 
 const deleteRelatedProducts = `-- name: DeleteRelatedProducts :exec
 DELETE FROM related_products
-WHERE product_id = $1
+WHERE variant_id = $1
 `
 
-func (q *Queries) DeleteRelatedProducts(ctx context.Context, productID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteRelatedProducts, productID)
+func (q *Queries) DeleteRelatedProducts(ctx context.Context, variantID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteRelatedProducts, variantID)
 	return err
 }
 
 const deleteSpecificRelatedProducts = `-- name: DeleteSpecificRelatedProducts :exec
 DELETE FROM related_products
-WHERE product_id = $1
-  AND related_product_id = any($2::uuid[])
+WHERE variant_id = $1
+  AND related_variant_id = any($2::uuid[])
 `
 
 type DeleteSpecificRelatedProductsParams struct {
-	ProductID uuid.UUID   `db:"product_id" json:"product_id"`
+	VariantID uuid.UUID   `db:"variant_id" json:"variant_id"`
 	Column2   []uuid.UUID `db:"column_2" json:"column_2"`
 }
 
 func (q *Queries) DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteSpecificRelatedProductsParams) error {
-	_, err := q.db.Exec(ctx, deleteSpecificRelatedProducts, arg.ProductID, arg.Column2)
+	_, err := q.db.Exec(ctx, deleteSpecificRelatedProducts, arg.VariantID, arg.Column2)
 	return err
 }
 
-const getRelatedProductsByProductID = `-- name: GetRelatedProductsByProductID :many
-SELECT p.id,
-       p.name,
-       p.slug,
-       p.model,
-       p.price,
-       p.image,
-       p.is_enable,
-       p.stock_status
-FROM related_products rp
-         JOIN products p ON rp.related_product_id = p.id
-WHERE rp.product_id = $1
-  AND p.is_enable = true
-ORDER BY p.name
-`
-
-type GetRelatedProductsByProductIDRow struct {
-	ID          uuid.UUID            `db:"id" json:"id"`
-	Name        string               `db:"name" json:"name"`
-	Slug        string               `db:"slug" json:"slug"`
-	Model       string               `db:"model" json:"model"`
-	Price       decimal.Decimal      `db:"price" json:"price"`
-	Image       pgtype.Text          `db:"image" json:"image"`
-	IsEnable    bool                 `db:"is_enable" json:"is_enable"`
-	StockStatus constant.StockStatus `db:"stock_status" json:"stock_status"`
-}
-
-func (q *Queries) GetRelatedProductsByProductID(ctx context.Context, productID uuid.UUID) ([]*GetRelatedProductsByProductIDRow, error) {
-	rows, err := q.db.Query(ctx, getRelatedProductsByProductID, productID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []*GetRelatedProductsByProductIDRow{}
-	for rows.Next() {
-		var i GetRelatedProductsByProductIDRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Slug,
-			&i.Model,
-			&i.Price,
-			&i.Image,
-			&i.IsEnable,
-			&i.StockStatus,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getRelatedProductsBySlug = `-- name: GetRelatedProductsBySlug :many
-SELECT p.id,
-       p.name,
-       p.slug,
+SELECT pv.id,
+       pv.name,
+       pv.slug,
+       pv.image,
+       pv.is_enable,
        p.model,
        p.price,
-       p.image,
-       p.is_enable,
        p.stock_status
 FROM related_products rp
-         JOIN products p ON rp.related_product_id = p.id
-WHERE rp.product_id = (SELECT id FROM products as p2 WHERE p2.slug = $1)
-  AND p.is_enable = true
-ORDER BY p.name
+         JOIN product_variants pv ON rp.related_variant_id = pv.id
+         JOIN products p ON pv.product_id = p.id
+WHERE rp.variant_id = (SELECT id FROM product_variants pv2 WHERE pv2.slug = $1)
+  AND pv.is_enable = true
+ORDER BY pv.name
 `
 
 type GetRelatedProductsBySlugRow struct {
 	ID          uuid.UUID            `db:"id" json:"id"`
 	Name        string               `db:"name" json:"name"`
 	Slug        string               `db:"slug" json:"slug"`
-	Model       string               `db:"model" json:"model"`
-	Price       decimal.Decimal      `db:"price" json:"price"`
 	Image       pgtype.Text          `db:"image" json:"image"`
 	IsEnable    bool                 `db:"is_enable" json:"is_enable"`
+	Model       string               `db:"model" json:"model"`
+	Price       decimal.Decimal      `db:"price" json:"price"`
 	StockStatus constant.StockStatus `db:"stock_status" json:"stock_status"`
 }
 
@@ -160,10 +105,67 @@ func (q *Queries) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]
 			&i.ID,
 			&i.Name,
 			&i.Slug,
-			&i.Model,
-			&i.Price,
 			&i.Image,
 			&i.IsEnable,
+			&i.Model,
+			&i.Price,
+			&i.StockStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRelatedProductsByVariantID = `-- name: GetRelatedProductsByVariantID :many
+SELECT pv.id,
+       pv.name,
+       pv.slug,
+       pv.image,
+       pv.is_enable,
+       p.model,
+       p.price,
+       p.stock_status
+FROM related_products rp
+         JOIN product_variants pv ON rp.related_variant_id = pv.id
+         JOIN products p ON pv.product_id = p.id
+WHERE rp.variant_id = $1
+  AND pv.is_enable = true
+ORDER BY pv.name
+`
+
+type GetRelatedProductsByVariantIDRow struct {
+	ID          uuid.UUID            `db:"id" json:"id"`
+	Name        string               `db:"name" json:"name"`
+	Slug        string               `db:"slug" json:"slug"`
+	Image       pgtype.Text          `db:"image" json:"image"`
+	IsEnable    bool                 `db:"is_enable" json:"is_enable"`
+	Model       string               `db:"model" json:"model"`
+	Price       decimal.Decimal      `db:"price" json:"price"`
+	StockStatus constant.StockStatus `db:"stock_status" json:"stock_status"`
+}
+
+func (q *Queries) GetRelatedProductsByVariantID(ctx context.Context, variantID uuid.UUID) ([]*GetRelatedProductsByVariantIDRow, error) {
+	rows, err := q.db.Query(ctx, getRelatedProductsByVariantID, variantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetRelatedProductsByVariantIDRow{}
+	for rows.Next() {
+		var i GetRelatedProductsByVariantIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Image,
+			&i.IsEnable,
+			&i.Model,
+			&i.Price,
 			&i.StockStatus,
 		); err != nil {
 			return nil, err

@@ -67,11 +67,12 @@ SELECT
     COUNT(DISTINCT p.id) as product_count
 FROM products p
 INNER JOIN product_attribute_values pav ON p.id = pav.product_id
+INNER JOIN product_variants pv ON pv.product_id = p.id
 INNER JOIN attribute_values av ON pav.attribute_value_id = av.id
 INNER JOIN attributes a ON av.attribute_id = a.id
 INNER JOIN attribute_groups ag ON a.attribute_group_id = ag.id
 WHERE
-    p.category_id = $1
+    pv.category_id = $1
     AND p.is_enable = true
     AND a.is_filterable = true
     AND av.is_active = true

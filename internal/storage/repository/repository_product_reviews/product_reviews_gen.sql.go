@@ -14,13 +14,13 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO product_reviews (product_id, user_id, order_id, rating, title, body, status, created_at, deleted_at)
+INSERT INTO product_reviews (variant_id, user_id, order_id, rating, title, body, status, created_at, deleted_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, now(), $8)
-	RETURNING id, product_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at
+	RETURNING id, variant_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at
 `
 
 type CreateParams struct {
-	ProductID uuid.UUID        `db:"product_id" json:"product_id"`
+	VariantID uuid.UUID        `db:"variant_id" json:"variant_id"`
 	UserID    uuid.UUID        `db:"user_id" json:"user_id"`
 	OrderID   uuid.NullUUID    `db:"order_id" json:"order_id"`
 	Rating    int16            `db:"rating" json:"rating"`
@@ -32,7 +32,7 @@ type CreateParams struct {
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.ProductReview, error) {
 	row := q.db.QueryRow(ctx, create,
-		arg.ProductID,
+		arg.VariantID,
 		arg.UserID,
 		arg.OrderID,
 		arg.Rating,
@@ -44,7 +44,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 	var i models.ProductReview
 	err := row.Scan(
 		&i.ID,
-		&i.ProductID,
+		&i.VariantID,
 		&i.UserID,
 		&i.OrderID,
 		&i.Rating,
@@ -69,14 +69,14 @@ func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
 
 const update = `-- name: Update :one
 UPDATE product_reviews
-	SET product_id=$1, user_id=$2, order_id=$3, rating=$4, title=$5, body=$6, 
+	SET variant_id=$1, user_id=$2, order_id=$3, rating=$4, title=$5, body=$6, 
 		status=$7, updated_at=now(), deleted_at=$8
 	WHERE id=$9
-	RETURNING id, product_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at
+	RETURNING id, variant_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at
 `
 
 type UpdateParams struct {
-	ProductID uuid.UUID        `db:"product_id" json:"product_id"`
+	VariantID uuid.UUID        `db:"variant_id" json:"variant_id"`
 	UserID    uuid.UUID        `db:"user_id" json:"user_id"`
 	OrderID   uuid.NullUUID    `db:"order_id" json:"order_id"`
 	Rating    int16            `db:"rating" json:"rating"`
@@ -89,7 +89,7 @@ type UpdateParams struct {
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.ProductReview, error) {
 	row := q.db.QueryRow(ctx, update,
-		arg.ProductID,
+		arg.VariantID,
 		arg.UserID,
 		arg.OrderID,
 		arg.Rating,
@@ -102,7 +102,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 	var i models.ProductReview
 	err := row.Scan(
 		&i.ID,
-		&i.ProductID,
+		&i.VariantID,
 		&i.UserID,
 		&i.OrderID,
 		&i.Rating,
