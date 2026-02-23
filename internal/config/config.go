@@ -16,6 +16,7 @@ type (
 		KeyValue     KeyValue     `yaml:"key_value"`
 		FileStorage  FileStorage  `yaml:"file_storage"`
 		SearchEngine SearchEngine `yaml:"search_engine"`
+		Kafka        KafkaConfig  `yaml:"kafka"`
 	}
 
 	AppConfig struct {

@@ -8,6 +8,18 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
+// ProductUpsertDTO used for create or update product from external system
+type ProductUpsertDTO struct {
+	ExternalID     string
+	Model          string
+	Sku            *string
+	Price          decimal.Decimal
+	Quantity       int64
+	StockStatus    constant.StockStatus
+	IsEnable       bool
+	ManufacturerID uuid.NullUUID
+}
+
 type CreateProductVariantDTO struct {
 	Name            string
 	Slug            string

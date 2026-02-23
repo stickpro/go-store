@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/stickpro/go-store/internal/config"
+	"github.com/stickpro/go-store/internal/messaging/handler"
+	"github.com/stickpro/go-store/internal/messaging/kafka"
 	"github.com/stickpro/go-store/internal/server"
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/storage"
@@ -40,6 +42,22 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 	srv := server.InitServer(conf, services, l)
 
 	initIndexer(ctx, services, l, true)
+
+	consumer, err := kafka.NewConsumer(conf.Kafka, l)
+	if err != nil {
+		l.Fatal("failed to init kafka consumer", err)
+		return
+	}
+	defer consumer.Close()
+
+	productHandler := handler.NewProductHandler(services.ProductService, l)
+
+	go func() {
+		l.Info("Start kafka consumer")
+		if err := consumer.Run(ctx, productHandler.HandleProduct); err != nil {
+			l.Error("kafka consumer stopped with error", err)
+		}
+	}()
 
 	serverErrCh := make(chan error, 1)
 	go func() {

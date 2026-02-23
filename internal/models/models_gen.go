@@ -153,6 +153,7 @@ type PersonalAccessToken struct {
 
 type Product struct {
 	ID             uuid.UUID            `db:"id" json:"id"`
+	ExternalID     pgtype.Text          `db:"external_id" json:"external_id"`
 	ManufacturerID uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
 	Model          string               `db:"model" json:"model"`
 	Sku            pgtype.Text          `db:"sku" json:"sku"`

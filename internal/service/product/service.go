@@ -2,6 +2,7 @@ package product
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -25,7 +26,10 @@ type IProductService interface {
 	// Base product CRUD
 	CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, *models.ProductVariant, error)
 	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, *models.ProductVariant, error)
+	// UpsertProductByExternalID
+	UpsertProductByExternalID(ctx context.Context, externalID string, d dto.ProductUpsertDTO) (*models.Product, error)
 	GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
+	GetProductByExternalID(ctx context.Context, externalID string) (*models.Product, error)
 	GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*dto.ProductWithMediaDTO, error)
 	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 
@@ -167,6 +171,14 @@ func (s *Service) GetProductByID(ctx context.Context, id uuid.UUID) (*models.Pro
 		parsedErr := pgerror.ParseError(err)
 		s.logger.Debugf("failed to get product by ID", "error", parsedErr)
 		return nil, parsedErr
+	}
+	return prd, nil
+}
+
+func (s *Service) GetProductByExternalID(ctx context.Context, externalID string) (*models.Product, error) {
+	prd, err := s.storage.Products().GetByExternalID(ctx, pgtypeutils.EncodeText(&externalID))
+	if err != nil {
+		return nil, pgerror.ParseError(err)
 	}
 	return prd, nil
 }
@@ -333,4 +345,42 @@ func (s *Service) GetProductAttributesByID(ctx context.Context, id uuid.UUID) ([
 	}
 
 	return mapper.MapProductAttributesToGroupedDTO(rawAttributes), nil
+}
+
+func (s *Service) UpsertProductByExternalID(ctx context.Context, externalID string, d dto.ProductUpsertDTO) (*models.Product, error) {
+	existing, err := s.storage.Products().GetByExternalID(ctx, pgtypeutils.EncodeText(&externalID))
+	if err != nil {
+		var notFound *pgerror.NotFoundError
+		if !errors.As(pgerror.ParseError(err), &notFound) {
+			return nil, pgerror.ParseError(err)
+		}
+		// товар не найден — создаём только запись товара без варианта
+		return s.storage.Products().Create(ctx, repository_products.CreateParams{
+			ExternalID:     pgtypeutils.EncodeText(&externalID),
+			ManufacturerID: d.ManufacturerID,
+			Model:          d.Model,
+			Sku:            pgtypeutils.EncodeText(d.Sku),
+			Quantity:       d.Quantity,
+			StockStatus:    d.StockStatus,
+			Price:          d.Price,
+			IsEnable:       d.IsEnable,
+		})
+	}
+
+	// товар найден — обновляем только поля товара
+	prd, err := s.storage.Products().Update(ctx, repository_products.UpdateParams{
+		ID:             existing.ID,
+		ExternalID:     pgtypeutils.EncodeText(&externalID),
+		ManufacturerID: d.ManufacturerID,
+		Model:          d.Model,
+		Sku:            pgtypeutils.EncodeText(d.Sku),
+		Quantity:       d.Quantity,
+		StockStatus:    d.StockStatus,
+		Price:          d.Price,
+		IsEnable:       d.IsEnable,
+	})
+	if err != nil {
+		return nil, pgerror.ParseError(err)
+	}
+	return prd, nil
 }

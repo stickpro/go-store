@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -18,6 +19,7 @@ type Querier interface {
 	DeleteProductMedia(ctx context.Context, productID uuid.UUID) error
 	DeleteRelatedProducts(ctx context.Context, variantID uuid.UUID) error
 	DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteSpecificRelatedProductsParams) error
+	GetByExternalID(ctx context.Context, externalID pgtype.Text) (*models.Product, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Product, error)
 	GetMediaByProductID(ctx context.Context, productID uuid.UUID) ([]*models.Medium, error)
