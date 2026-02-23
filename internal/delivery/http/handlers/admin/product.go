@@ -12,6 +12,7 @@ import (
 	// swag-gen
 	_ "github.com/stickpro/go-store/internal/storage/base"
 	_ "github.com/stickpro/go-store/internal/storage/repository/repository_product_variants"
+	_ "github.com/stickpro/go-store/internal/storage/repository/repository_products"
 )
 
 // createProduct is a function create product
@@ -295,6 +296,32 @@ func (h *Handler) syncProductAttribute(c fiber.Ctx) error {
 	return c.JSON(response.OkByMessage("Product attributes synced"))
 }
 
+// getProductsWithoutVariants returns a paginated list of products that have no variants
+//
+//	@Summary		Get products without variants
+//	@Description	Get products without variants (admin)
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			string	query		product_request.GetProductWithPagination	true	"GetProductWithPagination"
+//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[repository_products.FindRow]]
+//	@Failure		401		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Router			/v1/product/list/without-variants [get]
+//	@Security		BearerAuth
+func (h *Handler) getProductsWithoutVariants(c fiber.Ctx) error {
+	req := &product_request.GetProductWithPagination{}
+	if err := c.Bind().Query(req); err != nil {
+		return err
+	}
+
+	prds, err := h.services.ProductService.GetProductsWithoutVariants(c.Context(), dto.GetDTO{Page: req.Page, PageSize: req.PageSize})
+	if err != nil {
+		return h.handleError(err, "product")
+	}
+	return c.JSON(response.OkByData(prds))
+}
+
 // syncRelatedProducts syncs the list of related variants for a given variant
 //
 //	@Summary		Sync Related Products
@@ -355,6 +382,7 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Post("/", h.createProduct)
 	p.Put("/:id", h.updateProduct)
+	p.Get("/list/without-variants", h.getProductsWithoutVariants)
 	p.Get("/variant/list", h.getVariantsWithPagination)
 	p.Get("/:id/variants", h.getProductVariants)
 	p.Get("/:id/variants/:variant_id", h.getProductVariantByID)

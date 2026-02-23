@@ -1576,6 +1576,8 @@ definitions:
         $ref: '#/definitions/pgtype.Timestamp'
       ean:
         $ref: '#/definitions/pgtype.Text'
+      external_id:
+        $ref: '#/definitions/pgtype.Text'
       height:
         type: number
       id:
@@ -1624,6 +1626,8 @@ definitions:
       created_at:
         $ref: '#/definitions/pgtype.Timestamp'
       ean:
+        $ref: '#/definitions/pgtype.Text'
+      external_id:
         $ref: '#/definitions/pgtype.Text'
       height:
         type: number
@@ -3639,6 +3643,38 @@ paths:
           schema:
             $ref: '#/definitions/APIErrors'
       summary: Get product with media by ID
+      tags:
+      - Product
+  /v1/product/list/without-variants:
+    get:
+      consumes:
+      - application/json
+      description: Get products without variants (admin)
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get products without variants
       tags:
       - Product
   /v1/product/variants:

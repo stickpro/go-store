@@ -50,7 +50,7 @@ type ProductResponse struct {
 } //	@name	ProductResponse
 
 func NewFromModels(product *models.Product, variant *models.ProductVariant) ProductResponse {
-	return ProductResponse{
+	resp := ProductResponse{
 		ID:             product.ID,
 		Model:          product.Model,
 		Sku:            pgtypeutils.DecodeText(product.Sku),
@@ -72,7 +72,9 @@ func NewFromModels(product *models.Product, variant *models.ProductVariant) Prod
 		Minimum:        product.Minimum,
 		SortOrder:      product.SortOrder,
 		IsEnable:       product.IsEnable,
-		Variant: ProductVariantResponse{
+	}
+	if variant != nil {
+		resp.Variant = ProductVariantResponse{
 			ID:              variant.ID,
 			Name:            variant.Name,
 			Slug:            variant.Slug,
@@ -85,8 +87,9 @@ func NewFromModels(product *models.Product, variant *models.ProductVariant) Prod
 			Image:           pgtypeutils.DecodeText(variant.Image),
 			SortOrder:       variant.SortOrder,
 			IsEnable:        variant.IsEnable,
-		},
+		}
 	}
+	return resp
 }
 
 type ProductWithMediumResponse struct {

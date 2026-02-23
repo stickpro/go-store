@@ -2705,6 +2705,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/product/list/without-variants": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get products without variants (admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Get products without variants",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/product/variants": {
             "get": {
                 "security": [
@@ -5438,6 +5490,9 @@ const docTemplate = `{
                 "ean": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
+                "external_id": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
                 "height": {
                     "type": "number"
                 },
@@ -5510,6 +5565,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/pgtype.Timestamp"
                 },
                 "ean": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "external_id": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
                 "height": {

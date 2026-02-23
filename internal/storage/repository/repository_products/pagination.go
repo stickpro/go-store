@@ -3,12 +3,14 @@ package repository_products
 import (
 	"context"
 
+	"github.com/huandu/go-sqlbuilder"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/base"
 )
 
 type ProductsWithPaginationParams struct {
 	base.CommonFindParams
+	WithoutVariants bool
 }
 
 type FindRow struct {
@@ -19,7 +21,7 @@ func (s *CustomQueries) GetWithPaginate(
 	ctx context.Context,
 	params ProductsWithPaginationParams,
 ) (*base.FindResponseWithFullPagination[*FindRow], error) {
-	return base.Paginate[*FindRow](ctx, s.db, params.CommonFindParams, base.PaginationConfig[*FindRow]{
+	cfg := base.PaginationConfig[*FindRow]{
 		TableName:    "products",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,
@@ -28,5 +30,13 @@ func (s *CustomQueries) GetWithPaginate(
 			"name":       true,
 			"created_at": true,
 		},
-	})
+	}
+
+	if params.WithoutVariants {
+		cfg.WhereBuilder = func(sb *sqlbuilder.SelectBuilder) {
+			sb.Where("NOT EXISTS (SELECT 1 FROM product_variants WHERE product_variants.product_id = products.id)")
+		}
+	}
+
+	return base.Paginate[*FindRow](ctx, s.db, params.CommonFindParams, cfg)
 }

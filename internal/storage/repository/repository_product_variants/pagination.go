@@ -13,7 +13,7 @@ type VariantsWithPaginationParams struct {
 
 type FindRow struct {
 	models.ProductVariant
-} // @name ProductVariantListItem
+} //	@name	ProductVariantListItem
 
 func (s *CustomQueries) GetWithPaginate(
 	ctx context.Context,

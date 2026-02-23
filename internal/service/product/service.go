@@ -32,6 +32,7 @@ type IProductService interface {
 	GetProductByExternalID(ctx context.Context, externalID string) (*models.Product, error)
 	GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*dto.ProductWithMediaDTO, error)
 	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
+	GetProductsWithoutVariants(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 
 	// Attributes (by product ID)
 	GetProductAttributesByID(ctx context.Context, id uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error)
@@ -163,6 +164,21 @@ func (s *Service) GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*
 		return nil, err
 	}
 	return prds, nil
+}
+
+func (s *Service) GetProductsWithoutVariants(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error) {
+	commonParams := base.NewCommonFindParams()
+	if d.PageSize != nil {
+		commonParams.PageSize = d.PageSize
+	}
+	if d.Page != nil {
+		commonParams.Page = d.Page
+	}
+
+	return s.storage.Products().GetWithPaginate(ctx, repository_products.ProductsWithPaginationParams{
+		CommonFindParams: *commonParams,
+		WithoutVariants:  true,
+	})
 }
 
 func (s *Service) GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
