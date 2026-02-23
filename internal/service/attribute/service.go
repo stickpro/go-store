@@ -20,7 +20,8 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
-type IAttributeService interface {
+// TODO create crud intreface for attribute groups and values, and move group and value related methods to separate files
+type IAttributeService interface { //nolint:interfacebloat
 	IAttributeGroupService
 
 	CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO) (*models.Attribute, error)
@@ -151,6 +152,10 @@ func (s *Service) DeleteAttribute(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *Service) SearchAttributes(ctx context.Context, q string, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.Attribute], error) {
+	return searchWithPagination[*models.Attribute](s.searchService, constant.AttributesIndex, q, d)
+}
+
+func searchWithPagination[T any](svc searchtypes.ISearchService, index string, q string, d dto.GetDTO) (*base.FindResponseWithFullPagination[T], error) {
 	page := uint64(1)
 	pageSize := uint64(10)
 
@@ -161,29 +166,29 @@ func (s *Service) SearchAttributes(ctx context.Context, q string, d dto.GetDTO) 
 		pageSize = *d.PageSize
 	}
 
-	offset := int64((page - 1) * pageSize)
+	offset := int64((page - 1) * pageSize) //nolint:gosec
 	limit := int64(pageSize)
 
-	searchResult, err := s.searchService.Search(constant.AttributesIndex, q, limit, offset)
+	searchResult, err := svc.Search(index, q, limit, offset)
 	if err != nil {
 		return nil, err
 	}
-	attributes, err := search.UnmarshalHits[*models.Attribute](searchResult.Hits)
+	items, err := search.UnmarshalHits[T](searchResult.Hits)
 	if err != nil {
 		return nil, err
 	}
 
-	total := uint64(searchResult.TotalHits)
+	total := uint64(searchResult.TotalHits) //nolint:gosec
 	lastPage := uint64(1)
 	if pageSize > 0 {
-		lastPage = (total + uint64(pageSize) - 1) / uint64(pageSize)
+		lastPage = (total + pageSize - 1) / pageSize
 		if lastPage == 0 {
 			lastPage = 1
 		}
 	}
 
-	return &base.FindResponseWithFullPagination[*models.Attribute]{
-		Items: attributes,
+	return &base.FindResponseWithFullPagination[T]{
+		Items: items,
 		Pagination: base.FullPagingData{
 			Total:    total,
 			PageSize: pageSize,
@@ -218,15 +223,12 @@ func (s *Service) GetAvailableFiltersForCategory(ctx context.Context, categoryID
 	attrOrder := make(map[uuid.UUID][]uuid.UUID)
 
 	for _, row := range rows {
-		// Get or create group
-		group, groupExists := groupMap[row.GroupID]
-		if !groupExists {
-			group = &dto.AttributeGroupWithValuesDTO{
+		if _, groupExists := groupMap[row.GroupID]; !groupExists {
+			groupMap[row.GroupID] = &dto.AttributeGroupWithValuesDTO{
 				GroupID:   row.GroupID,
 				GroupName: row.GroupName,
 				GroupSlug: row.GroupSlug,
 			}
-			groupMap[row.GroupID] = group
 			groupOrder = append(groupOrder, row.GroupID)
 			attrOrder[row.GroupID] = []uuid.UUID{}
 		}

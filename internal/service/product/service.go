@@ -21,7 +21,7 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
-type IProductService interface { //nolint:interfacebloat
+type IProductService interface {
 	// Base product CRUD
 	CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, *models.ProductVariant, error)
 	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, *models.ProductVariant, error)

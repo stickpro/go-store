@@ -90,6 +90,10 @@ linters:
           - dupl
         path: internal/delivery/http/handlers/*
       - linters:
+          - gosec
+        path: internal/(config|dto|delivery/http/request)/
+        text: "G117"
+      - linters:
           - interfacebloat
         path: internal/storage/*
       - linters:

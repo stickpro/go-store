@@ -8,7 +8,6 @@ import (
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
-	"github.com/stickpro/go-store/internal/service/search"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attribute_groups"
@@ -108,43 +107,5 @@ func (s *Service) DeleteAttributeGroup(ctx context.Context, id uuid.UUID) error 
 }
 
 func (s *Service) SearchAttributeGroup(ctx context.Context, q string, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.AttributeGroup], error) {
-	page := uint64(1)
-	pageSize := uint64(10)
-
-	if d.Page != nil && *d.Page > 0 {
-		page = *d.Page
-	}
-	if d.PageSize != nil && *d.PageSize > 0 {
-		pageSize = *d.PageSize
-	}
-
-	offset := int64((page - 1) * pageSize)
-	limit := int64(pageSize)
-
-	searchResult, err := s.searchService.Search(constant.AttributeGroupsIndex, q, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	attrGroup, err := search.UnmarshalHits[*models.AttributeGroup](searchResult.Hits)
-	if err != nil {
-		return nil, err
-	}
-	total := uint64(searchResult.TotalHits)
-	lastPage := uint64(1)
-	if pageSize > 0 {
-		lastPage = (total + pageSize - 1) / pageSize
-		if lastPage == 0 {
-			lastPage = 1
-		}
-	}
-
-	return &base.FindResponseWithFullPagination[*models.AttributeGroup]{
-		Items: attrGroup,
-		Pagination: base.FullPagingData{
-			Total:    total,
-			PageSize: pageSize,
-			Page:     page,
-			LastPage: lastPage,
-		},
-	}, nil
+	return searchWithPagination[*models.AttributeGroup](s.searchService, constant.AttributeGroupsIndex, q, d)
 }

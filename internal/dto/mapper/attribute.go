@@ -21,14 +21,12 @@ func MapProductAttributesToGroupedDTO(rows []*repository_product_attribute_value
 
 	for _, row := range rows {
 		// Get or create group
-		group, groupExists := groupMap[row.GroupID]
-		if !groupExists {
-			group = &dto.AttributeGroupWithValuesDTO{
+		if _, groupExists := groupMap[row.GroupID]; !groupExists {
+			groupMap[row.GroupID] = &dto.AttributeGroupWithValuesDTO{
 				GroupID:   row.GroupID,
 				GroupName: row.GroupName,
 				GroupSlug: row.GroupSlug,
 			}
-			groupMap[row.GroupID] = group
 			groupOrder = append(groupOrder, row.GroupID)
 			attrOrder[row.GroupID] = []uuid.UUID{}
 		}

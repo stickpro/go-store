@@ -363,5 +363,4 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p.Delete("/:id/variants/:variant_id", h.deleteProductVariant)
 	p.Post("/:id/sync-attribute", h.syncProductAttribute)
 	p.Post("/:id/sync-related-products", h.syncRelatedProducts)
-
 }

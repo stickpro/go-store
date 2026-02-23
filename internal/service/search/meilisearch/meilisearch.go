@@ -24,7 +24,7 @@ func (e *SearchEngine) CreateIndex(nameIndex string, data []map[string]interface
 	}
 	index := e.client.Index(nameIndex)
 
-	if len(opts) > 0 {
+	if len(opts) > 0 { //nolint:nestif
 		settings := &meilisearchSDK.Settings{}
 
 		if len(opts[0].RankingRules) > 0 {
@@ -109,7 +109,7 @@ func (e *SearchEngine) GetFacetDistribution(nameIndex string, facets []string) (
 
 	// Преобразуем map[string]interface{} в map[string]map[string]int64
 	result := make(map[string]map[string]int64)
-	if searchResult.FacetDistribution != nil {
+	if searchResult.FacetDistribution != nil { //nolint:nestif
 		if facetDist, ok := searchResult.FacetDistribution.(map[string]interface{}); ok {
 			for facetName, facetData := range facetDist {
 				facetMap := make(map[string]int64)

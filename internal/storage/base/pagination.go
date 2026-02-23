@@ -52,7 +52,7 @@ func Paginate[R any](
 		sb.OrderBy(orderBy+" DESC", "id DESC")
 	}
 
-	sb.Limit(int(limit)).Offset(int(offset))
+	sb.Limit(int(limit)).Offset(int(offset)) //nolint:gosec
 
 	sql, args := sb.Build()
 	var items []R
@@ -68,7 +68,7 @@ func Paginate[R any](
 
 	page := uint64(1)
 	if params.Page != nil {
-		page = uint64(*params.Page)
+		page = *params.Page
 	}
 	lastPage := uint64(math.Ceil(float64(total) / float64(limit)))
 
@@ -76,7 +76,7 @@ func Paginate[R any](
 		Items: items,
 		Pagination: FullPagingData{
 			Total:    total,
-			PageSize: uint64(limit),
+			PageSize: limit,
 			Page:     page,
 			LastPage: lastPage,
 		},

@@ -88,7 +88,7 @@ type AttributeValueDTO struct {
 // Product Attribute DTOs
 type AssignProductAttributesDTO struct {
 	ProductID         uuid.UUID   `json:"product_id"`
-	AttributeValueIDs []uuid.UUID `json:"attribute_value_ids"`
+	AttributeValueIDs []uuid.UUID `json:"attribute_value_ids"` //nolint:tagliatelle
 } //	@name	AssignProductAttributesDTO
 
 type ProductAttributeDTO struct {
