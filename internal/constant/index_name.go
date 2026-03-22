@@ -2,7 +2,7 @@ package constant
 
 const (
 	CitiesIndex          string = "cities"
-	ProductsIndex        string = "products"
+	ProductVariantsIndex string = "product_variants"
 	AttributesIndex      string = "attributes"
 	AttributeGroupsIndex string = "attributes_groups"
 )

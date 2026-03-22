@@ -329,15 +329,15 @@ func (h *Handler) getProductsWithoutVariants(c fiber.Ctx) error {
 //	@Tags			Product
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		uuid.UUID									true	"Variant ID"
-//	@Param			update	body		product_request.SyncRelatedProductRequest	true	"Sync related products"
-//	@Success		200		{object}	response.Result[string]
-//	@Failure		400		{object}	apierror.Errors
-//	@Failure		422		{object}	apierror.Errors
-//	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/product/:id/sync-related-products [POST]
+//	@Param			variant_id	path		uuid.UUID									true	"Variant ID"
+//	@Param			update		body		product_request.SyncRelatedProductRequest	true	"Sync related products"
+//	@Success		200			{object}	response.Result[string]
+//	@Failure		400			{object}	apierror.Errors
+//	@Failure		422			{object}	apierror.Errors
+//	@Failure		500			{object}	apierror.Errors
+//	@Router			/v1/product/variant/:variant_id/sync-related-products [POST]
 func (h *Handler) syncRelatedProducts(c fiber.Ctx) error {
-	id, err := uuid.Parse(c.Params("id"))
+	id, err := uuid.Parse(c.Params("variant_id"))
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
@@ -390,5 +390,5 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p.Put("/:id/variants/:variant_id", h.updateProductVariant)
 	p.Delete("/:id/variants/:variant_id", h.deleteProductVariant)
 	p.Post("/:id/sync-attribute", h.syncProductAttribute)
-	p.Post("/:id/sync-related-products", h.syncRelatedProducts)
+	p.Post("/variant/:variant_id/sync-related-products", h.syncRelatedProducts)
 }

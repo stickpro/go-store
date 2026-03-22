@@ -12,7 +12,7 @@ type CreateCollectionDTO struct {
 	Name        string      `json:"name"`
 	Description *string     `json:"description,omitempty"`
 	Slug        string      `json:"slug"`
-	ProductIDs  []uuid.UUID `json:"product_ids,omitempty"` //nolint:tagliatelle
+	VariantIDs  []uuid.UUID `json:"variant_ids,omitempty"` //nolint:tagliatelle
 }
 
 type GetCollectionDTO struct {
@@ -25,7 +25,7 @@ type UpdateCollectionDTO struct {
 	Name        string      `json:"name"`
 	Description *string     `json:"description,omitempty"`
 	Slug        string      `json:"slug"`
-	ProductIDs  []uuid.UUID `json:"product_ids,omitempty"` //nolint:tagliatelle
+	VariantIDs  []uuid.UUID `json:"variant_ids,omitempty"` //nolint:tagliatelle
 }
 
 type WithProductsCollectionDTO struct {
@@ -43,7 +43,7 @@ func RequestToCreateCollectionDTO(req *collection_request.CreateCollectionReques
 		Name:        req.Name,
 		Description: req.Description,
 		Slug:        req.Slug,
-		ProductIDs:  req.ProductIDs,
+		VariantIDs:  req.VariantIDs,
 	}
 }
 
@@ -53,6 +53,6 @@ func RequestToUpdateCollectionDTO(req *collection_request.UpdateCollectionReques
 		Name:        req.Name,
 		Description: req.Description,
 		Slug:        req.Slug,
-		ProductIDs:  req.ProductIDs,
+		VariantIDs:  req.VariantIDs,
 	}
 }

@@ -13,11 +13,9 @@ import (
 )
 
 type Querier interface {
-	AddRelatedProducts(ctx context.Context, arg AddRelatedProductsParams) error
 	Create(ctx context.Context, arg CreateParams) (*models.Product, error)
 	CreateProductMedia(ctx context.Context, arg CreateProductMediaParams) error
 	DeleteProductMedia(ctx context.Context, productID uuid.UUID) error
-	DeleteRelatedProducts(ctx context.Context, variantID uuid.UUID) error
 	DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteSpecificRelatedProductsParams) error
 	GetByExternalID(ctx context.Context, externalID pgtype.Text) (*models.Product, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
@@ -25,6 +23,8 @@ type Querier interface {
 	GetMediaByProductID(ctx context.Context, productID uuid.UUID) ([]*models.Medium, error)
 	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error)
 	GetRelatedProductsByVariantID(ctx context.Context, variantID uuid.UUID) ([]*GetRelatedProductsByVariantIDRow, error)
+	GetRelatedProductsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetRelatedProductsByVariantIDsRow, error)
+	SyncRelatedProducts(ctx context.Context, arg SyncRelatedProductsParams) error
 	Update(ctx context.Context, arg UpdateParams) (*models.Product, error)
 }
 

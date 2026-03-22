@@ -1,19 +1,31 @@
--- name: AddRelatedProducts :exec
+-- name: SyncRelatedProducts :exec
+WITH deleted AS (
+    DELETE FROM related_products
+    WHERE variant_id = sqlc.arg(variant_id)::uuid
+)
 INSERT INTO related_products (variant_id, related_variant_id)
-SELECT sqlc.arg(variant_id)::uuid, pv.id
-FROM product_variants pv
-WHERE pv.id = any(sqlc.arg(related_variant_ids)::uuid[])
-  AND pv.id != sqlc.arg(variant_id)::uuid
-  AND NOT EXISTS (
-    SELECT 1
-    FROM related_products rp
-    WHERE rp.variant_id = sqlc.arg(variant_id)
-      AND rp.related_variant_id = pv.id
-    );
+SELECT sqlc.arg(variant_id)::uuid, v.id
+FROM product_variants v
+WHERE v.id = ANY(sqlc.arg(related_variant_ids)::uuid[])
+  AND v.id != sqlc.arg(variant_id)::uuid
+ON CONFLICT DO NOTHING;
 
--- name: DeleteRelatedProducts :exec
-DELETE FROM related_products
-WHERE variant_id = $1;
+-- name: GetRelatedProductsByVariantIDs :many
+SELECT rp.variant_id,
+       pv.id,
+       pv.name,
+       pv.slug,
+       pv.image,
+       pv.is_enable,
+       p.model,
+       p.price,
+       p.stock_status
+FROM related_products rp
+         JOIN product_variants pv ON rp.related_variant_id = pv.id
+         JOIN products p ON pv.product_id = p.id
+WHERE rp.variant_id = ANY($1::uuid[])
+  AND pv.is_enable = true
+ORDER BY rp.variant_id, pv.name;
 
 -- name: GetRelatedProductsByVariantID :many
 SELECT pv.id,
@@ -50,4 +62,4 @@ ORDER BY pv.name;
 -- name: DeleteSpecificRelatedProducts :exec
 DELETE FROM related_products
 WHERE variant_id = $1
-  AND related_variant_id = any($2::uuid[]);
+  AND related_variant_id = ANY($2::uuid[]);

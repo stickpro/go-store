@@ -59,7 +59,7 @@ func (s *Service) CreateCollection(ctx context.Context, d dto.CreateCollectionDT
 			return parsedErr
 		}
 		col = collection
-		err = s.updateProductToCollection(ctx, collection, d.ProductIDs, tx)
+		err = s.updateVariantsInCollection(ctx, collection, d.VariantIDs, tx)
 		if err != nil {
 			return err
 		}
@@ -87,8 +87,11 @@ func (s *Service) GetCollectionBySlug(ctx context.Context, slug string) (*dto.Wi
 	rows, err := s.storage.Collections().GetCollectionWithProductsBySlug(ctx, slug)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
-		s.l.Debug("failed to get collection by ID", "error", parsedErr)
+		s.l.Debug("failed to get collection by slug", "error", parsedErr)
 		return nil, parsedErr
+	}
+	if len(rows) == 0 {
+		return nil, &pgerror.NotFoundError{Detail: "collection not found by slug: " + slug}
 	}
 	d := mapper.MapCollectionBySlugToDTO(rows)
 	return d, nil
@@ -130,7 +133,7 @@ func (s *Service) UpdateCollection(ctx context.Context, d dto.UpdateCollectionDT
 			return parsedErr
 		}
 		col = collection
-		err = s.updateProductToCollection(ctx, collection, d.ProductIDs, tx)
+		err = s.updateVariantsInCollection(ctx, collection, d.VariantIDs, tx)
 		if err != nil {
 			return err
 		}
@@ -166,22 +169,22 @@ func (s *Service) DeleteCollection(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) updateProductToCollection(
+func (s *Service) updateVariantsInCollection(
 	ctx context.Context,
 	collection *models.Collection,
-	productIDs []uuid.UUID,
+	variantIDs []uuid.UUID,
 	dbTx pgx.Tx,
 ) error {
 	err := s.storage.Collections(repository.WithTx(dbTx)).DeleteProductsFromCollection(ctx, collection.ID)
 	if err != nil {
 		return err
 	}
-	if len(productIDs) == 0 {
+	if len(variantIDs) == 0 {
 		return nil
 	}
 	err = s.storage.Collections(repository.WithTx(dbTx)).AddProductsToCollection(ctx, repository_collections.AddProductsToCollectionParams{
 		CollectionID: collection.ID,
-		ProductIds:   productIDs,
+		VariantIds:   variantIDs,
 	})
 	if err != nil {
 		return err

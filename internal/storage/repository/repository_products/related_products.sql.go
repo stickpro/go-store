@@ -14,44 +14,10 @@ import (
 	"github.com/stickpro/go-store/internal/constant"
 )
 
-const addRelatedProducts = `-- name: AddRelatedProducts :exec
-INSERT INTO related_products (variant_id, related_variant_id)
-SELECT $1::uuid, pv.id
-FROM product_variants pv
-WHERE pv.id = any($2::uuid[])
-  AND pv.id != $1::uuid
-  AND NOT EXISTS (
-    SELECT 1
-    FROM related_products rp
-    WHERE rp.variant_id = $1
-      AND rp.related_variant_id = pv.id
-    )
-`
-
-type AddRelatedProductsParams struct {
-	VariantID         uuid.UUID   `db:"variant_id" json:"variant_id"`
-	RelatedVariantIds []uuid.UUID `db:"related_variant_ids" json:"related_variant_ids"`
-}
-
-func (q *Queries) AddRelatedProducts(ctx context.Context, arg AddRelatedProductsParams) error {
-	_, err := q.db.Exec(ctx, addRelatedProducts, arg.VariantID, arg.RelatedVariantIds)
-	return err
-}
-
-const deleteRelatedProducts = `-- name: DeleteRelatedProducts :exec
-DELETE FROM related_products
-WHERE variant_id = $1
-`
-
-func (q *Queries) DeleteRelatedProducts(ctx context.Context, variantID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteRelatedProducts, variantID)
-	return err
-}
-
 const deleteSpecificRelatedProducts = `-- name: DeleteSpecificRelatedProducts :exec
 DELETE FROM related_products
 WHERE variant_id = $1
-  AND related_variant_id = any($2::uuid[])
+  AND related_variant_id = ANY($2::uuid[])
 `
 
 type DeleteSpecificRelatedProductsParams struct {
@@ -176,4 +142,87 @@ func (q *Queries) GetRelatedProductsByVariantID(ctx context.Context, variantID u
 		return nil, err
 	}
 	return items, nil
+}
+
+const getRelatedProductsByVariantIDs = `-- name: GetRelatedProductsByVariantIDs :many
+SELECT rp.variant_id,
+       pv.id,
+       pv.name,
+       pv.slug,
+       pv.image,
+       pv.is_enable,
+       p.model,
+       p.price,
+       p.stock_status
+FROM related_products rp
+         JOIN product_variants pv ON rp.related_variant_id = pv.id
+         JOIN products p ON pv.product_id = p.id
+WHERE rp.variant_id = ANY($1::uuid[])
+  AND pv.is_enable = true
+ORDER BY rp.variant_id, pv.name
+`
+
+type GetRelatedProductsByVariantIDsRow struct {
+	VariantID   uuid.UUID            `db:"variant_id" json:"variant_id"`
+	ID          uuid.UUID            `db:"id" json:"id"`
+	Name        string               `db:"name" json:"name"`
+	Slug        string               `db:"slug" json:"slug"`
+	Image       pgtype.Text          `db:"image" json:"image"`
+	IsEnable    bool                 `db:"is_enable" json:"is_enable"`
+	Model       string               `db:"model" json:"model"`
+	Price       decimal.Decimal      `db:"price" json:"price"`
+	StockStatus constant.StockStatus `db:"stock_status" json:"stock_status"`
+}
+
+func (q *Queries) GetRelatedProductsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetRelatedProductsByVariantIDsRow, error) {
+	rows, err := q.db.Query(ctx, getRelatedProductsByVariantIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetRelatedProductsByVariantIDsRow{}
+	for rows.Next() {
+		var i GetRelatedProductsByVariantIDsRow
+		if err := rows.Scan(
+			&i.VariantID,
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Image,
+			&i.IsEnable,
+			&i.Model,
+			&i.Price,
+			&i.StockStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const syncRelatedProducts = `-- name: SyncRelatedProducts :exec
+WITH deleted AS (
+    DELETE FROM related_products
+    WHERE variant_id = $1::uuid
+)
+INSERT INTO related_products (variant_id, related_variant_id)
+SELECT $1::uuid, v.id
+FROM product_variants v
+WHERE v.id = ANY($2::uuid[])
+  AND v.id != $1::uuid
+ON CONFLICT DO NOTHING
+`
+
+type SyncRelatedProductsParams struct {
+	VariantID         uuid.UUID   `db:"variant_id" json:"variant_id"`
+	RelatedVariantIds []uuid.UUID `db:"related_variant_ids" json:"related_variant_ids"`
+}
+
+func (q *Queries) SyncRelatedProducts(ctx context.Context, arg SyncRelatedProductsParams) error {
+	_, err := q.db.Exec(ctx, syncRelatedProducts, arg.VariantID, arg.RelatedVariantIds)
+	return err
 }

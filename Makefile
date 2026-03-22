@@ -64,7 +64,7 @@ gen-swag:
 	swag init --parseDependency --parseInternal -g ./cmd/app/main.go
 
 download-geodb:
-	curl -L -o ./storage/geo/GeoIP2-Connection-Type.mmdb https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb
+	curl -L -o ./storage/geo/GeoLite2-City.mmdb https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb
 
 download-geo-cities:
 	curl -L -o ./storage/geo/city.csv https://github.com/hflabs/city/raw/refs/heads/master/city.csv

@@ -106,6 +106,15 @@ type ProductWithMediaDTO struct {
 	Medium  []*models.Medium       `json:"media"` //nolint:tagliatelle
 }
 
+// EnrichedVariantDTO combines variant data with product-level fields for indexing and enriched responses
+type EnrichedVariantDTO struct {
+	*models.ProductVariant
+	Price          decimal.Decimal      `json:"price"`
+	ManufacturerID uuid.NullUUID        `json:"manufacturer_id"`
+	StockStatus    constant.StockStatus `json:"stock_status"`
+	Model          string               `json:"model"`
+}
+
 type SyncAttributeProductDTO struct {
 	ProductID         uuid.UUID   `json:"product_id"`
 	AttributeValueIDs []uuid.UUID `json:"attribute_value_ids"` //nolint:tagliatelle

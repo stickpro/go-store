@@ -108,9 +108,9 @@ type Collection struct {
 	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 }
 
-type CollectionProduct struct {
+type CollectionVariant struct {
 	CollectionID uuid.UUID `db:"collection_id" json:"collection_id"`
-	ProductID    uuid.UUID `db:"product_id" json:"product_id"`
+	VariantID    uuid.UUID `db:"variant_id" json:"variant_id"`
 }
 
 type Manufacturer struct {

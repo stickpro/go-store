@@ -395,12 +395,12 @@ definitions:
         type: string
       name:
         type: string
-      product_ids:
+      slug:
+        type: string
+      variant_ids:
         items:
           type: string
         type: array
-      slug:
-        type: string
     required:
     - name
     - slug
@@ -536,6 +536,13 @@ definitions:
     properties:
       city:
         type: string
+    type: object
+  GetRelatedProductsBatchRequest:
+    properties:
+      variant_ids:
+        items:
+          type: string
+        type: array
     type: object
   JSONResponse-AttributeGroupResponse:
     properties:
@@ -860,6 +867,15 @@ definitions:
         items:
           $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Product'
         type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-map_string_array_ShortProduct:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/map_string_array_ShortProduct'
       message:
         type: string
     type: object
@@ -1241,12 +1257,12 @@ definitions:
         type: string
       name:
         type: string
-      product_ids:
+      slug:
+        type: string
+      variant_ids:
         items:
           type: string
         type: array
-      slug:
-        type: string
     required:
     - name
     - slug
@@ -1671,6 +1687,12 @@ definitions:
         type: number
       width:
         type: number
+    type: object
+  map_string_array_ShortProduct:
+    additionalProperties:
+      items:
+        $ref: '#/definitions/ShortProduct'
+      type: array
     type: object
   pgtype.Bool:
     properties:
@@ -3127,40 +3149,6 @@ paths:
       summary: Sync Product Attribute
       tags:
       - Product
-  /v1/product/:id/sync-related-products:
-    post:
-      consumes:
-      - application/json
-      description: Sync Related Products
-      parameters:
-      - description: Sync related products
-        in: body
-        name: update
-        required: true
-        schema:
-          $ref: '#/definitions/SyncRelatedProductRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-string'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Sync Related Products
-      tags:
-      - Product
   /v1/product/:id/variants:
     get:
       consumes:
@@ -3558,39 +3546,6 @@ paths:
       summary: Find product
       tags:
       - Product
-  /v1/product/id/:id/related-products:
-    get:
-      consumes:
-      - application/json
-      description: Get related products by variant ID
-      parameters:
-      - description: Variant ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-array_ShortProduct'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Get related products
-      tags:
-      - Product
   /v1/product/id/{id}/:
     get:
       consumes:
@@ -3675,6 +3630,103 @@ paths:
       security:
       - BearerAuth: []
       summary: Get products without variants
+      tags:
+      - Product
+  /v1/product/variant/:variant_id/sync-related-products:
+    post:
+      consumes:
+      - application/json
+      description: Sync Related Products
+      parameters:
+      - description: Sync related products
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/SyncRelatedProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-string'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Sync Related Products
+      tags:
+      - Product
+  /v1/product/variant/id/:id/related-products:
+    get:
+      consumes:
+      - application/json
+      description: Get related products by variant ID
+      parameters:
+      - description: Variant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_ShortProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get related products
+      tags:
+      - Product
+  /v1/product/variant/related-products/batch:
+    post:
+      consumes:
+      - application/json
+      description: Get related products for multiple variants in one request
+      parameters:
+      - description: List of variant IDs
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GetRelatedProductsBatchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-map_string_array_ShortProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get related products batch
       tags:
       - Product
   /v1/product/variants:

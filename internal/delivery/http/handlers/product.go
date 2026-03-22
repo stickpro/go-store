@@ -134,7 +134,7 @@ func (h *Handler) findProduct(c fiber.Ctx) error {
 	if product == "" {
 		return apierror.New().AddError(fmt.Errorf("product is requered")).SetHttpCode(fiber.StatusBadRequest)
 	}
-	products, err := h.services.SearchService.Search(constant.ProductsIndex, product, 10, 0)
+	products, err := h.services.SearchService.Search(constant.ProductVariantsIndex, product, 10, 0)
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
@@ -197,7 +197,7 @@ func (h *Handler) getProductBreadcrumbs(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/product/id/:id/related-products [get]
+//	@Router			/v1/product/variant/id/:id/related-products [get]
 func (h *Handler) getRelatedProducts(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -208,6 +208,30 @@ func (h *Handler) getRelatedProducts(c fiber.Ctx) error {
 		return h.handleError(err, "related products")
 	}
 	return c.JSON(response.OkByData(prd))
+}
+
+// getRelatedProductsBatch returns related products for multiple variants in one request
+//
+//	@Summary		Get related products batch
+//	@Description	Get related products for multiple variants in one request
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		product_request.GetRelatedProductsBatchRequest	true	"List of variant IDs"
+//	@Success		200		{object}	response.Result[map[string][]models.ShortProduct]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/product/variant/related-products/batch [post]
+func (h *Handler) getRelatedProductsBatch(c fiber.Ctx) error {
+	req := &product_request.GetRelatedProductsBatchRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+	result, err := h.services.ProductService.GetRelatedProductsBatch(c.Context(), req.VariantIDs)
+	if err != nil {
+		return h.handleError(err, "related products")
+	}
+	return c.JSON(response.OkByData(result))
 }
 
 // getRelatedProductsBySlug returns related products for a variant by variant slug
@@ -267,10 +291,12 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p.Get("/:slug/breadcrumbs", h.getProductBreadcrumbs)
 	p.Get("/:slug/related-products", h.getRelatedProductsBySlug)
 	p.Get("/:slug/reviews", h.getProductReviewsBySlug)
-	// by id
+	// by product id
 	p.Get("/id/:id", h.getProductByID)
 	p.Get("/id/:id/with-media", h.getProductWithMediaByID)
-	p.Get("/id/:id/related-products", h.getRelatedProducts)
 	p.Get("/id/:id/attributes", h.getProductAttributesByID)
 	p.Get("/id/:id/reviews", h.getProductReviewsByProductID)
+	// by variant id
+	p.Get("/variant/id/:id/related-products", h.getRelatedProducts)
+	p.Post("/variant/related-products/batch", h.getRelatedProductsBatch)
 }

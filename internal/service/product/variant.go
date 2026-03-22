@@ -21,6 +21,7 @@ type IVariantProductService interface {
 	UpdateProductVariant(ctx context.Context, variantID uuid.UUID, d dto.UpdateProductVariantDTO) (*models.ProductVariant, error)
 	DeleteProductVariant(ctx context.Context, variantID uuid.UUID) error
 	GetVariantsWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_product_variants.FindRow], error)
+	GetEnrichedVariantsWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO], error)
 
 	// Slug-based methods
 	GetVariantBySlug(ctx context.Context, slug string) (*models.ProductVariant, error)
@@ -124,6 +125,41 @@ func (s *Service) GetVariantsWithPagination(ctx context.Context, d dto.GetDTO) (
 		return nil, pgerror.ParseError(err)
 	}
 	return variantRows, nil
+}
+
+func (s *Service) GetEnrichedVariantsWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO], error) {
+	variantRows, err := s.GetVariantsWithPagination(ctx, d)
+	if err != nil {
+		return nil, err
+	}
+
+	productCache := make(map[uuid.UUID]*models.Product)
+	items := make([]*dto.EnrichedVariantDTO, 0, len(variantRows.Items))
+
+	for _, row := range variantRows.Items {
+		product, ok := productCache[row.ProductID]
+		if !ok {
+			product, err = s.storage.Products().GetByID(ctx, row.ProductID)
+			if err != nil {
+				s.logger.Warn("Failed to get product for variant", "variant_id", row.ID, "error", err)
+				continue
+			}
+			productCache[row.ProductID] = product
+		}
+
+		items = append(items, &dto.EnrichedVariantDTO{
+			ProductVariant: &row.ProductVariant,
+			Price:          product.Price,
+			ManufacturerID: product.ManufacturerID,
+			StockStatus:    product.StockStatus,
+			Model:          product.Model,
+		})
+	}
+
+	return &base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO]{
+		Items:      items,
+		Pagination: variantRows.Pagination,
+	}, nil
 }
 
 func (s *Service) GetVariantBySlug(ctx context.Context, slug string) (*models.ProductVariant, error) {

@@ -39,7 +39,7 @@ type IProductService interface { //nolint:interfacebloat
 	SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error
 
 	// Indexing
-	CreateProductIndex(ctx context.Context, reindex bool) error
+	CreateProductVariantIndex(ctx context.Context, reindex bool) error
 
 	// Related products
 	IRelatedProduct
@@ -134,9 +134,9 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 			}
 		}
 
-		err = s.IndexProduct(ctx, prd)
+		err = s.IndexVariant(ctx, variant, prd)
 		if err != nil {
-			s.logger.Error("failed to index product", "error", err)
+			s.logger.Error("failed to index variant", "error", err)
 			return err
 		}
 		return nil
@@ -277,9 +277,9 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 			}
 		}
 
-		err = s.IndexProduct(ctx, prd)
+		err = s.IndexVariant(ctx, variant, prd)
 		if err != nil {
-			s.logger.Error("failed to index product", err)
+			s.logger.Error("failed to index variant", "error", err)
 			return err
 		}
 		return nil

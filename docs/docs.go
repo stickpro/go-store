@@ -2174,58 +2174,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/product/:id/sync-related-products": {
-            "post": {
-                "description": "Sync Related Products",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Product"
-                ],
-                "summary": "Sync Related Products",
-                "parameters": [
-                    {
-                        "description": "Sync related products",
-                        "name": "update",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/SyncRelatedProductRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/JSONResponse-string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/product/:id/variants": {
             "get": {
                 "security": [
@@ -2573,56 +2521,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/product/id/:id/related-products": {
-            "get": {
-                "description": "Get related products by variant ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Product"
-                ],
-                "summary": "Get related products",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Variant ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_ShortProduct"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/product/id/{id}/": {
             "get": {
                 "description": "Get product by id",
@@ -2750,6 +2648,154 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/product/variant/:variant_id/sync-related-products": {
+            "post": {
+                "description": "Sync Related Products",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Sync Related Products",
+                "parameters": [
+                    {
+                        "description": "Sync related products",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SyncRelatedProductRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/product/variant/id/:id/related-products": {
+            "get": {
+                "description": "Get related products by variant ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Get related products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Variant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_ShortProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/product/variant/related-products/batch": {
+            "post": {
+                "description": "Get related products for multiple variants in one request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Get related products batch",
+                "parameters": [
+                    {
+                        "description": "List of variant IDs",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GetRelatedProductsBatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-map_string_array_ShortProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -3716,14 +3762,14 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "product_ids": {
+                "slug": {
+                    "type": "string"
+                },
+                "variant_ids": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
-                },
-                "slug": {
-                    "type": "string"
                 }
             }
         },
@@ -3917,6 +3963,17 @@ const docTemplate = `{
             "properties": {
                 "city": {
                     "type": "string"
+                }
+            }
+        },
+        "GetRelatedProductsBatchRequest": {
+            "type": "object",
+            "properties": {
+                "variant_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -4420,6 +4477,20 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Product"
                     }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-map_string_array_ShortProduct": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/map_string_array_ShortProduct"
                 },
                 "message": {
                     "type": "string"
@@ -4993,14 +5064,14 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "product_ids": {
+                "slug": {
+                    "type": "string"
+                },
+                "variant_ids": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
-                },
-                "slug": {
-                    "type": "string"
                 }
             }
         },
@@ -5632,6 +5703,15 @@ const docTemplate = `{
                 },
                 "width": {
                     "type": "number"
+                }
+            }
+        },
+        "map_string_array_ShortProduct": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/ShortProduct"
                 }
             }
         },

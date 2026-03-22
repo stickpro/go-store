@@ -20,9 +20,9 @@ func initIndexer(ctx context.Context, service *service.Services, l logger.Logger
 	}
 
 	if service.ProductService != nil {
-		err := service.ProductService.CreateProductIndex(ctx, forceReindex)
+		err := service.ProductService.CreateProductVariantIndex(ctx, forceReindex)
 		if err != nil {
-			l.Error("failed to create product index", "error", err)
+			l.Error("failed to create product variant index", "error", err)
 		}
 	}
 
