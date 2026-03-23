@@ -16,6 +16,7 @@ type IStorage interface {
 	repository.IRepository
 	PSQLConn() *pgxpool.Pool
 	Close() error
+	KeyValue() key_value.IKeyValue
 }
 
 type storage struct {
@@ -59,7 +60,8 @@ func InitStore(ctx context.Context, conf *config.Config) (IStorage, error) {
 	}, nil
 }
 
-func (s storage) PSQLConn() *pgxpool.Pool { return s.psql }
+func (s storage) PSQLConn() *pgxpool.Pool       { return s.psql }
+func (s storage) KeyValue() key_value.IKeyValue { return s.keyValue }
 
 func (s storage) Close() error {
 	defer s.psql.Close()
