@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -121,4 +122,61 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 		&i.UpdatedAt,
 	)
 	return &i, err
+}
+
+const getCartItemsByVariantIDs = `-- name: GetCartItemsByVariantIDs :many
+SELECT p.id       AS product_id,
+       p.price,
+       p.quantity  AS max_quantity,
+       p.is_enable AS product_enabled,
+       pv.id       AS variant_id,
+       pv.name,
+       pv.slug,
+       pv.image,
+       pv.is_enable AS variant_enabled
+FROM products p
+         JOIN product_variants pv ON pv.product_id = p.id
+WHERE pv.id = ANY ($1::uuid[])
+`
+
+type GetCartItemsByVariantIDsRow struct {
+	ProductID      uuid.UUID       `db:"product_id" json:"product_id"`
+	Price          decimal.Decimal `db:"price" json:"price"`
+	MaxQuantity    int64           `db:"max_quantity" json:"max_quantity"`
+	ProductEnabled bool            `db:"product_enabled" json:"product_enabled"`
+	VariantID      uuid.UUID       `db:"variant_id" json:"variant_id"`
+	Name           string          `db:"name" json:"name"`
+	Slug           string          `db:"slug" json:"slug"`
+	Image          pgtype.Text     `db:"image" json:"image"`
+	VariantEnabled bool            `db:"variant_enabled" json:"variant_enabled"`
+}
+
+func (q *Queries) GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetCartItemsByVariantIDsRow, error) {
+	rows, err := q.db.Query(ctx, getCartItemsByVariantIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetCartItemsByVariantIDsRow{}
+	for rows.Next() {
+		var i GetCartItemsByVariantIDsRow
+		if err := rows.Scan(
+			&i.ProductID,
+			&i.Price,
+			&i.MaxQuantity,
+			&i.ProductEnabled,
+			&i.VariantID,
+			&i.Name,
+			&i.Slug,
+			&i.Image,
+			&i.VariantEnabled,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

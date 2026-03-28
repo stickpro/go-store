@@ -6,7 +6,8 @@ import (
 )
 
 type CartDTO struct {
-	Items []CartItemsDTO
+	Items      []CartItemsDTO
+	TotalPrice decimal.Decimal
 }
 
 type CartItemsDTO struct {

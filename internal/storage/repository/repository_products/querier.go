@@ -20,6 +20,7 @@ type Querier interface {
 	GetByExternalID(ctx context.Context, externalID pgtype.Text) (*models.Product, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Product, error)
+	GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetCartItemsByVariantIDsRow, error)
 	GetMediaByProductID(ctx context.Context, productID uuid.UUID) ([]*models.Medium, error)
 	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error)
 	GetRelatedProductsByVariantID(ctx context.Context, variantID uuid.UUID) ([]*GetRelatedProductsByVariantIDRow, error)
