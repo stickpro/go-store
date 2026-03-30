@@ -67,7 +67,8 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Collectio
 
 const getCollectionWithProductsByID = `-- name: GetCollectionWithProductsByID :many
 SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
-       pv.id                     AS product_id,
+       pv.id                     AS variant_id,
+       pv.product_id             AS product_id,
        COALESCE(pv.name, '')     AS product_name,
        COALESCE(pv.slug, '')     AS product_slug,
        p.model                   AS product_model,
@@ -88,6 +89,7 @@ type GetCollectionWithProductsByIDRow struct {
 	Slug            string              `db:"slug" json:"slug"`
 	CreatedAt       pgtype.Timestamptz  `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
+	VariantID       uuid.NullUUID       `db:"variant_id" json:"variant_id"`
 	ProductID       uuid.NullUUID       `db:"product_id" json:"product_id"`
 	ProductName     string              `db:"product_name" json:"product_name"`
 	ProductSlug     string              `db:"product_slug" json:"product_slug"`
@@ -113,6 +115,7 @@ func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUI
 			&i.Slug,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.VariantID,
 			&i.ProductID,
 			&i.ProductName,
 			&i.ProductSlug,
@@ -133,7 +136,8 @@ func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUI
 
 const getCollectionWithProductsBySlug = `-- name: GetCollectionWithProductsBySlug :many
 SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
-       pv.id                     AS product_id,
+       pv.id                     AS variant_id,
+       pv.product_id             AS product_id,
        COALESCE(pv.name, '')     AS product_name,
        COALESCE(pv.slug, '')     AS product_slug,
        p.model                   AS product_model,
@@ -154,6 +158,7 @@ type GetCollectionWithProductsBySlugRow struct {
 	Slug            string              `db:"slug" json:"slug"`
 	CreatedAt       pgtype.Timestamptz  `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
+	VariantID       uuid.NullUUID       `db:"variant_id" json:"variant_id"`
 	ProductID       uuid.NullUUID       `db:"product_id" json:"product_id"`
 	ProductName     string              `db:"product_name" json:"product_name"`
 	ProductSlug     string              `db:"product_slug" json:"product_slug"`
@@ -179,6 +184,7 @@ func (q *Queries) GetCollectionWithProductsBySlug(ctx context.Context, slug stri
 			&i.Slug,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.VariantID,
 			&i.ProductID,
 			&i.ProductName,
 			&i.ProductSlug,

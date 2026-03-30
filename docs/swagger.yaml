@@ -16,6 +16,20 @@ definitions:
           $ref: '#/definitions/APIError'
         type: array
     type: object
+  AddCartItemRequest:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+      variant_id:
+        type: string
+    required:
+    - product_id
+    - quantity
+    - variant_id
+    type: object
   AttributeGroupResponse:
     properties:
       created_at:
@@ -151,6 +165,36 @@ definitions:
         type: string
       slug:
         type: string
+    type: object
+  CartItemResponse:
+    properties:
+      available:
+        type: boolean
+      image_url:
+        type: string
+      max_quantity:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+      product_id:
+        type: string
+      quantity:
+        type: integer
+      slug:
+        type: string
+      variant_id:
+        type: string
+    type: object
+  CartResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/CartItemResponse'
+        type: array
+      total_price:
+        type: number
     type: object
   CategoryResponse:
     properties:
@@ -589,6 +633,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-CartResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/CartResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-CategoryResponse:
     properties:
       code:
@@ -757,6 +810,14 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/UserInfoResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-any:
+    properties:
+      code:
+        type: integer
+      data: {}
       message:
         type: string
     type: object
@@ -1164,6 +1225,8 @@ definitions:
         type: string
       price:
         type: number
+      product_id:
+        type: string
       slug:
         type: string
     type: object
@@ -1216,6 +1279,11 @@ definitions:
         type: number
     required:
     - value
+    type: object
+  UpdateCartItemRequest:
+    properties:
+      quantity:
+        type: integer
     type: object
   UpdateCategoryRequest:
     properties:
@@ -1762,6 +1830,135 @@ info:
   title: GO-store
   version: "1.0"
 paths:
+  /api/v1/cart:
+    delete:
+      description: Removes all items from the cart
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Clear cart
+      tags:
+      - Cart
+    get:
+      description: Returns the current cart for authenticated user or guest session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CartResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get cart
+      tags:
+      - Cart
+  /api/v1/cart/items:
+    post:
+      consumes:
+      - application/json
+      description: Adds a product variant to the cart. If the variant is already present,
+        its quantity is increased.
+      parameters:
+      - description: Item to add
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AddCartItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CartResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Add item to cart
+      tags:
+      - Cart
+  /api/v1/cart/items/{variantId}:
+    delete:
+      description: Removes the specified variant from the cart
+      parameters:
+      - description: Variant UUID
+        in: path
+        name: variantId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CartResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Remove item from cart
+      tags:
+      - Cart
+    patch:
+      consumes:
+      - application/json
+      description: Sets a new quantity for the specified variant in the cart
+      parameters:
+      - description: Variant UUID
+        in: path
+        name: variantId
+        required: true
+        type: string
+      - description: New quantity
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateCartItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CartResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Update cart item quantity
+      tags:
+      - Cart
   /api/v1/product_review/:
     post:
       consumes:

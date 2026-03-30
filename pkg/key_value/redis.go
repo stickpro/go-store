@@ -22,7 +22,7 @@ func NewRedisStorage(client *redis.Client) IKeyValue {
 
 func (o *redisStorage) Get(ctx context.Context, key string) (KeyValueResult, error) {
 	if v := o.client.Get(ctx, key); v.Err() != nil && errors.Is(v.Err(), redis.Nil) {
-		return nil, fmt.Errorf("key not found: %w", v.Err())
+		return nil, ErrEntryNotFound
 	}
 	kType, err := o.client.Type(ctx, key).Result()
 	if err != nil {

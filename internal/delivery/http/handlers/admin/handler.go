@@ -22,10 +22,8 @@ func NewAdminHandler(services *service.Services) *Handler {
 }
 
 func (h *Handler) InitAdminHandler(api *fiber.App) {
-	v1 := api.Group("api/v1")
-
-	secured := v1.Group(
-		"/",
+	secured := api.Group(
+		"api/v1",
 		middleware.AuthMiddleware(h.services.AuthService),
 		middleware.AdminMiddleware(),
 	)

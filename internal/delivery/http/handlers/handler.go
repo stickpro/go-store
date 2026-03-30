@@ -42,10 +42,7 @@ func (h *Handler) InitHandler(api *fiber.App) {
 	h.initProductReviewRoutes(v1)
 	h.initCartRoutes(v1)
 
-	secured := v1.Group(
-		"/",
-		middleware.AuthMiddleware(h.services.AuthService),
-	)
+	secured := api.Group("api/v1", middleware.AuthMiddleware(h.services.AuthService))
 	h.initUserRoutes(secured)
 }
 

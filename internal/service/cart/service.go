@@ -13,7 +13,7 @@ import (
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
-	repository_products "github.com/stickpro/go-store/internal/storage/repository/repository_products"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/pkg/key_value"
 	"github.com/stickpro/go-store/pkg/logger"
 )

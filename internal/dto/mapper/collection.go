@@ -27,13 +27,14 @@ func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProducts
 			continue
 		}
 		d.Products = append(d.Products, &models.ShortProduct{
-			ID:       row.ProductID.UUID,
-			Name:     row.ProductName,
-			Slug:     row.ProductSlug,
-			Model:    row.ProductModel.String,
-			Price:    row.ProductPrice.Decimal,
-			IsEnable: row.ProductIsEnable.Bool,
-			Image:    row.ProductImage,
+			ID:        row.VariantID.UUID,
+			ProductID: row.ProductID.UUID,
+			Name:      row.ProductName,
+			Slug:      row.ProductSlug,
+			Model:     row.ProductModel.String,
+			Price:     row.ProductPrice.Decimal,
+			IsEnable:  row.ProductIsEnable.Bool,
+			Image:     row.ProductImage,
 		})
 	}
 
@@ -60,13 +61,14 @@ func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithPr
 			continue
 		}
 		d.Products = append(d.Products, &models.ShortProduct{
-			ID:       row.ProductID.UUID,
-			Name:     row.ProductName,
-			Slug:     row.ProductSlug,
-			Model:    row.ProductModel.String,
-			Price:    row.ProductPrice.Decimal,
-			IsEnable: row.ProductIsEnable.Bool,
-			Image:    row.ProductImage,
+			ID:        row.VariantID.UUID,
+			ProductID: row.ProductID.UUID,
+			Name:      row.ProductName,
+			Slug:      row.ProductSlug,
+			Model:     row.ProductModel.String,
+			Price:     row.ProductPrice.Decimal,
+			IsEnable:  row.ProductIsEnable.Bool,
+			Image:     row.ProductImage,
 		})
 	}
 

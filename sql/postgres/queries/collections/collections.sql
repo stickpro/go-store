@@ -19,7 +19,8 @@ WHERE v.id = any(sqlc.arg(variant_ids)::uuid[])
 
 -- name: GetCollectionWithProductsBySlug :many
 SELECT c.*,
-       pv.id                     AS product_id,
+       pv.id                     AS variant_id,
+       pv.product_id             AS product_id,
        COALESCE(pv.name, '')     AS product_name,
        COALESCE(pv.slug, '')     AS product_slug,
        p.model                   AS product_model,
@@ -34,7 +35,8 @@ WHERE c.slug = $1;
 
 -- name: GetCollectionWithProductsByID :many
 SELECT c.*,
-       pv.id                     AS product_id,
+       pv.id                     AS variant_id,
+       pv.product_id             AS product_id,
        COALESCE(pv.name, '')     AS product_name,
        COALESCE(pv.slug, '')     AS product_slug,
        p.model                   AS product_model,

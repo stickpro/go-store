@@ -3,6 +3,7 @@ package dto
 import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/stickpro/go-store/internal/delivery/http/request/cart_request"
 )
 
 type CartDTO struct {
@@ -31,4 +32,12 @@ type AddCartItemDTO struct {
 type CartOwner struct {
 	UserID    *uuid.UUID
 	SessionID *uuid.UUID
+}
+
+func RequestToAddCartItemDTO(req *cart_request.AddCartItemRequest) AddCartItemDTO {
+	return AddCartItemDTO{
+		ProductID: req.ProductID,
+		VariantID: req.VariantID,
+		Quantity:  req.Quantity,
+	}
 }
