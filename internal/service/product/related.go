@@ -30,7 +30,7 @@ func (s *Service) GetRelatedProducts(ctx context.Context, variantID uuid.UUID) (
 			Name:     p.Name,
 			Slug:     p.Slug,
 			Model:    p.Model,
-			Price:    p.Price,
+			Price:    p.PriceRetail,
 			IsEnable: p.IsEnable,
 			Image:    p.Image,
 		})
@@ -53,7 +53,7 @@ func (s *Service) GetRelatedProductsBatch(ctx context.Context, variantIDs []uuid
 			Name:     row.Name,
 			Slug:     row.Slug,
 			Model:    row.Model,
-			Price:    row.Price,
+			Price:    row.PriceRetail,
 			IsEnable: row.IsEnable,
 			Image:    row.Image,
 		})
@@ -75,7 +75,7 @@ func (s *Service) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]
 			Name:     p.Name,
 			Slug:     p.Slug,
 			Model:    p.Model,
-			Price:    p.Price,
+			Price:    p.PriceRetail,
 			IsEnable: p.IsEnable,
 			Image:    p.Image,
 		})

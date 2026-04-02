@@ -67,7 +67,6 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, ss 
 func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, *models.ProductVariant, error) {
 	productParams := repository_products.CreateParams{
 		ManufacturerID: d.ManufacturerID,
-		Model:          d.Model,
 		Sku:            pgtypeutils.EncodeText(d.Sku),
 		Upc:            pgtypeutils.EncodeText(d.Upc),
 		Ean:            pgtypeutils.EncodeText(d.Ean),
@@ -77,7 +76,9 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 		Location:       pgtypeutils.EncodeText(d.Location),
 		Quantity:       d.Quantity,
 		StockStatus:    d.StockStatus,
-		Price:          d.Price,
+		PriceRetail:    d.PriceRetail,
+		PriceBusiness:  d.PriceBusiness,
+		PriceWholesale: d.PriceWholesale,
 		Weight:         d.Weight,
 		Length:         d.Length,
 		Width:          d.Width,
@@ -203,7 +204,6 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 	productParams := repository_products.UpdateParams{
 		ID:             d.ID,
 		ManufacturerID: d.ManufacturerID,
-		Model:          d.Model,
 		Sku:            pgtypeutils.EncodeText(d.Sku),
 		Upc:            pgtypeutils.EncodeText(d.Upc),
 		Ean:            pgtypeutils.EncodeText(d.Ean),
@@ -213,7 +213,9 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 		Location:       pgtypeutils.EncodeText(d.Location),
 		Quantity:       d.Quantity,
 		StockStatus:    d.StockStatus,
-		Price:          d.Price,
+		PriceRetail:    d.PriceRetail,
+		PriceBusiness:  d.PriceBusiness,
+		PriceWholesale: d.PriceWholeSale,
 		Weight:         d.Weight,
 		Length:         d.Length,
 		Width:          d.Width,
@@ -242,6 +244,7 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 			CategoryID:      d.Variant.CategoryID,
 			Name:            d.Variant.Name,
 			Slug:            d.Variant.Slug,
+			Model:           d.Variant.Model,
 			Description:     pgtypeutils.EncodeText(d.Variant.Description),
 			MetaTitle:       pgtypeutils.EncodeText(d.Variant.MetaTitle),
 			MetaH1:          pgtypeutils.EncodeText(d.Variant.MetaH1),
@@ -374,11 +377,12 @@ func (s *Service) UpsertProductByExternalID(ctx context.Context, externalID stri
 		return s.storage.Products().Create(ctx, repository_products.CreateParams{
 			ExternalID:     pgtypeutils.EncodeText(&externalID),
 			ManufacturerID: d.ManufacturerID,
-			Model:          d.Model,
 			Sku:            pgtypeutils.EncodeText(d.Sku),
 			Quantity:       d.Quantity,
 			StockStatus:    d.StockStatus,
-			Price:          d.Price,
+			PriceRetail:    d.PriceRetail,
+			PriceBusiness:  d.PriceBusiness,
+			PriceWholesale: d.PriceWholesale,
 			IsEnable:       d.IsEnable,
 		})
 	}
@@ -388,11 +392,12 @@ func (s *Service) UpsertProductByExternalID(ctx context.Context, externalID stri
 		ID:             existing.ID,
 		ExternalID:     pgtypeutils.EncodeText(&externalID),
 		ManufacturerID: d.ManufacturerID,
-		Model:          d.Model,
 		Sku:            pgtypeutils.EncodeText(d.Sku),
 		Quantity:       d.Quantity,
 		StockStatus:    d.StockStatus,
-		Price:          d.Price,
+		PriceRetail:    d.PriceRetail,
+		PriceBusiness:  d.PriceBusiness,
+		PriceWholesale: d.PriceWholesale,
 		IsEnable:       d.IsEnable,
 	})
 	if err != nil {

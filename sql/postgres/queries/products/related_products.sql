@@ -17,8 +17,10 @@ SELECT rp.variant_id,
        pv.slug,
        pv.image,
        pv.is_enable,
-       p.model,
-       p.price,
+       pv.model,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
        p.stock_status
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id
@@ -33,8 +35,10 @@ SELECT pv.id,
        pv.slug,
        pv.image,
        pv.is_enable,
-       p.model,
-       p.price,
+       pv.model,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
        p.stock_status
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id
@@ -49,8 +53,10 @@ SELECT pv.id,
        pv.slug,
        pv.image,
        pv.is_enable,
-       p.model,
-       p.price,
+       pv.model,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
        p.stock_status
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id

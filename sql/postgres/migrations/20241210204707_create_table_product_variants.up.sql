@@ -7,6 +7,7 @@ create table product_variants
     name             varchar(255)   not null,
     slug             varchar(255)   not null unique,
     description      text,
+    model           varchar(255)   not null unique,
     meta_title       varchar(255),
     meta_h1          varchar(255),
     meta_description varchar(400),

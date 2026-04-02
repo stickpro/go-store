@@ -15,7 +15,7 @@ import (
 )
 
 const getByExternalID = `-- name: GetByExternalID :one
-SELECT id, external_id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at FROM products WHERE external_id = $1 LIMIT 1
+SELECT id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at FROM products WHERE external_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByExternalID(ctx context.Context, externalID pgtype.Text) (*models.Product, error) {
@@ -25,7 +25,6 @@ func (q *Queries) GetByExternalID(ctx context.Context, externalID pgtype.Text) (
 		&i.ID,
 		&i.ExternalID,
 		&i.ManufacturerID,
-		&i.Model,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -35,7 +34,9 @@ func (q *Queries) GetByExternalID(ctx context.Context, externalID pgtype.Text) (
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Price,
+		&i.PriceRetail,
+		&i.PriceBusiness,
+		&i.PriceWholesale,
 		&i.Weight,
 		&i.Length,
 		&i.Width,
@@ -51,7 +52,7 @@ func (q *Queries) GetByExternalID(ctx context.Context, externalID pgtype.Text) (
 }
 
 const getByID = `-- name: GetByID :one
-SELECT id, external_id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at FROM products WHERE id = $1 LIMIT 1
+SELECT id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at FROM products WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
@@ -61,7 +62,6 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 		&i.ID,
 		&i.ExternalID,
 		&i.ManufacturerID,
-		&i.Model,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -71,7 +71,9 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Price,
+		&i.PriceRetail,
+		&i.PriceBusiness,
+		&i.PriceWholesale,
 		&i.Weight,
 		&i.Length,
 		&i.Width,
@@ -87,7 +89,7 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 }
 
 const getBySlug = `-- name: GetBySlug :one
-SELECT p.id, p.external_id, p.manufacturer_id, p.model, p.sku, p.upc, p.ean, p.jan, p.isbn, p.mpn, p.location, p.quantity, p.stock_status, p.price, p.weight, p.length, p.width, p.height, p.subtract, p.minimum, p.sort_order, p.is_enable, p.created_at, p.updated_at FROM products p
+SELECT p.id, p.external_id, p.manufacturer_id, p.sku, p.upc, p.ean, p.jan, p.isbn, p.mpn, p.location, p.quantity, p.stock_status, p.price_retail, p.price_business, p.price_wholesale, p.weight, p.length, p.width, p.height, p.subtract, p.minimum, p.sort_order, p.is_enable, p.created_at, p.updated_at FROM products p
 INNER JOIN product_variants pv ON pv.product_id = p.id
 WHERE pv.slug = $1 LIMIT 1
 `
@@ -99,7 +101,6 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 		&i.ID,
 		&i.ExternalID,
 		&i.ManufacturerID,
-		&i.Model,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -109,7 +110,9 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Price,
+		&i.PriceRetail,
+		&i.PriceBusiness,
+		&i.PriceWholesale,
 		&i.Weight,
 		&i.Length,
 		&i.Width,
@@ -126,7 +129,9 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 
 const getCartItemsByVariantIDs = `-- name: GetCartItemsByVariantIDs :many
 SELECT p.id       AS product_id,
-       p.price,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
        p.quantity  AS max_quantity,
        p.is_enable AS product_enabled,
        pv.id       AS variant_id,
@@ -141,7 +146,9 @@ WHERE pv.id = ANY ($1::uuid[])
 
 type GetCartItemsByVariantIDsRow struct {
 	ProductID      uuid.UUID       `db:"product_id" json:"product_id"`
-	Price          decimal.Decimal `db:"price" json:"price"`
+	PriceRetail    decimal.Decimal `db:"price_retail" json:"price_retail"`
+	PriceBusiness  decimal.Decimal `db:"price_business" json:"price_business"`
+	PriceWholesale decimal.Decimal `db:"price_wholesale" json:"price_wholesale"`
 	MaxQuantity    int64           `db:"max_quantity" json:"max_quantity"`
 	ProductEnabled bool            `db:"product_enabled" json:"product_enabled"`
 	VariantID      uuid.UUID       `db:"variant_id" json:"variant_id"`
@@ -162,7 +169,9 @@ func (q *Queries) GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.
 		var i GetCartItemsByVariantIDsRow
 		if err := rows.Scan(
 			&i.ProductID,
-			&i.Price,
+			&i.PriceRetail,
+			&i.PriceBusiness,
+			&i.PriceWholesale,
 			&i.MaxQuantity,
 			&i.ProductEnabled,
 			&i.VariantID,

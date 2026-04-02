@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/collection_response"
 	"github.com/stickpro/go-store/internal/tools/apierror"
@@ -31,7 +32,7 @@ func (h *Handler) getCollectionByID(c fiber.Ctx) error {
 		return h.handleError(err, "collection")
 	}
 
-	return c.JSON(response.OkByData(collection_response.NewFromDTO(collectionDTO)))
+	return c.JSON(response.OkByData(collection_response.NewFromDTO(collectionDTO, constant.PriceGroupRetail)))
 }
 
 // getCollectionBySlug is a function get collection by slug
@@ -53,7 +54,7 @@ func (h *Handler) getCollectionBySlug(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "collection")
 	}
-	return c.JSON(response.OkByData(collection_response.NewFromDTO(collectionDTO)))
+	return c.JSON(response.OkByData(collection_response.NewFromDTO(collectionDTO, constant.PriceGroupRetail)))
 }
 
 func (h *Handler) initCollectionRoutes(v1 fiber.Router) {

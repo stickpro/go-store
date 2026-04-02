@@ -11,7 +11,9 @@ WHERE pv.slug = $1 LIMIT 1;
 
 -- name: GetCartItemsByVariantIDs :many
 SELECT p.id       AS product_id,
-       p.price,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
        p.quantity  AS max_quantity,
        p.is_enable AS product_enabled,
        pv.id       AS variant_id,

@@ -36,8 +36,10 @@ SELECT pv.id,
        pv.slug,
        pv.image,
        pv.is_enable,
-       p.model,
-       p.price,
+       pv.model,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
        p.stock_status
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id
@@ -48,14 +50,16 @@ ORDER BY pv.name
 `
 
 type GetRelatedProductsBySlugRow struct {
-	ID          uuid.UUID            `db:"id" json:"id"`
-	Name        string               `db:"name" json:"name"`
-	Slug        string               `db:"slug" json:"slug"`
-	Image       pgtype.Text          `db:"image" json:"image"`
-	IsEnable    bool                 `db:"is_enable" json:"is_enable"`
-	Model       string               `db:"model" json:"model"`
-	Price       decimal.Decimal      `db:"price" json:"price"`
-	StockStatus constant.StockStatus `db:"stock_status" json:"stock_status"`
+	ID             uuid.UUID            `db:"id" json:"id"`
+	Name           string               `db:"name" json:"name"`
+	Slug           string               `db:"slug" json:"slug"`
+	Image          pgtype.Text          `db:"image" json:"image"`
+	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
+	Model          string               `db:"model" json:"model"`
+	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
+	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
+	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
+	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
 }
 
 func (q *Queries) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error) {
@@ -74,7 +78,9 @@ func (q *Queries) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]
 			&i.Image,
 			&i.IsEnable,
 			&i.Model,
-			&i.Price,
+			&i.PriceRetail,
+			&i.PriceBusiness,
+			&i.PriceWholesale,
 			&i.StockStatus,
 		); err != nil {
 			return nil, err
@@ -93,8 +99,10 @@ SELECT pv.id,
        pv.slug,
        pv.image,
        pv.is_enable,
-       p.model,
-       p.price,
+       pv.model,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
        p.stock_status
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id
@@ -105,14 +113,16 @@ ORDER BY pv.name
 `
 
 type GetRelatedProductsByVariantIDRow struct {
-	ID          uuid.UUID            `db:"id" json:"id"`
-	Name        string               `db:"name" json:"name"`
-	Slug        string               `db:"slug" json:"slug"`
-	Image       pgtype.Text          `db:"image" json:"image"`
-	IsEnable    bool                 `db:"is_enable" json:"is_enable"`
-	Model       string               `db:"model" json:"model"`
-	Price       decimal.Decimal      `db:"price" json:"price"`
-	StockStatus constant.StockStatus `db:"stock_status" json:"stock_status"`
+	ID             uuid.UUID            `db:"id" json:"id"`
+	Name           string               `db:"name" json:"name"`
+	Slug           string               `db:"slug" json:"slug"`
+	Image          pgtype.Text          `db:"image" json:"image"`
+	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
+	Model          string               `db:"model" json:"model"`
+	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
+	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
+	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
+	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
 }
 
 func (q *Queries) GetRelatedProductsByVariantID(ctx context.Context, variantID uuid.UUID) ([]*GetRelatedProductsByVariantIDRow, error) {
@@ -131,7 +141,9 @@ func (q *Queries) GetRelatedProductsByVariantID(ctx context.Context, variantID u
 			&i.Image,
 			&i.IsEnable,
 			&i.Model,
-			&i.Price,
+			&i.PriceRetail,
+			&i.PriceBusiness,
+			&i.PriceWholesale,
 			&i.StockStatus,
 		); err != nil {
 			return nil, err
@@ -151,8 +163,10 @@ SELECT rp.variant_id,
        pv.slug,
        pv.image,
        pv.is_enable,
-       p.model,
-       p.price,
+       pv.model,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
        p.stock_status
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id
@@ -163,15 +177,17 @@ ORDER BY rp.variant_id, pv.name
 `
 
 type GetRelatedProductsByVariantIDsRow struct {
-	VariantID   uuid.UUID            `db:"variant_id" json:"variant_id"`
-	ID          uuid.UUID            `db:"id" json:"id"`
-	Name        string               `db:"name" json:"name"`
-	Slug        string               `db:"slug" json:"slug"`
-	Image       pgtype.Text          `db:"image" json:"image"`
-	IsEnable    bool                 `db:"is_enable" json:"is_enable"`
-	Model       string               `db:"model" json:"model"`
-	Price       decimal.Decimal      `db:"price" json:"price"`
-	StockStatus constant.StockStatus `db:"stock_status" json:"stock_status"`
+	VariantID      uuid.UUID            `db:"variant_id" json:"variant_id"`
+	ID             uuid.UUID            `db:"id" json:"id"`
+	Name           string               `db:"name" json:"name"`
+	Slug           string               `db:"slug" json:"slug"`
+	Image          pgtype.Text          `db:"image" json:"image"`
+	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
+	Model          string               `db:"model" json:"model"`
+	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
+	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
+	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
+	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
 }
 
 func (q *Queries) GetRelatedProductsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetRelatedProductsByVariantIDsRow, error) {
@@ -191,7 +207,9 @@ func (q *Queries) GetRelatedProductsByVariantIDs(ctx context.Context, dollar_1 [
 			&i.Image,
 			&i.IsEnable,
 			&i.Model,
-			&i.Price,
+			&i.PriceRetail,
+			&i.PriceBusiness,
+			&i.PriceWholesale,
 			&i.StockStatus,
 		); err != nil {
 			return nil, err

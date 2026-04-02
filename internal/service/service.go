@@ -15,6 +15,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/search"
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/service/user"
+	"github.com/stickpro/go-store/internal/service/viewed"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/logger"
 )
@@ -32,6 +33,7 @@ type Services struct {
 	AttributeService     attribute.IAttributeService
 	GeoService           geo.IGeoService
 	CartService          cart.ICartService
+	ViewedService        viewed.IViewedService
 }
 
 func InitService(
@@ -57,6 +59,7 @@ func InitService(
 	geoService := geo.New(conf, logger, storage, searchService)
 
 	cartService := cart.New(conf, logger, storage, storage.KeyValue())
+	viewedService := viewed.New(logger, storage, storage.KeyValue())
 	return &Services{
 		UserService:          userService,
 		AuthService:          authService,
@@ -70,6 +73,7 @@ func InitService(
 		AttributeService:     attributeService,
 		GeoService:           geoService,
 		CartService:          cartService,
+		ViewedService:        viewedService,
 	}, nil
 }
 

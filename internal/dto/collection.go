@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/delivery/http/request/collection_request"
-	"github.com/stickpro/go-store/internal/models"
 )
 
 type CreateCollectionDTO struct {
@@ -29,13 +28,13 @@ type UpdateCollectionDTO struct {
 }
 
 type WithProductsCollectionDTO struct {
-	ID          uuid.UUID              `json:"id"`
-	Name        string                 `json:"name"`
-	Description *string                `json:"description,omitempty"`
-	Slug        string                 `json:"slug"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   *time.Time             `json:"updated_at"`
-	Products    []*models.ShortProduct `json:"products,omitempty"`
+	ID          uuid.UUID          `json:"id"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description,omitempty"`
+	Slug        string             `json:"slug"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   *time.Time         `json:"updated_at"`
+	Products    []*ShortProductDTO `json:"products,omitempty"`
 }
 
 func RequestToCreateCollectionDTO(req *collection_request.CreateCollectionRequest) CreateCollectionDTO {

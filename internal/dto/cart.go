@@ -29,11 +29,6 @@ type AddCartItemDTO struct {
 	Quantity  int64
 }
 
-type CartOwner struct {
-	UserID    *uuid.UUID
-	SessionID *uuid.UUID
-}
-
 func RequestToAddCartItemDTO(req *cart_request.AddCartItemRequest) AddCartItemDTO {
 	return AddCartItemDTO{
 		ProductID: req.ProductID,

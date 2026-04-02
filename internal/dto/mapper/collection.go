@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"github.com/stickpro/go-store/internal/dto"
-	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
@@ -26,15 +25,17 @@ func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProducts
 		if !row.ProductID.Valid {
 			continue
 		}
-		d.Products = append(d.Products, &models.ShortProduct{
-			ID:        row.VariantID.UUID,
-			ProductID: row.ProductID.UUID,
-			Name:      row.ProductName,
-			Slug:      row.ProductSlug,
-			Model:     row.ProductModel.String,
-			Price:     row.ProductPrice.Decimal,
-			IsEnable:  row.ProductIsEnable.Bool,
-			Image:     row.ProductImage,
+		d.Products = append(d.Products, &dto.ShortProductDTO{
+			ID:             row.VariantID.UUID,
+			ProductID:      row.ProductID.UUID,
+			Name:           row.ProductName,
+			Slug:           row.ProductSlug,
+			Model:          row.ProductModel.String,
+			PriceRetail:    row.ProductPriceRetail.Decimal,
+			PriceBusiness:  row.ProductPriceBusiness.Decimal,
+			PriceWholeSale: row.ProductPriceWholesale.Decimal,
+			IsEnable:       row.ProductIsEnable.Bool,
+			Image:          row.ProductImage,
 		})
 	}
 
@@ -60,15 +61,17 @@ func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithPr
 		if !row.ProductID.Valid {
 			continue
 		}
-		d.Products = append(d.Products, &models.ShortProduct{
-			ID:        row.VariantID.UUID,
-			ProductID: row.ProductID.UUID,
-			Name:      row.ProductName,
-			Slug:      row.ProductSlug,
-			Model:     row.ProductModel.String,
-			Price:     row.ProductPrice.Decimal,
-			IsEnable:  row.ProductIsEnable.Bool,
-			Image:     row.ProductImage,
+		d.Products = append(d.Products, &dto.ShortProductDTO{
+			ID:             row.VariantID.UUID,
+			ProductID:      row.ProductID.UUID,
+			Name:           row.ProductName,
+			Slug:           row.ProductSlug,
+			Model:          row.ProductModel.String,
+			PriceRetail:    row.ProductPriceRetail.Decimal,
+			PriceBusiness:  row.ProductPriceBusiness.Decimal,
+			PriceWholeSale: row.ProductPriceWholesale.Decimal,
+			IsEnable:       row.ProductIsEnable.Bool,
+			Image:          row.ProductImage,
 		})
 	}
 

@@ -161,9 +161,9 @@ func (h *Handler) initCartRoutes(v1 fiber.Router) {
 // cartOwner builds a CartOwner from the request context.
 // Prefers the authenticated user; falls back to session cookie,
 // then X-Session-ID header. Returns an error if neither is present.
-func (h *Handler) cartOwner(c fiber.Ctx) (dto.CartOwner, error) {
+func (h *Handler) cartOwner(c fiber.Ctx) (dto.Owner, error) {
 	if user, err := loadAuthUser(c); err == nil {
-		return dto.CartOwner{UserID: &user.ID}, nil
+		return dto.Owner{UserID: &user.ID}, nil
 	}
 
 	sessionStr := c.Cookies("session_id")
@@ -172,17 +172,17 @@ func (h *Handler) cartOwner(c fiber.Ctx) (dto.CartOwner, error) {
 	}
 
 	if sessionStr == "" {
-		return dto.CartOwner{}, apierror.New().
+		return dto.Owner{}, apierror.New().
 			AddError(errors.New("session_id cookie or X-Session-ID header is required")).
 			SetHttpCode(fiber.StatusBadRequest)
 	}
 
 	sessionID, err := uuid.Parse(sessionStr)
 	if err != nil {
-		return dto.CartOwner{}, apierror.New().
+		return dto.Owner{}, apierror.New().
 			AddError(errors.New("session_id must be a valid UUID")).
 			SetHttpCode(fiber.StatusBadRequest)
 	}
 
-	return dto.CartOwner{SessionID: &sessionID}, nil
+	return dto.Owner{SessionID: &sessionID}, nil
 }

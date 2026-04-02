@@ -24,11 +24,11 @@ const (
 )
 
 type ICartService interface {
-	GetCart(ctx context.Context, owner dto.CartOwner) (*dto.CartDTO, error)
-	AddItem(ctx context.Context, owner dto.CartOwner, d dto.AddCartItemDTO) (*dto.CartDTO, error)
-	UpdateQuantity(ctx context.Context, owner dto.CartOwner, variantID uuid.UUID, qty int64) (*dto.CartDTO, error)
-	RemoveItem(ctx context.Context, owner dto.CartOwner, variantID uuid.UUID) (*dto.CartDTO, error)
-	ClearCart(ctx context.Context, owner dto.CartOwner) error
+	GetCart(ctx context.Context, owner dto.Owner) (*dto.CartDTO, error)
+	AddItem(ctx context.Context, owner dto.Owner, d dto.AddCartItemDTO) (*dto.CartDTO, error)
+	UpdateQuantity(ctx context.Context, owner dto.Owner, variantID uuid.UUID, qty int64) (*dto.CartDTO, error)
+	RemoveItem(ctx context.Context, owner dto.Owner, variantID uuid.UUID) (*dto.CartDTO, error)
+	ClearCart(ctx context.Context, owner dto.Owner) error
 	MergeCarts(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID) (*dto.CartDTO, error)
 }
 
@@ -48,7 +48,7 @@ func New(cfg *config.Config, l logger.Logger, st storage.IStorage, kv key_value.
 	}
 }
 
-func (s Service) GetCart(ctx context.Context, owner dto.CartOwner) (*dto.CartDTO, error) {
+func (s Service) GetCart(ctx context.Context, owner dto.Owner) (*dto.CartDTO, error) {
 	cart, err := s.loadCart(ctx, owner)
 	if err != nil {
 		return nil, fmt.Errorf("load cart: %w", err)
@@ -60,7 +60,7 @@ func (s Service) GetCart(ctx context.Context, owner dto.CartOwner) (*dto.CartDTO
 	return s.enrichCart(ctx, cart)
 }
 
-func (s Service) AddItem(ctx context.Context, owner dto.CartOwner, d dto.AddCartItemDTO) (*dto.CartDTO, error) {
+func (s Service) AddItem(ctx context.Context, owner dto.Owner, d dto.AddCartItemDTO) (*dto.CartDTO, error) {
 	cart, err := s.loadCart(ctx, owner)
 	if err != nil {
 		return nil, fmt.Errorf("load cart: %w", err)
@@ -90,7 +90,7 @@ func (s Service) AddItem(ctx context.Context, owner dto.CartOwner, d dto.AddCart
 	return s.enrichCart(ctx, cart)
 }
 
-func (s Service) UpdateQuantity(ctx context.Context, owner dto.CartOwner, variantID uuid.UUID, qty int64) (*dto.CartDTO, error) {
+func (s Service) UpdateQuantity(ctx context.Context, owner dto.Owner, variantID uuid.UUID, qty int64) (*dto.CartDTO, error) {
 	cart, err := s.loadCart(ctx, owner)
 	if err != nil {
 		return nil, fmt.Errorf("load cart: %w", err)
@@ -109,7 +109,7 @@ func (s Service) UpdateQuantity(ctx context.Context, owner dto.CartOwner, varian
 	return nil, fmt.Errorf("variant %s not found in cart", variantID)
 }
 
-func (s Service) RemoveItem(ctx context.Context, owner dto.CartOwner, variantID uuid.UUID) (*dto.CartDTO, error) {
+func (s Service) RemoveItem(ctx context.Context, owner dto.Owner, variantID uuid.UUID) (*dto.CartDTO, error) {
 	cart, err := s.loadCart(ctx, owner)
 	if err != nil {
 		return nil, fmt.Errorf("load cart: %w", err)
@@ -128,7 +128,7 @@ func (s Service) RemoveItem(ctx context.Context, owner dto.CartOwner, variantID 
 	return nil, fmt.Errorf("variant %s not found in cart", variantID)
 }
 
-func (s Service) ClearCart(ctx context.Context, owner dto.CartOwner) error {
+func (s Service) ClearCart(ctx context.Context, owner dto.Owner) error {
 	return s.kv.Delete(ctx, cartKey(owner))
 }
 
@@ -136,8 +136,8 @@ func (s Service) ClearCart(ctx context.Context, owner dto.CartOwner) error {
 // Items present in both are combined (quantities are summed).
 // The session cart is deleted afterwards.
 func (s Service) MergeCarts(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID) (*dto.CartDTO, error) {
-	sessionOwner := dto.CartOwner{SessionID: &sessionID}
-	userOwner := dto.CartOwner{UserID: &userID}
+	sessionOwner := dto.Owner{SessionID: &sessionID}
+	userOwner := dto.Owner{UserID: &userID}
 
 	sessionCart, err := s.loadCart(ctx, sessionOwner)
 	if err != nil {
@@ -178,7 +178,7 @@ func (s Service) MergeCarts(ctx context.Context, sessionID uuid.UUID, userID uui
 
 // loadCart reads the raw cart (only IDs + quantities) from Redis.
 // Returns an empty cart if the key does not exist yet.
-func (s Service) loadCart(ctx context.Context, owner dto.CartOwner) (*models.Cart, error) {
+func (s Service) loadCart(ctx context.Context, owner dto.Owner) (*models.Cart, error) {
 	data, err := s.kv.Get(ctx, cartKey(owner))
 	if err != nil {
 		if errors.Is(err, key_value.ErrEntryNotFound) {
@@ -196,6 +196,7 @@ func (s Service) loadCart(ctx context.Context, owner dto.CartOwner) (*models.Car
 
 // enrichCart fetches actual prices, names and availability from the DB
 // and maps the raw cart into CartDTO.
+// TODO: get price by user group retail/buisness/wholesale, not just retail.
 func (s Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDTO, error) {
 	variantIDs := make([]uuid.UUID, len(cart.Items))
 	for i, item := range cart.Items {
@@ -239,13 +240,13 @@ func (s Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDT
 			Name:        row.Name,
 			Slug:        row.Slug,
 			ImageURL:    imageURL,
-			Price:       row.Price,
+			Price:       row.PriceRetail, // todo get price by user group retail/buisness/wholesale, not just retail.
 			Quantity:    int64(qty),
 			MaxQuantity: row.MaxQuantity,
 			Available:   available,
 		})
 
-		totalPrice = totalPrice.Add(row.Price.Mul(decimal.NewFromInt(int64(qty))))
+		totalPrice = totalPrice.Add(row.PriceRetail.Mul(decimal.NewFromInt(int64(qty))))
 	}
 
 	result.TotalPrice = totalPrice
@@ -253,7 +254,7 @@ func (s Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDT
 }
 
 // saveCart serialises the cart and writes it to Redis with the appropriate TTL.
-func (s Service) saveCart(ctx context.Context, owner dto.CartOwner, cart *models.Cart) error {
+func (s Service) saveCart(ctx context.Context, owner dto.Owner, cart *models.Cart) error {
 	data, err := json.Marshal(cart)
 	if err != nil {
 		return fmt.Errorf("marshal cart: %w", err)
@@ -261,14 +262,14 @@ func (s Service) saveCart(ctx context.Context, owner dto.CartOwner, cart *models
 	return s.kv.Set(ctx, cartKey(owner), string(data), cartTTL(owner))
 }
 
-func cartKey(owner dto.CartOwner) string {
+func cartKey(owner dto.Owner) string {
 	if owner.UserID != nil {
 		return "cart:user:" + owner.UserID.String()
 	}
 	return "cart:session:" + owner.SessionID.String()
 }
 
-func cartTTL(owner dto.CartOwner) time.Duration {
+func cartTTL(owner dto.Owner) time.Duration {
 	if owner.UserID != nil {
 		return cartUserTTL
 	}

@@ -149,10 +149,11 @@ func (s *Service) GetEnrichedVariantsWithPagination(ctx context.Context, d dto.G
 
 		items = append(items, &dto.EnrichedVariantDTO{
 			ProductVariant: &row.ProductVariant,
-			Price:          product.Price,
+			PriceRetail:    product.PriceRetail,
+			PriceBusiness:  product.PriceBusiness,
+			PriceWholesale: product.PriceWholesale,
 			ManufacturerID: product.ManufacturerID,
 			StockStatus:    product.StockStatus,
-			Model:          product.Model,
 		})
 	}
 

@@ -125,10 +125,11 @@ func (s *Service) buildVariantDocuments(ctx context.Context, variants []*dto.Enr
 func (s *Service) buildVariantDocument(ctx context.Context, variant *models.ProductVariant, product *models.Product) (map[string]any, error) {
 	enriched := &dto.EnrichedVariantDTO{
 		ProductVariant: variant,
-		Price:          product.Price,
+		PriceRetail:    product.PriceRetail,
+		PriceBusiness:  product.PriceBusiness,
+		PriceWholesale: product.PriceWholesale,
 		ManufacturerID: product.ManufacturerID,
 		StockStatus:    product.StockStatus,
-		Model:          product.Model,
 	}
 
 	attrs, err := s.storage.ProductAttributeValues().GetByProductID(ctx, product.ID)
@@ -153,7 +154,9 @@ func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*reposito
 		"sort_order":      v.SortOrder,
 		"viewed":          v.Viewed,
 		"created_at":      v.CreatedAt,
-		"price":           v.Price,
+		"price_retail":    v.PriceRetail,
+		"price_business":  v.PriceBusiness,
+		"price_wholesale": v.PriceWholesale,
 		"manufacturer_id": v.ManufacturerID,
 		"stock_status":    v.StockStatus,
 		"model":           v.Model,

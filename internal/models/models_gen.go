@@ -155,7 +155,6 @@ type Product struct {
 	ID             uuid.UUID            `db:"id" json:"id"`
 	ExternalID     pgtype.Text          `db:"external_id" json:"external_id"`
 	ManufacturerID uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
-	Model          string               `db:"model" json:"model"`
 	Sku            pgtype.Text          `db:"sku" json:"sku"`
 	Upc            pgtype.Text          `db:"upc" json:"upc"`
 	Ean            pgtype.Text          `db:"ean" json:"ean"`
@@ -165,7 +164,9 @@ type Product struct {
 	Location       pgtype.Text          `db:"location" json:"location"`
 	Quantity       int64                `db:"quantity" json:"quantity"`
 	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
-	Price          decimal.Decimal      `db:"price" json:"price"`
+	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
+	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
+	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
 	Weight         decimal.Decimal      `db:"weight" json:"weight"`
 	Length         decimal.Decimal      `db:"length" json:"length"`
 	Width          decimal.Decimal      `db:"width" json:"width"`
@@ -211,6 +212,7 @@ type ProductVariant struct {
 	Name            string           `db:"name" json:"name"`
 	Slug            string           `db:"slug" json:"slug"`
 	Description     pgtype.Text      `db:"description" json:"description"`
+	Model           string           `db:"model" json:"model"`
 	MetaTitle       pgtype.Text      `db:"meta_title" json:"meta_title"`
 	MetaH1          pgtype.Text      `db:"meta_h1" json:"meta_h1"`
 	MetaDescription pgtype.Text      `db:"meta_description" json:"meta_description"`

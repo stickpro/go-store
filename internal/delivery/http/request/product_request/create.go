@@ -8,6 +8,7 @@ import (
 type CreateProductVariantRequest struct {
 	Name            string     `json:"name" validate:"required"`
 	Slug            string     `json:"slug" validate:"required,slug"`
+	Model           string     `json:"model" validate:"required"`
 	CategoryID      *uuid.UUID `json:"category_id,omitempty" validate:"omitempty,uuid"`
 	Description     *string    `json:"description,omitempty"`
 	MetaTitle       *string    `json:"meta_title,omitempty"`
@@ -20,7 +21,6 @@ type CreateProductVariantRequest struct {
 } //	@name	CreateProductVariantRequest
 
 type CreateProductRequest struct {
-	Model          string                      `json:"model" validate:"required"`
 	Sku            *string                     `json:"sku,omitempty"`
 	Upc            *string                     `json:"upc,omitempty"`
 	Ean            *string                     `json:"ean,omitempty"`
@@ -31,7 +31,9 @@ type CreateProductRequest struct {
 	Quantity       int64                       `json:"quantity"`
 	StockStatus    string                      `json:"stock_status"`
 	ManufacturerID *uuid.UUID                  `json:"manufacturer_id,omitempty" validate:"omitempty,uuid"`
-	Price          decimal.Decimal             `json:"price" validate:"required,numeric"`
+	PriceRetail    decimal.Decimal             `json:"price_retail" validate:"numeric"`
+	PriceBusiness  decimal.Decimal             `json:"price_business" validate:"numeric"`
+	PriceWholeSale decimal.Decimal             `json:"price_wholesale" validate:"numeric"`
 	Weight         decimal.Decimal             `json:"weight" validate:"numeric"`
 	Length         decimal.Decimal             `json:"length" validate:"numeric"`
 	Width          decimal.Decimal             `json:"width" validate:"numeric"`

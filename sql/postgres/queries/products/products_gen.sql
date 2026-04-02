@@ -1,14 +1,14 @@
 -- name: Create :one
-INSERT INTO products (external_id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, now())
+INSERT INTO products (external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, now())
 	RETURNING *;
 
 -- name: Update :one
 UPDATE products
-	SET external_id=$1, manufacturer_id=$2, model=$3, sku=$4, upc=$5, ean=$6, 
-		jan=$7, isbn=$8, mpn=$9, location=$10, quantity=$11, stock_status=$12, 
-		price=$13, weight=$14, length=$15, width=$16, height=$17, subtract=$18, 
-		minimum=$19, sort_order=$20, is_enable=$21, updated_at=now()
-	WHERE id=$22
+	SET external_id=$1, manufacturer_id=$2, sku=$3, upc=$4, ean=$5, jan=$6, 
+		isbn=$7, mpn=$8, location=$9, quantity=$10, stock_status=$11, price_retail=$12, 
+		price_business=$13, price_wholesale=$14, weight=$15, length=$16, width=$17, height=$18, 
+		subtract=$19, minimum=$20, sort_order=$21, is_enable=$22, updated_at=now()
+	WHERE id=$23
 	RETURNING *;
 

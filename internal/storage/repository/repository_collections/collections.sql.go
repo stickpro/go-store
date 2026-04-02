@@ -18,13 +18,11 @@ const addProductsToCollection = `-- name: AddProductsToCollection :exec
 INSERT INTO collection_variants (collection_id, variant_id)
 SELECT $1::uuid, v.id
 FROM product_variants v
-WHERE v.id = any($2::uuid[])
-  AND NOT EXISTS (
-    SELECT 1
-    FROM collection_variants cv
-    WHERE cv.collection_id = $1
-      AND cv.variant_id = v.id
-    )
+WHERE v.id = any ($2::uuid[])
+  AND NOT EXISTS (SELECT 1
+                  FROM collection_variants cv
+                  WHERE cv.collection_id = $1
+                    AND cv.variant_id = v.id)
 `
 
 type AddProductsToCollectionParams struct {
@@ -38,7 +36,8 @@ func (q *Queries) AddProductsToCollection(ctx context.Context, arg AddProductsTo
 }
 
 const deleteProductsFromCollection = `-- name: DeleteProductsFromCollection :exec
-DELETE FROM collection_variants
+DELETE
+FROM collection_variants
 WHERE collection_id = $1
 `
 
@@ -48,7 +47,9 @@ func (q *Queries) DeleteProductsFromCollection(ctx context.Context, collectionID
 }
 
 const getBySlug = `-- name: GetBySlug :one
-SELECT id, name, description, slug, created_at, updated_at FROM collections WHERE slug=$1 LIMIT 1
+SELECT id, name, description, slug, created_at, updated_at
+FROM collections
+WHERE slug = $1 LIMIT 1
 `
 
 func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Collection, error) {
@@ -67,14 +68,16 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Collectio
 
 const getCollectionWithProductsByID = `-- name: GetCollectionWithProductsByID :many
 SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
-       pv.id                     AS variant_id,
-       pv.product_id             AS product_id,
-       COALESCE(pv.name, '')     AS product_name,
-       COALESCE(pv.slug, '')     AS product_slug,
-       p.model                   AS product_model,
-       p.price                   AS product_price,
-       p.is_enable               AS product_is_enable,
-       pv.image                  AS product_image
+       pv.id                 AS variant_id,
+       pv.product_id         AS product_id,
+       COALESCE(pv.name, '') AS product_name,
+       COALESCE(pv.slug, '') AS product_slug,
+       pv.model              AS product_model,
+       p.price_retail        AS product_price_retail,
+       p.price_business      AS product_price_business,
+       p.price_wholesale     AS product_price_wholesale,
+       p.is_enable           AS product_is_enable,
+       pv.image              AS product_image
 FROM collections c
          LEFT JOIN collection_variants cv ON cv.collection_id = c.id
          LEFT JOIN product_variants pv ON pv.id = cv.variant_id
@@ -83,20 +86,22 @@ WHERE c.id = $1
 `
 
 type GetCollectionWithProductsByIDRow struct {
-	ID              uuid.UUID           `db:"id" json:"id"`
-	Name            string              `db:"name" json:"name"`
-	Description     pgtype.Text         `db:"description" json:"description"`
-	Slug            string              `db:"slug" json:"slug"`
-	CreatedAt       pgtype.Timestamptz  `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
-	VariantID       uuid.NullUUID       `db:"variant_id" json:"variant_id"`
-	ProductID       uuid.NullUUID       `db:"product_id" json:"product_id"`
-	ProductName     string              `db:"product_name" json:"product_name"`
-	ProductSlug     string              `db:"product_slug" json:"product_slug"`
-	ProductModel    pgtype.Text         `db:"product_model" json:"product_model"`
-	ProductPrice    decimal.NullDecimal `db:"product_price" json:"product_price"`
-	ProductIsEnable pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
-	ProductImage    pgtype.Text         `db:"product_image" json:"product_image"`
+	ID                    uuid.UUID           `db:"id" json:"id"`
+	Name                  string              `db:"name" json:"name"`
+	Description           pgtype.Text         `db:"description" json:"description"`
+	Slug                  string              `db:"slug" json:"slug"`
+	CreatedAt             pgtype.Timestamptz  `db:"created_at" json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
+	VariantID             uuid.NullUUID       `db:"variant_id" json:"variant_id"`
+	ProductID             uuid.NullUUID       `db:"product_id" json:"product_id"`
+	ProductName           string              `db:"product_name" json:"product_name"`
+	ProductSlug           string              `db:"product_slug" json:"product_slug"`
+	ProductModel          pgtype.Text         `db:"product_model" json:"product_model"`
+	ProductPriceRetail    decimal.NullDecimal `db:"product_price_retail" json:"product_price_retail"`
+	ProductPriceBusiness  decimal.NullDecimal `db:"product_price_business" json:"product_price_business"`
+	ProductPriceWholesale decimal.NullDecimal `db:"product_price_wholesale" json:"product_price_wholesale"`
+	ProductIsEnable       pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
+	ProductImage          pgtype.Text         `db:"product_image" json:"product_image"`
 }
 
 func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUID) ([]*GetCollectionWithProductsByIDRow, error) {
@@ -120,7 +125,9 @@ func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUI
 			&i.ProductName,
 			&i.ProductSlug,
 			&i.ProductModel,
-			&i.ProductPrice,
+			&i.ProductPriceRetail,
+			&i.ProductPriceBusiness,
+			&i.ProductPriceWholesale,
 			&i.ProductIsEnable,
 			&i.ProductImage,
 		); err != nil {
@@ -136,14 +143,16 @@ func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUI
 
 const getCollectionWithProductsBySlug = `-- name: GetCollectionWithProductsBySlug :many
 SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
-       pv.id                     AS variant_id,
-       pv.product_id             AS product_id,
-       COALESCE(pv.name, '')     AS product_name,
-       COALESCE(pv.slug, '')     AS product_slug,
-       p.model                   AS product_model,
-       p.price                   AS product_price,
-       p.is_enable               AS product_is_enable,
-       pv.image                  AS product_image
+       pv.id                 AS variant_id,
+       pv.product_id         AS product_id,
+       COALESCE(pv.name, '') AS product_name,
+       COALESCE(pv.slug, '') AS product_slug,
+       pv.model              AS product_model,
+       p.price_retail        AS product_price_retail,
+       p.price_business      AS product_price_business,
+       p.price_wholesale     AS product_price_wholesale,
+       p.is_enable           AS product_is_enable,
+       pv.image              AS product_image
 FROM collections c
          LEFT JOIN collection_variants cv ON cv.collection_id = c.id
          LEFT JOIN product_variants pv ON pv.id = cv.variant_id
@@ -152,20 +161,22 @@ WHERE c.slug = $1
 `
 
 type GetCollectionWithProductsBySlugRow struct {
-	ID              uuid.UUID           `db:"id" json:"id"`
-	Name            string              `db:"name" json:"name"`
-	Description     pgtype.Text         `db:"description" json:"description"`
-	Slug            string              `db:"slug" json:"slug"`
-	CreatedAt       pgtype.Timestamptz  `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
-	VariantID       uuid.NullUUID       `db:"variant_id" json:"variant_id"`
-	ProductID       uuid.NullUUID       `db:"product_id" json:"product_id"`
-	ProductName     string              `db:"product_name" json:"product_name"`
-	ProductSlug     string              `db:"product_slug" json:"product_slug"`
-	ProductModel    pgtype.Text         `db:"product_model" json:"product_model"`
-	ProductPrice    decimal.NullDecimal `db:"product_price" json:"product_price"`
-	ProductIsEnable pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
-	ProductImage    pgtype.Text         `db:"product_image" json:"product_image"`
+	ID                    uuid.UUID           `db:"id" json:"id"`
+	Name                  string              `db:"name" json:"name"`
+	Description           pgtype.Text         `db:"description" json:"description"`
+	Slug                  string              `db:"slug" json:"slug"`
+	CreatedAt             pgtype.Timestamptz  `db:"created_at" json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz  `db:"updated_at" json:"updated_at"`
+	VariantID             uuid.NullUUID       `db:"variant_id" json:"variant_id"`
+	ProductID             uuid.NullUUID       `db:"product_id" json:"product_id"`
+	ProductName           string              `db:"product_name" json:"product_name"`
+	ProductSlug           string              `db:"product_slug" json:"product_slug"`
+	ProductModel          pgtype.Text         `db:"product_model" json:"product_model"`
+	ProductPriceRetail    decimal.NullDecimal `db:"product_price_retail" json:"product_price_retail"`
+	ProductPriceBusiness  decimal.NullDecimal `db:"product_price_business" json:"product_price_business"`
+	ProductPriceWholesale decimal.NullDecimal `db:"product_price_wholesale" json:"product_price_wholesale"`
+	ProductIsEnable       pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
+	ProductImage          pgtype.Text         `db:"product_image" json:"product_image"`
 }
 
 func (q *Queries) GetCollectionWithProductsBySlug(ctx context.Context, slug string) ([]*GetCollectionWithProductsBySlugRow, error) {
@@ -189,7 +200,9 @@ func (q *Queries) GetCollectionWithProductsBySlug(ctx context.Context, slug stri
 			&i.ProductName,
 			&i.ProductSlug,
 			&i.ProductModel,
-			&i.ProductPrice,
+			&i.ProductPriceRetail,
+			&i.ProductPriceBusiness,
+			&i.ProductPriceWholesale,
 			&i.ProductIsEnable,
 			&i.ProductImage,
 		); err != nil {

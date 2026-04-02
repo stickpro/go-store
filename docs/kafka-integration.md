@@ -27,12 +27,44 @@ Logic: if a product with the given `external_id` already exists — it is update
 ```json
 {
   "external_id": "ERP-12345",
-  "model": "iPhone 15 Pro 256GB Black",
   "sku": "APPL-IP15P-256-BLK",
-  "price": "999.99",
+  "price_retail": "999.99",
+  "price_business": "949.99",
+  "price_wholesale": "899.99",
   "stock_status": "IN_STOCK",
   "quantity": 50,
-  "is_enable": true
+  "is_enable": true,
+  "weight": "0.5",
+  "length": "10.0",
+  "width": "5.0",
+  "height": "0.5",
+  "image_main": "https://example.com/images/iphone15pro.jpg",
+  "images" : [
+    "https://example.com/images/iphone15pro-front.jpg",
+    "https://example.com/images/iphone15pro-back.jpg"
+  ],
+  "attributes": [
+    {
+      "name": "Цвет",
+      "slug": "color",
+      "type": "select",
+      "value": "Чёрный"
+    },
+    {
+      "name": "Объём памяти",
+      "slug": "storage",
+      "type": "select",
+      "unit": "GB",
+      "value": "256"
+    },
+    {
+      "name": "Диагональ экрана",
+      "slug": "screen_size",
+      "type": "number",
+      "unit": "inch",
+      "value": "6.1"
+    }
+  ]
 }
 ```
 

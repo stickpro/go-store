@@ -16,15 +16,14 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO products (external_id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, now())
-	RETURNING id, external_id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at
+INSERT INTO products (external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, now())
+	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at
 `
 
 type CreateParams struct {
 	ExternalID     pgtype.Text          `db:"external_id" json:"external_id"`
 	ManufacturerID uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
-	Model          string               `db:"model" json:"model"`
 	Sku            pgtype.Text          `db:"sku" json:"sku"`
 	Upc            pgtype.Text          `db:"upc" json:"upc"`
 	Ean            pgtype.Text          `db:"ean" json:"ean"`
@@ -34,7 +33,9 @@ type CreateParams struct {
 	Location       pgtype.Text          `db:"location" json:"location"`
 	Quantity       int64                `db:"quantity" json:"quantity"`
 	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
-	Price          decimal.Decimal      `db:"price" json:"price"`
+	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
+	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
+	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
 	Weight         decimal.Decimal      `db:"weight" json:"weight"`
 	Length         decimal.Decimal      `db:"length" json:"length"`
 	Width          decimal.Decimal      `db:"width" json:"width"`
@@ -49,7 +50,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 	row := q.db.QueryRow(ctx, create,
 		arg.ExternalID,
 		arg.ManufacturerID,
-		arg.Model,
 		arg.Sku,
 		arg.Upc,
 		arg.Ean,
@@ -59,7 +59,9 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		arg.Location,
 		arg.Quantity,
 		arg.StockStatus,
-		arg.Price,
+		arg.PriceRetail,
+		arg.PriceBusiness,
+		arg.PriceWholesale,
 		arg.Weight,
 		arg.Length,
 		arg.Width,
@@ -74,7 +76,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		&i.ID,
 		&i.ExternalID,
 		&i.ManufacturerID,
-		&i.Model,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -84,7 +85,9 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Price,
+		&i.PriceRetail,
+		&i.PriceBusiness,
+		&i.PriceWholesale,
 		&i.Weight,
 		&i.Length,
 		&i.Width,
@@ -101,18 +104,17 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 
 const update = `-- name: Update :one
 UPDATE products
-	SET external_id=$1, manufacturer_id=$2, model=$3, sku=$4, upc=$5, ean=$6, 
-		jan=$7, isbn=$8, mpn=$9, location=$10, quantity=$11, stock_status=$12, 
-		price=$13, weight=$14, length=$15, width=$16, height=$17, subtract=$18, 
-		minimum=$19, sort_order=$20, is_enable=$21, updated_at=now()
-	WHERE id=$22
-	RETURNING id, external_id, manufacturer_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at
+	SET external_id=$1, manufacturer_id=$2, sku=$3, upc=$4, ean=$5, jan=$6, 
+		isbn=$7, mpn=$8, location=$9, quantity=$10, stock_status=$11, price_retail=$12, 
+		price_business=$13, price_wholesale=$14, weight=$15, length=$16, width=$17, height=$18, 
+		subtract=$19, minimum=$20, sort_order=$21, is_enable=$22, updated_at=now()
+	WHERE id=$23
+	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at
 `
 
 type UpdateParams struct {
 	ExternalID     pgtype.Text          `db:"external_id" json:"external_id"`
 	ManufacturerID uuid.NullUUID        `db:"manufacturer_id" json:"manufacturer_id"`
-	Model          string               `db:"model" json:"model"`
 	Sku            pgtype.Text          `db:"sku" json:"sku"`
 	Upc            pgtype.Text          `db:"upc" json:"upc"`
 	Ean            pgtype.Text          `db:"ean" json:"ean"`
@@ -122,7 +124,9 @@ type UpdateParams struct {
 	Location       pgtype.Text          `db:"location" json:"location"`
 	Quantity       int64                `db:"quantity" json:"quantity"`
 	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
-	Price          decimal.Decimal      `db:"price" json:"price"`
+	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
+	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
+	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
 	Weight         decimal.Decimal      `db:"weight" json:"weight"`
 	Length         decimal.Decimal      `db:"length" json:"length"`
 	Width          decimal.Decimal      `db:"width" json:"width"`
@@ -138,7 +142,6 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 	row := q.db.QueryRow(ctx, update,
 		arg.ExternalID,
 		arg.ManufacturerID,
-		arg.Model,
 		arg.Sku,
 		arg.Upc,
 		arg.Ean,
@@ -148,7 +151,9 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		arg.Location,
 		arg.Quantity,
 		arg.StockStatus,
-		arg.Price,
+		arg.PriceRetail,
+		arg.PriceBusiness,
+		arg.PriceWholesale,
 		arg.Weight,
 		arg.Length,
 		arg.Width,
@@ -164,7 +169,6 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		&i.ID,
 		&i.ExternalID,
 		&i.ManufacturerID,
-		&i.Model,
 		&i.Sku,
 		&i.Upc,
 		&i.Ean,
@@ -174,7 +178,9 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		&i.Location,
 		&i.Quantity,
 		&i.StockStatus,
-		&i.Price,
+		&i.PriceRetail,
+		&i.PriceBusiness,
+		&i.PriceWholesale,
 		&i.Weight,
 		&i.Length,
 		&i.Width,

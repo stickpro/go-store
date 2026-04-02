@@ -4,6 +4,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -18,14 +21,25 @@ type CollectionResponse struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 } //	@name	CollectionResponse
 
+type ShortProductResponse struct {
+	ID        uuid.UUID       `json:"id"`
+	ProductID uuid.UUID       `json:"product_id"`
+	Name      string          `json:"name"`
+	Model     string          `json:"model"`
+	Slug      string          `json:"slug"`
+	Image     pgtype.Text     `json:"image"`
+	Price     decimal.Decimal `json:"price"`
+	IsEnable  bool            `json:"is_enable"`
+} //	@name	ShortProductResponse
+
 type CollectionResponseWithProducts struct {
-	ID          uuid.UUID              `json:"id"`
-	Name        string                 `json:"name"`
-	Description *string                `json:"description,omitempty"`
-	Slug        string                 `json:"slug"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   *time.Time             `json:"updated_at"`
-	Products    []*models.ShortProduct `json:"products"`
+	ID          uuid.UUID               `json:"id"`
+	Name        string                  `json:"name"`
+	Description *string                 `json:"description,omitempty"`
+	Slug        string                  `json:"slug"`
+	CreatedAt   time.Time               `json:"created_at"`
+	UpdatedAt   *time.Time              `json:"updated_at"`
+	Products    []*ShortProductResponse `json:"products"`
 } //	@name	CollectionWithProductResponse
 
 func NewFromModel(collection *models.Collection) *CollectionResponse {
@@ -47,10 +61,19 @@ func NewFromModels(collection []*models.Collection) []*CollectionResponse {
 	return res
 }
 
-func NewFromDTO(d *dto.WithProductsCollectionDTO) *CollectionResponseWithProducts {
-	products := d.Products
-	if products == nil {
-		products = make([]*models.ShortProduct, 0)
+func NewFromDTO(d *dto.WithProductsCollectionDTO, priceGroup constant.PriceGroup) *CollectionResponseWithProducts {
+	products := make([]*ShortProductResponse, 0, len(d.Products))
+	for _, p := range d.Products {
+		products = append(products, &ShortProductResponse{
+			ID:        p.ID,
+			ProductID: p.ProductID,
+			Name:      p.Name,
+			Model:     p.Model,
+			Slug:      p.Slug,
+			Image:     p.Image,
+			Price:     selectPrice(p, priceGroup),
+			IsEnable:  p.IsEnable,
+		})
 	}
 	return &CollectionResponseWithProducts{
 		ID:          d.ID,
@@ -60,5 +83,16 @@ func NewFromDTO(d *dto.WithProductsCollectionDTO) *CollectionResponseWithProduct
 		CreatedAt:   d.CreatedAt,
 		UpdatedAt:   d.UpdatedAt,
 		Products:    products,
+	}
+}
+
+func selectPrice(p *dto.ShortProductDTO, group constant.PriceGroup) decimal.Decimal {
+	switch group {
+	case constant.PriceGroupBusiness:
+		return p.PriceBusiness
+	case constant.PriceGroupWholeSale:
+		return p.PriceWholeSale
+	default:
+		return p.PriceRetail
 	}
 }

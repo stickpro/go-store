@@ -20,13 +20,15 @@ func NewProductHandler(svc product.IProductService, log logger.Logger) *ProductH
 
 func (h *ProductHandler) HandleProduct(ctx context.Context, p contracts.ProductPayload) error {
 	_, err := h.svc.UpsertProductByExternalID(ctx, p.ExternalID, dto.ProductUpsertDTO{
-		ExternalID:  p.ExternalID,
-		Model:       p.Model,
-		Sku:         p.Sku,
-		Price:       p.Price,
-		Quantity:    p.Quantity,
-		StockStatus: p.StockStatus,
-		IsEnable:    p.IsEnable,
+		ExternalID:     p.ExternalID,
+		Model:          p.Model,
+		Sku:            p.Sku,
+		PriceRetail:    p.PriceRetail,
+		PriceBusiness:  p.PriceBusiness,
+		PriceWholesale: p.PriceWholesale,
+		Quantity:       p.Quantity,
+		StockStatus:    p.StockStatus,
+		IsEnable:       p.IsEnable,
 	})
 	return err
 }

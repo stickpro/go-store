@@ -13,6 +13,7 @@ type ProductVariantResponse struct {
 	ID              uuid.UUID     `json:"id"`
 	Name            string        `json:"name"`
 	Slug            string        `json:"slug"`
+	Model           string        `json:"model"`
 	CategoryID      uuid.NullUUID `json:"category_id"`
 	Description     *string       `json:"description"`
 	MetaTitle       *string       `json:"meta_title"`
@@ -26,7 +27,6 @@ type ProductVariantResponse struct {
 
 type ProductResponse struct {
 	ID             uuid.UUID              `json:"id"`
-	Model          string                 `json:"model"`
 	Sku            *string                `json:"sku"`
 	Upc            *string                `json:"upc"`
 	Ean            *string                `json:"ean"`
@@ -37,7 +37,9 @@ type ProductResponse struct {
 	Quantity       int64                  `json:"quantity"`
 	StockStatus    string                 `json:"stock_status"`
 	ManufacturerID uuid.NullUUID          `json:"manufacturer_id"`
-	Price          decimal.Decimal        `json:"price"`
+	PriceRetail    decimal.Decimal        `json:"price_retail"`
+	PriceBusiness  decimal.Decimal        `json:"price_business"`
+	PriceWholesale decimal.Decimal        `json:"price_wholesale"`
 	Weight         decimal.Decimal        `json:"weight"`
 	Length         decimal.Decimal        `json:"length"`
 	Width          decimal.Decimal        `json:"width"`
@@ -52,7 +54,6 @@ type ProductResponse struct {
 func NewFromModels(product *models.Product, variant *models.ProductVariant) ProductResponse {
 	resp := ProductResponse{
 		ID:             product.ID,
-		Model:          product.Model,
 		Sku:            pgtypeutils.DecodeText(product.Sku),
 		Upc:            pgtypeutils.DecodeText(product.Upc),
 		Ean:            pgtypeutils.DecodeText(product.Ean),
@@ -63,7 +64,9 @@ func NewFromModels(product *models.Product, variant *models.ProductVariant) Prod
 		Quantity:       product.Quantity,
 		StockStatus:    product.StockStatus.String(),
 		ManufacturerID: product.ManufacturerID,
-		Price:          product.Price,
+		PriceRetail:    product.PriceRetail,
+		PriceBusiness:  product.PriceBusiness,
+		PriceWholesale: product.PriceWholesale,
 		Weight:         product.Weight,
 		Length:         product.Length,
 		Width:          product.Width,
@@ -78,6 +81,7 @@ func NewFromModels(product *models.Product, variant *models.ProductVariant) Prod
 			ID:              variant.ID,
 			Name:            variant.Name,
 			Slug:            variant.Slug,
+			Model:           variant.Model,
 			CategoryID:      variant.CategoryID,
 			Description:     pgtypeutils.DecodeText(variant.Description),
 			MetaTitle:       pgtypeutils.DecodeText(variant.MetaTitle),
@@ -117,6 +121,7 @@ func NewVariantFromModel(variant *models.ProductVariant) ProductVariantResponse 
 		ID:              variant.ID,
 		Name:            variant.Name,
 		Slug:            variant.Slug,
+		Model:           variant.Model,
 		CategoryID:      variant.CategoryID,
 		Description:     pgtypeutils.DecodeText(variant.Description),
 		MetaTitle:       pgtypeutils.DecodeText(variant.MetaTitle),
@@ -132,7 +137,6 @@ func NewVariantFromModel(variant *models.ProductVariant) ProductVariantResponse 
 func NewFromProductOnly(product *models.Product) ProductResponse {
 	return ProductResponse{
 		ID:             product.ID,
-		Model:          product.Model,
 		Sku:            pgtypeutils.DecodeText(product.Sku),
 		Upc:            pgtypeutils.DecodeText(product.Upc),
 		Ean:            pgtypeutils.DecodeText(product.Ean),
@@ -143,7 +147,9 @@ func NewFromProductOnly(product *models.Product) ProductResponse {
 		Quantity:       product.Quantity,
 		StockStatus:    product.StockStatus.String(),
 		ManufacturerID: product.ManufacturerID,
-		Price:          product.Price,
+		PriceRetail:    product.PriceRetail,
+		PriceBusiness:  product.PriceBusiness,
+		PriceWholesale: product.PriceWholesale,
 		Weight:         product.Weight,
 		Length:         product.Length,
 		Width:          product.Width,

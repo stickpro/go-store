@@ -108,6 +108,7 @@ func (h *Handler) createProductVariant(c fiber.Ctx) error {
 		Name:            req.Name,
 		Slug:            req.Slug,
 		CategoryID:      categoryID,
+		Model:           req.Model,
 		Description:     req.Description,
 		MetaTitle:       req.MetaTitle,
 		MetaH1:          req.MetaH1,

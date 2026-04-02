@@ -2,6 +2,7 @@ package dto
 
 import (
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
@@ -13,7 +14,9 @@ type ProductUpsertDTO struct {
 	ExternalID     string
 	Model          string
 	Sku            *string
-	Price          decimal.Decimal
+	PriceRetail    decimal.Decimal
+	PriceBusiness  decimal.Decimal
+	PriceWholesale decimal.Decimal
 	Quantity       int64
 	StockStatus    constant.StockStatus
 	IsEnable       bool
@@ -23,6 +26,7 @@ type ProductUpsertDTO struct {
 type CreateProductVariantDTO struct {
 	Name            string
 	Slug            string
+	Model           string
 	CategoryID      uuid.NullUUID
 	Description     *string
 	MetaTitle       *string
@@ -35,7 +39,6 @@ type CreateProductVariantDTO struct {
 }
 
 type CreateProductDTO struct {
-	Model          string
 	Sku            *string
 	Upc            *string
 	Ean            *string
@@ -46,7 +49,9 @@ type CreateProductDTO struct {
 	Quantity       int64
 	StockStatus    constant.StockStatus
 	ManufacturerID uuid.NullUUID
-	Price          decimal.Decimal
+	PriceRetail    decimal.Decimal
+	PriceBusiness  decimal.Decimal
+	PriceWholesale decimal.Decimal
 	Weight         decimal.Decimal
 	Length         decimal.Decimal
 	Width          decimal.Decimal
@@ -63,6 +68,7 @@ type UpdateProductVariantDTO struct {
 	ID              uuid.UUID
 	Name            string
 	Slug            string
+	Model           string
 	CategoryID      uuid.NullUUID
 	Description     *string
 	MetaTitle       *string
@@ -76,7 +82,6 @@ type UpdateProductVariantDTO struct {
 
 type UpdateProductDTO struct {
 	ID             uuid.UUID
-	Model          string
 	Sku            *string
 	Upc            *string
 	Ean            *string
@@ -87,7 +92,9 @@ type UpdateProductDTO struct {
 	Quantity       int64
 	StockStatus    constant.StockStatus
 	ManufacturerID uuid.NullUUID
-	Price          decimal.Decimal
+	PriceRetail    decimal.Decimal
+	PriceBusiness  decimal.Decimal
+	PriceWholeSale decimal.Decimal
 	Weight         decimal.Decimal
 	Length         decimal.Decimal
 	Width          decimal.Decimal
@@ -109,10 +116,11 @@ type ProductWithMediaDTO struct {
 // EnrichedVariantDTO combines variant data with product-level fields for indexing and enriched responses
 type EnrichedVariantDTO struct {
 	*models.ProductVariant
-	Price          decimal.Decimal      `json:"price"`
+	PriceRetail    decimal.Decimal      `json:"price_retail"`
+	PriceBusiness  decimal.Decimal      `json:"price_business"`
+	PriceWholesale decimal.Decimal      `json:"price_wholesale"`
 	ManufacturerID uuid.NullUUID        `json:"manufacturer_id"`
 	StockStatus    constant.StockStatus `json:"stock_status"`
-	Model          string               `json:"model"`
 }
 
 type SyncAttributeProductDTO struct {
@@ -132,7 +140,6 @@ func RequestToCreateProductDTO(req *product_request.CreateProductRequest) Create
 	}
 
 	return CreateProductDTO{
-		Model:          req.Model,
 		Sku:            req.Sku,
 		Upc:            req.Upc,
 		Ean:            req.Ean,
@@ -143,7 +150,9 @@ func RequestToCreateProductDTO(req *product_request.CreateProductRequest) Create
 		Quantity:       req.Quantity,
 		StockStatus:    constant.StockStatus(req.StockStatus),
 		ManufacturerID: manufacturerID,
-		Price:          req.Price,
+		PriceRetail:    req.PriceRetail,
+		PriceBusiness:  req.PriceBusiness,
+		PriceWholesale: req.PriceWholeSale,
 		Weight:         req.Weight,
 		Length:         req.Length,
 		Height:         req.Height,
@@ -182,7 +191,6 @@ func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uui
 
 	return UpdateProductDTO{
 		ID:             id,
-		Model:          req.Model,
 		Sku:            req.Sku,
 		Upc:            req.Upc,
 		Ean:            req.Ean,
@@ -193,7 +201,9 @@ func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uui
 		Quantity:       req.Quantity,
 		StockStatus:    constant.StockStatus(req.StockStatus),
 		ManufacturerID: manufacturerID,
-		Price:          req.Price,
+		PriceRetail:    req.PriceRetail,
+		PriceBusiness:  req.PriceBusiness,
+		PriceWholeSale: req.PriceWholeSale,
 		Weight:         req.Weight,
 		Length:         req.Length,
 		Height:         req.Height,
@@ -218,4 +228,17 @@ func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uui
 			IsEnable:        req.Variant.IsEnable,
 		},
 	}
+}
+
+type ShortProductDTO struct {
+	ID             uuid.UUID
+	ProductID      uuid.UUID
+	Name           string
+	Model          string
+	Slug           string
+	Image          pgtype.Text
+	PriceRetail    decimal.Decimal
+	PriceBusiness  decimal.Decimal
+	PriceWholeSale decimal.Decimal
+	IsEnable       bool
 }
