@@ -19,6 +19,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
+	"github.com/stickpro/go-store/pkg/urlutil"
 )
 
 // SyncProductImages downloads new images, reuses existing ones, removes stale ones.
@@ -157,11 +158,15 @@ func (s Service) resolveImage(ctx context.Context, rawURL string) (*models.Mediu
 }
 
 func downloadImage(ctx context.Context, rawURL string) ([]byte, string, error) {
+	if err := urlutil.ValidatePublicHTTPURL(rawURL); err != nil {
+		return nil, "", err
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, "", err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req) //nolint:gosec // URL validated by ValidatePublicHTTPURL above
 	if err != nil {
 		return nil, "", err
 	}
