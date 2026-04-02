@@ -19,6 +19,7 @@ type Querier interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Attribute, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Attribute, error)
 	GetFilterableAttributes(ctx context.Context) ([]*GetFilterableAttributesRow, error)
+	GetOrCreate(ctx context.Context, arg GetOrCreateParams) (*models.Attribute, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.Attribute, error)
 }
 

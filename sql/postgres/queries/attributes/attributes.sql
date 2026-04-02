@@ -1,3 +1,14 @@
+-- name: GetOrCreate :one
+INSERT INTO attributes (attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at)
+VALUES ($1, $2, $3, $4, $5, true, true, false, 0, now())
+ON CONFLICT (slug)
+DO UPDATE SET
+    name       = EXCLUDED.name,
+    type       = EXCLUDED.type,
+    unit       = EXCLUDED.unit,
+    updated_at = now()
+RETURNING id, attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at, updated_at;
+
 -- name: DeleteByAttributeGroupID :exec
 DELETE FROM attributes WHERE attribute_group_id = $1::uuid;
 

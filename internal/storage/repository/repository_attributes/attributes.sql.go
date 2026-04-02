@@ -143,3 +143,49 @@ func (q *Queries) GetFilterableAttributes(ctx context.Context) ([]*GetFilterable
 	}
 	return items, nil
 }
+
+const getOrCreate = `-- name: GetOrCreate :one
+INSERT INTO attributes (attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at)
+VALUES ($1, $2, $3, $4, $5, true, true, false, 0, now())
+ON CONFLICT (slug)
+DO UPDATE SET
+    name       = EXCLUDED.name,
+    type       = EXCLUDED.type,
+    unit       = EXCLUDED.unit,
+    updated_at = now()
+RETURNING id, attribute_group_id, name, slug, type, unit, is_filterable, is_visible, is_required, sort_order, created_at, updated_at
+`
+
+type GetOrCreateParams struct {
+	AttributeGroupID uuid.NullUUID `db:"attribute_group_id" json:"attribute_group_id"`
+	Name             string        `db:"name" json:"name"`
+	Slug             string        `db:"slug" json:"slug"`
+	Type             string        `db:"type" json:"type"`
+	Unit             pgtype.Text   `db:"unit" json:"unit"`
+}
+
+func (q *Queries) GetOrCreate(ctx context.Context, arg GetOrCreateParams) (*models.Attribute, error) {
+	row := q.db.QueryRow(ctx, getOrCreate,
+		arg.AttributeGroupID,
+		arg.Name,
+		arg.Slug,
+		arg.Type,
+		arg.Unit,
+	)
+	var i models.Attribute
+	err := row.Scan(
+		&i.ID,
+		&i.AttributeGroupID,
+		&i.Name,
+		&i.Slug,
+		&i.Type,
+		&i.Unit,
+		&i.IsFilterable,
+		&i.IsVisible,
+		&i.IsRequired,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
+}

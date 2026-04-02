@@ -9,3 +9,7 @@ create table attribute_groups
 );
 
 create unique index idx_attribute_groups_slug on attribute_groups(slug);
+
+insert into attribute_groups (id, name, slug, description)
+values ('00000000-0000-0000-0000-000000000001', 'Основные', 'default', 'Группа по умолчанию для атрибутов из внешних систем')
+on conflict (slug) do nothing;

@@ -11,3 +11,6 @@ VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;
 
 -- name: DeleteProductMedia :exec
 DELETE FROM product_media WHERE product_id = $1;
+
+-- name: DeleteProductMediaByMediaIDs :exec
+DELETE FROM product_media WHERE product_id = $1 AND media_id = ANY($2::uuid[]);

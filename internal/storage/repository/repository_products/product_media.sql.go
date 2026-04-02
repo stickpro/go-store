@@ -37,8 +37,22 @@ func (q *Queries) DeleteProductMedia(ctx context.Context, productID uuid.UUID) e
 	return err
 }
 
+const deleteProductMediaByMediaIDs = `-- name: DeleteProductMediaByMediaIDs :exec
+DELETE FROM product_media WHERE product_id = $1 AND media_id = ANY($2::uuid[])
+`
+
+type DeleteProductMediaByMediaIDsParams struct {
+	ProductID uuid.UUID   `db:"product_id" json:"product_id"`
+	Column2   []uuid.UUID `db:"column_2" json:"column_2"`
+}
+
+func (q *Queries) DeleteProductMediaByMediaIDs(ctx context.Context, arg DeleteProductMediaByMediaIDsParams) error {
+	_, err := q.db.Exec(ctx, deleteProductMediaByMediaIDs, arg.ProductID, arg.Column2)
+	return err
+}
+
 const getMediaByProductID = `-- name: GetMediaByProductID :many
-SELECT m.id, m.name, m.path, m.file_name, m.mime_type, m.disk_type, m.size, m.created_at
+SELECT m.id, m.name, m.path, m.file_name, m.mime_type, m.disk_type, m.size, m.created_at, m.source_url
 FROM product_media pm
          JOIN media m ON pm.media_id = m.id
 WHERE pm.product_id = $1
@@ -63,6 +77,7 @@ func (q *Queries) GetMediaByProductID(ctx context.Context, productID uuid.UUID) 
 			&i.DiskType,
 			&i.Size,
 			&i.CreatedAt,
+			&i.SourceUrl,
 		); err != nil {
 			return nil, err
 		}

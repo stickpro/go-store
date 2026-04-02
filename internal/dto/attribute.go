@@ -124,7 +124,16 @@ type AttributeWithValuesDTO struct {
 	Values       []AttributeValueDTO `json:"values"`
 } //	@name	AttributeWithValuesDTO
 
-// Facet Distribution DTO (для фильтров из Meilisearch)
+// AttributeKafkaItem describes a single attribute key-value pair coming from Kafka.
+type AttributeKafkaItem struct {
+	Name  string
+	Slug  string
+	Type  string // select, number, boolean, text
+	Unit  *string
+	Value string
+}
+
+// Facet Distribution DTO (for filter Meilisearch)
 type FacetDistributionDTO struct {
 	AttributeSlug string           `json:"attribute_slug"`
 	AttributeName string           `json:"attribute_name"`

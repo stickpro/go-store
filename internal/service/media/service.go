@@ -19,6 +19,7 @@ import (
 type IMediaService interface {
 	Save(ctx context.Context, dto SaveMediumDTO) (*models.Medium, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	SyncProductImages(ctx context.Context, productID uuid.UUID, imageMain *string, images []string) error
 }
 
 type Service struct {

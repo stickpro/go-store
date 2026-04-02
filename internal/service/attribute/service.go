@@ -13,6 +13,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
+	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attributes"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_attribute_values"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
@@ -35,6 +36,10 @@ type IAttributeService interface { //nolint:interfacebloat
 	IAttributeValueService
 	// Filters
 	GetAvailableFiltersForCategory(ctx context.Context, categoryID *uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error)
+
+	// Kafka
+	RunInTx(ctx context.Context, fn func(...repository.Option) error) error
+	SyncAttributesFromKafka(ctx context.Context, productID uuid.UUID, items []dto.AttributeKafkaItem, opts ...repository.Option) error
 
 	// Indexing
 	CreateAttributeIndex(ctx context.Context, reindex bool) error

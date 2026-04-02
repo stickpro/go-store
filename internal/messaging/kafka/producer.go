@@ -2,9 +2,9 @@ package kafka
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
+	"github.com/goccy/go-json"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/messaging/contracts"
 	"github.com/stickpro/go-store/internal/messaging/topics"

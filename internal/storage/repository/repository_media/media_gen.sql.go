@@ -9,22 +9,24 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stickpro/go-store/internal/models"
 )
 
 const create = `-- name: Create :one
-INSERT INTO media (name, path, file_name, mime_type, disk_type, size, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, now())
-	RETURNING id, name, path, file_name, mime_type, disk_type, size, created_at
+INSERT INTO media (name, path, file_name, mime_type, disk_type, size, created_at, source_url)
+	VALUES ($1, $2, $3, $4, $5, $6, now(), $7)
+	RETURNING id, name, path, file_name, mime_type, disk_type, size, created_at, source_url
 `
 
 type CreateParams struct {
-	Name     string `db:"name" json:"name"`
-	Path     string `db:"path" json:"path"`
-	FileName string `db:"file_name" json:"file_name"`
-	MimeType string `db:"mime_type" json:"mime_type"`
-	DiskType string `db:"disk_type" json:"disk_type"`
-	Size     int64  `db:"size" json:"size"`
+	Name      string      `db:"name" json:"name"`
+	Path      string      `db:"path" json:"path"`
+	FileName  string      `db:"file_name" json:"file_name"`
+	MimeType  string      `db:"mime_type" json:"mime_type"`
+	DiskType  string      `db:"disk_type" json:"disk_type"`
+	Size      int64       `db:"size" json:"size"`
+	SourceUrl pgtype.Text `db:"source_url" json:"source_url"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Medium, error) {
@@ -35,6 +37,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Medium,
 		arg.MimeType,
 		arg.DiskType,
 		arg.Size,
+		arg.SourceUrl,
 	)
 	var i models.Medium
 	err := row.Scan(
@@ -46,6 +49,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Medium,
 		&i.DiskType,
 		&i.Size,
 		&i.CreatedAt,
+		&i.SourceUrl,
 	)
 	return &i, err
 }

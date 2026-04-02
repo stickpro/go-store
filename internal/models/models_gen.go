@@ -137,6 +137,7 @@ type Medium struct {
 	DiskType  string           `db:"disk_type" json:"disk_type"`
 	Size      int64            `db:"size" json:"size"`
 	CreatedAt pgtype.Timestamp `db:"created_at" json:"created_at"`
+	SourceUrl pgtype.Text      `db:"source_url" json:"source_url"`
 }
 
 type PersonalAccessToken struct {

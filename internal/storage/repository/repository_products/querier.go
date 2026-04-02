@@ -16,6 +16,7 @@ type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.Product, error)
 	CreateProductMedia(ctx context.Context, arg CreateProductMediaParams) error
 	DeleteProductMedia(ctx context.Context, productID uuid.UUID) error
+	DeleteProductMediaByMediaIDs(ctx context.Context, arg DeleteProductMediaByMediaIDsParams) error
 	DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteSpecificRelatedProductsParams) error
 	GetByExternalID(ctx context.Context, externalID pgtype.Text) (*models.Product, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error)

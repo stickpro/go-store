@@ -8,13 +8,16 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stickpro/go-store/internal/models"
 )
 
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.Medium, error)
+	CreateWithSourceURL(ctx context.Context, arg CreateWithSourceURLParams) (*models.Medium, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	Get(ctx context.Context, id uuid.UUID) (*models.Medium, error)
+	GetBySourceURL(ctx context.Context, sourceUrl pgtype.Text) (*models.Medium, error)
 }
 
 var _ Querier = (*Queries)(nil)

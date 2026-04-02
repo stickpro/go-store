@@ -9,11 +9,53 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const createWithSourceURL = `-- name: CreateWithSourceURL :one
+INSERT INTO media (name, path, file_name, mime_type, disk_type, size, source_url, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+RETURNING id, name, path, file_name, mime_type, disk_type, size, created_at, source_url
+`
+
+type CreateWithSourceURLParams struct {
+	Name      string      `db:"name" json:"name"`
+	Path      string      `db:"path" json:"path"`
+	FileName  string      `db:"file_name" json:"file_name"`
+	MimeType  string      `db:"mime_type" json:"mime_type"`
+	DiskType  string      `db:"disk_type" json:"disk_type"`
+	Size      int64       `db:"size" json:"size"`
+	SourceUrl pgtype.Text `db:"source_url" json:"source_url"`
+}
+
+func (q *Queries) CreateWithSourceURL(ctx context.Context, arg CreateWithSourceURLParams) (*models.Medium, error) {
+	row := q.db.QueryRow(ctx, createWithSourceURL,
+		arg.Name,
+		arg.Path,
+		arg.FileName,
+		arg.MimeType,
+		arg.DiskType,
+		arg.Size,
+		arg.SourceUrl,
+	)
+	var i models.Medium
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Path,
+		&i.FileName,
+		&i.MimeType,
+		&i.DiskType,
+		&i.Size,
+		&i.CreatedAt,
+		&i.SourceUrl,
+	)
+	return &i, err
+}
+
 const get = `-- name: Get :one
-SELECT id, name, path, file_name, mime_type, disk_type, size, created_at FROM media WHERE id = $1 LIMIT 1
+SELECT id, name, path, file_name, mime_type, disk_type, size, created_at, source_url FROM media WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) Get(ctx context.Context, id uuid.UUID) (*models.Medium, error) {
@@ -28,6 +70,28 @@ func (q *Queries) Get(ctx context.Context, id uuid.UUID) (*models.Medium, error)
 		&i.DiskType,
 		&i.Size,
 		&i.CreatedAt,
+		&i.SourceUrl,
+	)
+	return &i, err
+}
+
+const getBySourceURL = `-- name: GetBySourceURL :one
+SELECT id, name, path, file_name, mime_type, disk_type, size, created_at, source_url FROM media WHERE source_url = $1 LIMIT 1
+`
+
+func (q *Queries) GetBySourceURL(ctx context.Context, sourceUrl pgtype.Text) (*models.Medium, error) {
+	row := q.db.QueryRow(ctx, getBySourceURL, sourceUrl)
+	var i models.Medium
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Path,
+		&i.FileName,
+		&i.MimeType,
+		&i.DiskType,
+		&i.Size,
+		&i.CreatedAt,
+		&i.SourceUrl,
 	)
 	return &i, err
 }

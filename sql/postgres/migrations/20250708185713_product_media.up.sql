@@ -6,3 +6,5 @@ create table if not exists product_media
     foreign key (product_id) references products (id) on delete cascade,
     foreign key (media_id) references media (id) on delete cascade
 );
+
+alter table product_media add constraint uq_product_media unique (product_id, media_id);
