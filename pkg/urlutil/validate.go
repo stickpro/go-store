@@ -1,6 +1,7 @@
 package urlutil
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -16,9 +17,11 @@ var privateRanges = []net.IPNet{
 	{IP: net.ParseIP("fc00::"), Mask: net.CIDRMask(7, 128)},
 }
 
+var defaultResolver = &net.Resolver{}
+
 // ValidatePublicHTTPURL checks that rawURL uses http/https and does not resolve
 // to a private or loopback address, preventing SSRF attacks.
-func ValidatePublicHTTPURL(rawURL string) error {
+func ValidatePublicHTTPURL(ctx context.Context, rawURL string) error {
 	parsed, err := url.Parse(rawURL)
 	if err != nil {
 		return fmt.Errorf("invalid url: %w", err)
@@ -28,7 +31,7 @@ func ValidatePublicHTTPURL(rawURL string) error {
 	}
 
 	hostname := parsed.Hostname()
-	ips, err := net.LookupHost(hostname)
+	ips, err := defaultResolver.LookupHost(ctx, hostname)
 	if err != nil {
 		return fmt.Errorf("resolve host %q: %w", hostname, err)
 	}
