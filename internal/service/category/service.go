@@ -73,7 +73,6 @@ func (s *Service) CreateCategory(ctx context.Context, dto CreateDTO) (*models.Ca
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +107,6 @@ func (s *Service) GetCategoriesWithPagination(ctx context.Context, d dto.GetDTO)
 	cats, err := s.storage.Categories().GetWithPaginate(ctx, repository_categories.CategoryWithPaginationParams{
 		CommonFindParams: *commonParams,
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +146,6 @@ func (s *Service) UpdateCategory(ctx context.Context, d UpdateDTO) (*models.Cate
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}

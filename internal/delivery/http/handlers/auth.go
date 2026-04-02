@@ -34,7 +34,6 @@ func (h *Handler) register(c fiber.Ctx) error {
 		Location: request.Location,
 		Language: request.Language,
 	})
-
 	if err != nil {
 		return apierror.New(errs.ErrNoMatchesFound).SetHttpCode(fiber.StatusBadRequest)
 	}

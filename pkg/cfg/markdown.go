@@ -121,7 +121,7 @@ func (c *config) generateMarkdown(l *aconfig.Loader, filePath string) error {
 	_, _ = fmt.Fprintln(c.out, out.String())
 
 	if filePath != "" {
-		if err := os.WriteFile(filePath, []byte(out.String()), 0600); err != nil {
+		if err := os.WriteFile(filePath, []byte(out.String()), 0o600); err != nil {
 			return err
 		}
 	}

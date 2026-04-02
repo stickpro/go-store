@@ -196,7 +196,7 @@ func (s Service) loadCart(ctx context.Context, owner dto.Owner) (*models.Cart, e
 
 // enrichCart fetches actual prices, names and availability from the DB
 // and maps the raw cart into CartDTO.
-// TODO: get price by user group retail/buisness/wholesale, not just retail.
+// TODO: get price by user group retail/business/wholesale, not just retail.
 func (s Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDTO, error) {
 	variantIDs := make([]uuid.UUID, len(cart.Items))
 	for i, item := range cart.Items {
@@ -240,7 +240,7 @@ func (s Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDT
 			Name:        row.Name,
 			Slug:        row.Slug,
 			ImageURL:    imageURL,
-			Price:       row.PriceRetail, // todo get price by user group retail/buisness/wholesale, not just retail.
+			Price:       row.PriceRetail, // todo get price by user group retail/business/wholesale, not just retail.
 			Quantity:    int64(qty),
 			MaxQuantity: row.MaxQuantity,
 			Available:   available,

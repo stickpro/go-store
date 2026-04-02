@@ -13,7 +13,7 @@ import (
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
 
-type IVariantProductService interface {
+type IVariantProductService interface { //nolint:interfacebloat
 	// Variant CRUD
 	CreateProductVariant(ctx context.Context, productID uuid.UUID, d dto.CreateProductVariantDTO) (*models.ProductVariant, error)
 	GetProductVariantByID(ctx context.Context, variantID uuid.UUID) (*models.ProductVariant, error)

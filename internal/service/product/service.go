@@ -287,7 +287,6 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -348,7 +347,6 @@ func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttribute
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}

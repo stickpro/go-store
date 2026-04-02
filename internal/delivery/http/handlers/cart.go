@@ -42,10 +42,10 @@ func (h *Handler) getCart(c fiber.Ctx) error {
 //	@Description	Adds a product variant to the cart. If the variant is already present, its quantity is increased.
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		cart_request.AddCartItemRequest	true	"Item to add"
-//	@Success		200		{object}	response.Result[cart_response.CartResponse]
-//	@Failure		400		{object}	apierror.Errors
-//	@Failure		422		{object}	apierror.Errors
+//	@Param			Add	body		cart_request.AddCartItemRequest	true	"Item to add"
+//	@Success		200	{object}	response.Result[cart_response.CartResponse]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		422	{object}	apierror.Errors
 //	@Router			/api/v1/cart/items [post]
 func (h *Handler) addCartItem(c fiber.Ctx) error {
 	owner, err := h.cartOwner(c)
@@ -74,7 +74,7 @@ func (h *Handler) addCartItem(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			variantId	path		string								true	"Variant UUID"
-//	@Param			body		body		cart_request.UpdateCartItemRequest	true	"New quantity"
+//	@Param			create		body		cart_request.UpdateCartItemRequest	true	"New quantity"
 //	@Success		200			{object}	response.Result[cart_response.CartResponse]
 //	@Failure		400			{object}	apierror.Errors
 //	@Failure		404			{object}	apierror.Errors
@@ -91,6 +91,9 @@ func (h *Handler) updateCartItemQuantity(c fiber.Ctx) error {
 	}
 
 	variantID, err := uuid.Parse(c.Params("variantId"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
 
 	cartDTO, err := h.services.CartService.UpdateQuantity(c.Context(), owner, variantID, req.Quantity)
 	if err != nil {
@@ -117,6 +120,9 @@ func (h *Handler) removeCartItem(c fiber.Ctx) error {
 		return err
 	}
 	variantID, err := uuid.Parse(c.Params("variantId"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
 
 	cartDTO, err := h.services.CartService.RemoveItem(c.Context(), owner, variantID)
 	if err != nil {

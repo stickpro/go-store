@@ -65,7 +65,6 @@ func (s *Service) CreateCollection(ctx context.Context, d dto.CreateCollectionDT
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +82,7 @@ func (s *Service) GetCollectionByID(ctx context.Context, id uuid.UUID) (*dto.Wit
 	d := mapper.MapCollectionToDTO(rows)
 	return d, nil
 }
+
 func (s *Service) GetCollectionBySlug(ctx context.Context, slug string) (*dto.WithProductsCollectionDTO, error) {
 	rows, err := s.storage.Collections().GetCollectionWithProductsBySlug(ctx, slug)
 	if err != nil {
@@ -139,7 +139,6 @@ func (s *Service) UpdateCollection(ctx context.Context, d dto.UpdateCollectionDT
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +160,6 @@ func (s *Service) DeleteCollection(ctx context.Context, id uuid.UUID) error {
 		}
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}

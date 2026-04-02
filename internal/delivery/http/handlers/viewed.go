@@ -19,10 +19,10 @@ import (
 //	@Description	Records a product variant as viewed for the current user or guest session
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		viewed_request.TrackViewedRequest	true	"Variant to track"
-//	@Success		200		{object}	response.Result[any]
-//	@Failure		400		{object}	apierror.Errors
-//	@Failure		422		{object}	apierror.Errors
+//	@Param			add	body		viewed_request.TrackViewedRequest	true	"Variant to track"
+//	@Success		200	{object}	response.Result[any]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		422	{object}	apierror.Errors
 //	@Router			/api/v1/viewed-products [post]
 func (h *Handler) trackViewed(c fiber.Ctx) error {
 	owner, err := h.viewedOwner(c)

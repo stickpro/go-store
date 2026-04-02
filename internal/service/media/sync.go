@@ -109,7 +109,7 @@ func (s Service) SyncProductImages(ctx context.Context, productID uuid.UUID, ima
 			if err := repo.CreateProductMedia(ctx, repository_products.CreateProductMediaParams{
 				ProductID: productID,
 				MediaID:   mediaID,
-				SortOrder: int32(i), //nolint:gosec
+				SortOrder: int32(i),
 			}); err != nil {
 				return pgerror.ParseError(err)
 			}

@@ -318,7 +318,7 @@ definitions:
         type: string
       products:
         items:
-          $ref: '#/definitions/ShortProduct'
+          $ref: '#/definitions/ShortProductResponse'
         type: array
       slug:
         type: string
@@ -507,11 +507,13 @@ definitions:
         type: array
       minimum:
         type: integer
-      model:
-        type: string
       mpn:
         type: string
-      price:
+      price_business:
+        type: number
+      price_retail:
+        type: number
+      price_wholesale:
         type: number
       quantity:
         type: integer
@@ -533,8 +535,6 @@ definitions:
         type: number
     required:
     - minimum
-    - model
-    - price
     - variant
     type: object
   CreateProductVariantRequest:
@@ -555,6 +555,8 @@ definitions:
         type: string
       meta_title:
         type: string
+      model:
+        type: string
       name:
         type: string
       slug:
@@ -562,6 +564,7 @@ definitions:
       sort_order:
         type: integer
     required:
+    - model
     - name
     - slug
     type: object
@@ -813,6 +816,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-ViewedResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ViewedResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-any:
     properties:
       code:
@@ -1017,11 +1029,13 @@ definitions:
         $ref: '#/definitions/uuid.NullUUID'
       minimum:
         type: integer
-      model:
-        type: string
       mpn:
         type: string
-      price:
+      price_business:
+        type: number
+      price_retail:
+        type: number
+      price_wholesale:
         type: number
       quantity:
         type: integer
@@ -1083,6 +1097,8 @@ definitions:
         $ref: '#/definitions/pgtype.Text'
       meta_title:
         $ref: '#/definitions/pgtype.Text'
+      model:
+        type: string
       name:
         type: string
       product_id:
@@ -1115,6 +1131,8 @@ definitions:
       meta_keyword:
         type: string
       meta_title:
+        type: string
+      model:
         type: string
       name:
         type: string
@@ -1230,6 +1248,25 @@ definitions:
       slug:
         type: string
     type: object
+  ShortProductResponse:
+    properties:
+      id:
+        type: string
+      image:
+        $ref: '#/definitions/pgtype.Text'
+      is_enable:
+        type: boolean
+      model:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      product_id:
+        type: string
+      slug:
+        type: string
+    type: object
   StockStatus:
     enum:
     - IN_STOCK
@@ -1246,6 +1283,13 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  TrackViewedRequest:
+    properties:
+      variant_id:
+        type: string
+    required:
+    - variant_id
     type: object
   UpdateAttributeGroupRequest:
     properties:
@@ -1394,7 +1438,11 @@ definitions:
         type: string
       mpn:
         type: string
-      price:
+      price_business:
+        type: number
+      price_retail:
+        type: number
+      price_wholesale:
         type: number
       quantity:
         type: integer
@@ -1472,6 +1520,28 @@ definitions:
     required:
     - email
     - location
+    type: object
+  ViewedItemResponse:
+    properties:
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      product_id:
+        type: string
+      slug:
+        type: string
+      variant_id:
+        type: string
+    type: object
+  ViewedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/ViewedItemResponse'
+        type: array
     type: object
   decimal.NullDecimal:
     properties:
@@ -1680,11 +1750,13 @@ definitions:
         $ref: '#/definitions/uuid.NullUUID'
       minimum:
         type: integer
-      model:
-        type: string
       mpn:
         $ref: '#/definitions/pgtype.Text'
-      price:
+      price_business:
+        type: number
+      price_retail:
+        type: number
+      price_wholesale:
         type: number
       quantity:
         type: integer
@@ -1731,11 +1803,13 @@ definitions:
         $ref: '#/definitions/uuid.NullUUID'
       minimum:
         type: integer
-      model:
-        type: string
       mpn:
         $ref: '#/definitions/pgtype.Text'
-      price:
+      price_business:
+        type: number
+      price_retail:
+        type: number
+      price_wholesale:
         type: number
       quantity:
         type: integer
@@ -1872,7 +1946,7 @@ paths:
       parameters:
       - description: Item to add
         in: body
-        name: body
+        name: Add
         required: true
         schema:
           $ref: '#/definitions/AddCartItemRequest'
@@ -1933,7 +2007,7 @@ paths:
         type: string
       - description: New quantity
         in: body
-        name: body
+        name: create
         required: true
         schema:
           $ref: '#/definitions/UpdateCartItemRequest'
@@ -2044,6 +2118,54 @@ paths:
       summary: Get Product Reviews By Product ID
       tags:
       - Product Review
+  /api/v1/viewed-products:
+    get:
+      description: Returns the last 10 viewed product variants for the current user
+        or guest session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ViewedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get viewed products
+      tags:
+      - Viewed
+    post:
+      consumes:
+      - application/json
+      description: Records a product variant as viewed for the current user or guest
+        session
+      parameters:
+      - description: Variant to track
+        in: body
+        name: add
+        required: true
+        schema:
+          $ref: '#/definitions/TrackViewedRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Track viewed product
+      tags:
+      - Viewed
   /v1/attribute-group:
     get:
       consumes:
@@ -3904,7 +4026,7 @@ paths:
       parameters:
       - description: List of variant IDs
         in: body
-        name: body
+        name: get
         required: true
         schema:
           $ref: '#/definitions/GetRelatedProductsBatchRequest'

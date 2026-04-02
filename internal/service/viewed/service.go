@@ -111,7 +111,7 @@ func (s Service) enrich(ctx context.Context, ids []uuid.UUID) (*dto.ViewedDTO, e
 			Name:      r.Name,
 			Slug:      r.Slug,
 			ImageURL:  imageURL,
-			Price:     r.PriceRetail, // todo get price by user group retail/buisness/wholesale, not just retail.
+			Price:     r.PriceRetail, // todo get price by user group retail/business/wholesale, not just retail.
 		}
 	}
 

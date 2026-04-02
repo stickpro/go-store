@@ -77,7 +77,7 @@
                 "parameters": [
                     {
                         "description": "Item to add",
-                        "name": "body",
+                        "name": "Add",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -169,7 +169,7 @@
                     },
                     {
                         "description": "New quantity",
-                        "name": "body",
+                        "name": "create",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -331,6 +331,76 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/viewed-products": {
+            "get": {
+                "description": "Returns the last 10 viewed product variants for the current user or guest session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Viewed"
+                ],
+                "summary": "Get viewed products",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ViewedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Records a product variant as viewed for the current user or guest session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Viewed"
+                ],
+                "summary": "Track viewed product",
+                "parameters": [
+                    {
+                        "description": "Variant to track",
+                        "name": "add",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/TrackViewedRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -2960,7 +3030,7 @@
                 "parameters": [
                     {
                         "description": "List of variant IDs",
-                        "name": "body",
+                        "name": "get",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -3843,7 +3913,7 @@
                 "products": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ShortProduct"
+                        "$ref": "#/definitions/ShortProductResponse"
                     }
                 },
                 "slug": {
@@ -4076,8 +4146,6 @@
             "type": "object",
             "required": [
                 "minimum",
-                "model",
-                "price",
                 "variant"
             ],
             "properties": {
@@ -4114,13 +4182,16 @@
                 "minimum": {
                     "type": "integer"
                 },
-                "model": {
-                    "type": "string"
-                },
                 "mpn": {
                     "type": "string"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {
@@ -4155,6 +4226,7 @@
         "CreateProductVariantRequest": {
             "type": "object",
             "required": [
+                "model",
                 "name",
                 "slug"
             ],
@@ -4181,6 +4253,9 @@
                     "type": "string"
                 },
                 "meta_title": {
+                    "type": "string"
+                },
+                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -4580,6 +4655,20 @@
                 }
             }
         },
+        "JSONResponse-ViewedResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ViewedResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-any": {
             "type": "object",
             "properties": {
@@ -4893,13 +4982,16 @@
                 "minimum": {
                     "type": "integer"
                 },
-                "model": {
-                    "type": "string"
-                },
                 "mpn": {
                     "type": "string"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {
@@ -4993,6 +5085,9 @@
                 "meta_title": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
+                "model": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -5041,6 +5136,9 @@
                     "type": "string"
                 },
                 "meta_title": {
+                    "type": "string"
+                },
+                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -5216,6 +5314,35 @@
                 }
             }
         },
+        "ShortProductResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "is_enable": {
+                    "type": "boolean"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
         "StockStatus": {
             "type": "string",
             "enum": [
@@ -5237,6 +5364,17 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "TrackViewedRequest": {
+            "type": "object",
+            "required": [
+                "variant_id"
+            ],
+            "properties": {
+                "variant_id": {
+                    "type": "string"
                 }
             }
         },
@@ -5452,7 +5590,13 @@
                 "mpn": {
                     "type": "string"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {
@@ -5563,6 +5707,40 @@
                 "updated_at": {
                     "type": "string",
                     "format": "date-time"
+                }
+            }
+        },
+        "ViewedItemResponse": {
+            "type": "object",
+            "properties": {
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "variant_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "ViewedResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ViewedItemResponse"
+                    }
                 }
             }
         },
@@ -5881,13 +6059,16 @@
                 "minimum": {
                     "type": "integer"
                 },
-                "model": {
-                    "type": "string"
-                },
                 "mpn": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {
@@ -5958,13 +6139,16 @@
                 "minimum": {
                     "type": "integer"
                 },
-                "model": {
-                    "type": "string"
-                },
                 "mpn": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {

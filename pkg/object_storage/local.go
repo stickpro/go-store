@@ -13,10 +13,10 @@ type LocalStorage struct {
 
 func (s *LocalStorage) Save(_ context.Context, path string, data []byte) (string, error) {
 	fullPath := filepath.Join(s.BasePath, path)
-	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(fullPath, data, 0644); err != nil { //nolint:gosec
+	if err := os.WriteFile(fullPath, data, 0o644); err != nil { //nolint:gosec
 		return "", err
 	}
 	return fullPath, nil

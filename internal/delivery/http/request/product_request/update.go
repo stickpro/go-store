@@ -34,7 +34,7 @@ type UpdateProductRequest struct {
 	ManufacturerID *uuid.UUID                  `json:"manufacturer_id,omitempty" validate:"omitempty,uuid"`
 	PriceRetail    decimal.Decimal             `json:"price_retail" validate:"omitempty,numeric"`
 	PriceBusiness  decimal.Decimal             `json:"price_business" validate:"omitempty,numeric"`
-	PriceWholeSale decimal.Decimal             `json:"price_wholesale" validate:"omitempty,numeric"`
+	PriceWholesale decimal.Decimal             `json:"price_wholesale" validate:"omitempty,numeric"`
 	Weight         decimal.Decimal             `json:"weight" validate:"omitempty,numeric"`
 	Length         decimal.Decimal             `json:"length" validate:"omitempty,numeric"`
 	Width          decimal.Decimal             `json:"width" validate:"omitempty,numeric"`

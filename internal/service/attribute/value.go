@@ -30,7 +30,6 @@ func (s *Service) GetAttributeValues(ctx context.Context, d dto.GetDTO) (*base.F
 		commonParams.Page = d.Page
 	}
 	attributeValues, err := s.storage.AttributeValues().GetWithPaginate(ctx, commonParams)
-
 	if err != nil {
 		return nil, err
 	}

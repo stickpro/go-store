@@ -64,7 +64,6 @@ func (s Service) Save(ctx context.Context, dto SaveMediumDTO) (*models.Medium, e
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +73,6 @@ func (s Service) Save(ctx context.Context, dto SaveMediumDTO) (*models.Medium, e
 
 func (s Service) Delete(ctx context.Context, id uuid.UUID) error {
 	mediaInfo, err := s.storage.Media().Get(ctx, id)
-
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.l.Debug("failed to get media by ID", "error", parsedErr)

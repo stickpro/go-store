@@ -84,7 +84,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Item to add",
-                        "name": "body",
+                        "name": "Add",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -176,7 +176,7 @@ const docTemplate = `{
                     },
                     {
                         "description": "New quantity",
-                        "name": "body",
+                        "name": "create",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -338,6 +338,76 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/viewed-products": {
+            "get": {
+                "description": "Returns the last 10 viewed product variants for the current user or guest session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Viewed"
+                ],
+                "summary": "Get viewed products",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ViewedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Records a product variant as viewed for the current user or guest session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Viewed"
+                ],
+                "summary": "Track viewed product",
+                "parameters": [
+                    {
+                        "description": "Variant to track",
+                        "name": "add",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/TrackViewedRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -2967,7 +3037,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "List of variant IDs",
-                        "name": "body",
+                        "name": "get",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -3850,7 +3920,7 @@ const docTemplate = `{
                 "products": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ShortProduct"
+                        "$ref": "#/definitions/ShortProductResponse"
                     }
                 },
                 "slug": {
@@ -4083,8 +4153,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "minimum",
-                "model",
-                "price",
                 "variant"
             ],
             "properties": {
@@ -4121,13 +4189,16 @@ const docTemplate = `{
                 "minimum": {
                     "type": "integer"
                 },
-                "model": {
-                    "type": "string"
-                },
                 "mpn": {
                     "type": "string"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {
@@ -4162,6 +4233,7 @@ const docTemplate = `{
         "CreateProductVariantRequest": {
             "type": "object",
             "required": [
+                "model",
                 "name",
                 "slug"
             ],
@@ -4188,6 +4260,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "meta_title": {
+                    "type": "string"
+                },
+                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -4587,6 +4662,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-ViewedResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ViewedResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-any": {
             "type": "object",
             "properties": {
@@ -4900,13 +4989,16 @@ const docTemplate = `{
                 "minimum": {
                     "type": "integer"
                 },
-                "model": {
-                    "type": "string"
-                },
                 "mpn": {
                     "type": "string"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {
@@ -5000,6 +5092,9 @@ const docTemplate = `{
                 "meta_title": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
+                "model": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -5048,6 +5143,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "meta_title": {
+                    "type": "string"
+                },
+                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -5223,6 +5321,35 @@ const docTemplate = `{
                 }
             }
         },
+        "ShortProductResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "is_enable": {
+                    "type": "boolean"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
         "StockStatus": {
             "type": "string",
             "enum": [
@@ -5244,6 +5371,17 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "TrackViewedRequest": {
+            "type": "object",
+            "required": [
+                "variant_id"
+            ],
+            "properties": {
+                "variant_id": {
+                    "type": "string"
                 }
             }
         },
@@ -5459,7 +5597,13 @@ const docTemplate = `{
                 "mpn": {
                     "type": "string"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {
@@ -5570,6 +5714,40 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "format": "date-time"
+                }
+            }
+        },
+        "ViewedItemResponse": {
+            "type": "object",
+            "properties": {
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "variant_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "ViewedResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ViewedItemResponse"
+                    }
                 }
             }
         },
@@ -5888,13 +6066,16 @@ const docTemplate = `{
                 "minimum": {
                     "type": "integer"
                 },
-                "model": {
-                    "type": "string"
-                },
                 "mpn": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {
@@ -5965,13 +6146,16 @@ const docTemplate = `{
                 "minimum": {
                     "type": "integer"
                 },
-                "model": {
-                    "type": "string"
-                },
                 "mpn": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
-                "price": {
+                "price_business": {
+                    "type": "number"
+                },
+                "price_retail": {
+                    "type": "number"
+                },
+                "price_wholesale": {
                     "type": "number"
                 },
                 "quantity": {

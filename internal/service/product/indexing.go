@@ -61,11 +61,7 @@ func (s *Service) CreateProductVariantIndex(ctx context.Context, reindex bool) e
 			break
 		}
 
-		data, err := s.buildVariantDocuments(ctx, res.Items)
-		if err != nil {
-			s.logger.Error("Failed to build variant documents", "error", err)
-			return err
-		}
+		data := s.buildVariantDocuments(ctx, res.Items)
 
 		if isFirstBatch {
 			err = s.searchService.CreateIndex(constant.ProductVariantsIndex, data, indexOptions)
@@ -94,14 +90,11 @@ func (s *Service) CreateProductVariantIndex(ctx context.Context, reindex bool) e
 }
 
 func (s *Service) IndexVariant(ctx context.Context, variant *models.ProductVariant, product *models.Product) error {
-	doc, err := s.buildVariantDocument(ctx, variant, product)
-	if err != nil {
-		return err
-	}
+	doc := s.buildVariantDocument(ctx, variant, product)
 	return s.searchService.UpsertDocument(constant.ProductVariantsIndex, []map[string]any{doc})
 }
 
-func (s *Service) buildVariantDocuments(ctx context.Context, variants []*dto.EnrichedVariantDTO) ([]map[string]any, error) {
+func (s *Service) buildVariantDocuments(ctx context.Context, variants []*dto.EnrichedVariantDTO) []map[string]any {
 	attrCache := make(map[uuid.UUID][]*repository_product_attribute_values.GetByProductIDRow)
 
 	docs := make([]map[string]any, 0, len(variants))
@@ -119,10 +112,10 @@ func (s *Service) buildVariantDocuments(ctx context.Context, variants []*dto.Enr
 		docs = append(docs, s.variantToDocument(v, attrs))
 	}
 
-	return docs, nil
+	return docs
 }
 
-func (s *Service) buildVariantDocument(ctx context.Context, variant *models.ProductVariant, product *models.Product) (map[string]any, error) {
+func (s *Service) buildVariantDocument(ctx context.Context, variant *models.ProductVariant, product *models.Product) map[string]any {
 	enriched := &dto.EnrichedVariantDTO{
 		ProductVariant: variant,
 		PriceRetail:    product.PriceRetail,
@@ -137,7 +130,7 @@ func (s *Service) buildVariantDocument(ctx context.Context, variant *models.Prod
 		s.logger.Warn("Failed to get attributes for product", "product_id", product.ID, "error", err)
 	}
 
-	return s.variantToDocument(enriched, attrs), nil
+	return s.variantToDocument(enriched, attrs)
 }
 
 func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*repository_product_attribute_values.GetByProductIDRow) map[string]any {

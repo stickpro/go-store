@@ -34,7 +34,6 @@ func (s *Service) GetAttributeGroups(ctx context.Context, d dto.GetDTO) (*base.F
 	}
 
 	attributeGroup, err := s.storage.AttributeGroups().GetWithPaginate(ctx, commonParams)
-
 	if err != nil {
 		return nil, err
 	}
