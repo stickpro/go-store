@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -22,6 +23,7 @@ import (
 
 // SyncProductImages downloads new images, reuses existing ones, removes stale ones.
 // Images uploaded via admin UI (source_url IS NULL) are never touched.
+// TODO main image set for product or product_variant?
 func (s Service) SyncProductImages(ctx context.Context, productID uuid.UUID, imageMain *string, images []string) error {
 	// Build ordered URL list: main first, then the rest (deduplicated)
 	seen := make(map[string]struct{})
@@ -45,15 +47,35 @@ func (s Service) SyncProductImages(ctx context.Context, productID uuid.UUID, ima
 		}
 	}
 
-	// Resolve each URL to a media record (reuse or download)
+	// Resolve each URL to a media record in parallel (reuse or download).
+	// Results are collected in order to preserve sort_order.
+	type result struct {
+		mediaID uuid.UUID
+		err     error
+	}
+	results := make([]result, len(orderedURLs))
+	var wg sync.WaitGroup
+	for i, rawURL := range orderedURLs {
+		wg.Add(1)
+		go func(idx int, u string) {
+			defer wg.Done()
+			m, err := s.resolveImage(ctx, u)
+			if err != nil {
+				results[idx] = result{err: err}
+				return
+			}
+			results[idx] = result{mediaID: m.ID}
+		}(i, rawURL)
+	}
+	wg.Wait()
+
 	newMediaIDs := make([]uuid.UUID, 0, len(orderedURLs))
-	for _, rawURL := range orderedURLs {
-		m, err := s.resolveImage(ctx, rawURL)
-		if err != nil {
-			s.l.Errorw("sync product images: resolve", "url", rawURL, "error", err)
+	for i, r := range results {
+		if r.err != nil {
+			s.l.Errorw("sync product images: resolve", "url", orderedURLs[i], "error", r.err)
 			continue
 		}
-		newMediaIDs = append(newMediaIDs, m.ID)
+		newMediaIDs = append(newMediaIDs, r.mediaID)
 	}
 
 	// Determine which Kafka-managed media should be removed from product_media

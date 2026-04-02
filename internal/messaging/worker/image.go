@@ -2,8 +2,9 @@ package worker
 
 import (
 	"context"
-	"encoding/json"
+	"sync"
 
+	"github.com/goccy/go-json"
 	"github.com/stickpro/go-store/internal/messaging/tasks"
 	"github.com/stickpro/go-store/internal/service/media"
 	"github.com/stickpro/go-store/pkg/logger"
@@ -11,17 +12,34 @@ import (
 )
 
 type ImageWorker struct {
-	queue    queue.IQueue
-	mediaSvc media.IMediaService
-	logger   logger.Logger
+	queue       queue.IQueue
+	mediaSvc    media.IMediaService
+	logger      logger.Logger
+	concurrency int
 }
 
-func NewImageWorker(q queue.IQueue, mediaSvc media.IMediaService, log logger.Logger) *ImageWorker {
-	return &ImageWorker{queue: q, mediaSvc: mediaSvc, logger: log}
+func NewImageWorker(q queue.IQueue, mediaSvc media.IMediaService, concurrency int, log logger.Logger) *ImageWorker {
+	if concurrency <= 0 {
+		concurrency = 1
+	}
+	return &ImageWorker{queue: q, mediaSvc: mediaSvc, concurrency: concurrency, logger: log}
 }
 
+// Run starts concurrency worker goroutines and blocks until ctx is cancelled.
 func (w *ImageWorker) Run(ctx context.Context) {
-	w.logger.Info("Image worker started")
+	var wg sync.WaitGroup
+	for range w.concurrency {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			w.loop(ctx)
+		}()
+	}
+	wg.Wait()
+	w.logger.Info("Image workers stopped")
+}
+
+func (w *ImageWorker) loop(ctx context.Context) {
 	for {
 		payload, err := w.queue.Pop(ctx, tasks.ImageSyncQueue)
 		if err != nil {

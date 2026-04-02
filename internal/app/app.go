@@ -72,7 +72,7 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 		}
 	}()
 
-	imageWorker := worker.NewImageWorker(q, services.MediaService, l)
+	imageWorker := worker.NewImageWorker(q, services.MediaService, conf.Workers.ImageSync, l)
 	go imageWorker.Run(ctx)
 
 	serverErrCh := make(chan error, 1)

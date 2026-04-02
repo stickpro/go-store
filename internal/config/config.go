@@ -13,10 +13,11 @@ type (
 		Postgres     PostgresDB `yaml:"postgres"`
 		Redis        RedisDB    `yaml:"redis"`
 		Log          logger.Config
-		KeyValue     KeyValue     `yaml:"key_value"`
-		FileStorage  FileStorage  `yaml:"file_storage"`
-		SearchEngine SearchEngine `yaml:"search_engine"`
-		Kafka        KafkaConfig  `yaml:"kafka"`
+		KeyValue     KeyValue      `yaml:"key_value"`
+		FileStorage  FileStorage   `yaml:"file_storage"`
+		SearchEngine SearchEngine  `yaml:"search_engine"`
+		Kafka        KafkaConfig   `yaml:"kafka"`
+		Workers      WorkersConfig `yaml:"workers"`
 	}
 
 	AppConfig struct {
@@ -47,6 +48,10 @@ type (
 		Type   string `yaml:"type" default:"local" example:"local / s3"`
 		Path   string `yaml:"path" default:"storage"`
 		Bucket string `yaml:"bucket" default:""`
+	}
+
+	WorkersConfig struct {
+		ImageSync int `yaml:"image_sync" default:"3"`
 	}
 )
 
