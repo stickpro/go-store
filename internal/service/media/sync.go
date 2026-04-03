@@ -158,7 +158,7 @@ func (s Service) resolveImage(ctx context.Context, rawURL string) (*models.Mediu
 }
 
 func downloadImage(ctx context.Context, rawURL string) ([]byte, string, error) {
-	if err := urlutil.ValidatePublicHTTPURL(rawURL); err != nil {
+	if err := urlutil.ValidatePublicHTTPURL(ctx, rawURL); err != nil {
 		return nil, "", err
 	}
 
