@@ -142,7 +142,6 @@ func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*reposito
 		"slug":            v.Slug,
 		"description":     v.Description.String,
 		"meta_keyword":    v.MetaKeyword.String,
-		"image":           v.Image.String,
 		"is_enable":       v.IsEnable,
 		"sort_order":      v.SortOrder,
 		"viewed":          v.Viewed,

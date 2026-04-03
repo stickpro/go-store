@@ -33,7 +33,6 @@ type CreateProductVariantDTO struct {
 	MetaH1          *string
 	MetaDescription *string
 	MetaKeyword     *string
-	Image           *string
 	SortOrder       int32
 	IsEnable        bool
 }
@@ -47,6 +46,7 @@ type CreateProductDTO struct {
 	Mpn            *string
 	Location       *string
 	Quantity       int64
+	Image          *string
 	StockStatus    constant.StockStatus
 	ManufacturerID uuid.NullUUID
 	PriceRetail    decimal.Decimal
@@ -90,6 +90,7 @@ type UpdateProductDTO struct {
 	Mpn            *string
 	Location       *string
 	Quantity       int64
+	Image          *string
 	StockStatus    constant.StockStatus
 	ManufacturerID uuid.NullUUID
 	PriceRetail    decimal.Decimal
@@ -162,6 +163,7 @@ func RequestToCreateProductDTO(req *product_request.CreateProductRequest) Create
 		SortOrder:      req.SortOrder,
 		IsEnable:       req.IsEnable,
 		MediaIDs:       req.MediaIDs,
+		Image:          req.Image,
 		Variant: CreateProductVariantDTO{
 			Name:            req.Variant.Name,
 			Slug:            req.Variant.Slug,
@@ -171,7 +173,6 @@ func RequestToCreateProductDTO(req *product_request.CreateProductRequest) Create
 			MetaH1:          req.Variant.MetaH1,
 			MetaDescription: req.Variant.MetaDescription,
 			MetaKeyword:     req.Variant.MetaKeyword,
-			Image:           req.Variant.Image,
 			SortOrder:       req.Variant.SortOrder,
 			IsEnable:        req.Variant.IsEnable,
 		},

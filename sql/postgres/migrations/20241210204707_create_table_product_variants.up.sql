@@ -12,7 +12,6 @@ create table product_variants
     meta_h1          varchar(255),
     meta_description varchar(400),
     meta_keyword     varchar(255),
-    image            varchar(255)            default null,
     sort_order       int            not null default 0,
     is_enable        boolean        not null default true,
     viewed           bigint         not null default 0,

@@ -22,6 +22,7 @@ create table products
     height          decimal(15, 8) not null default 0.00000000,
     subtract        boolean        not null default true,
     minimum         bigint         not null default 1,
+    image           varchar(255)            default null,
     sort_order      int            not null default 0,
     is_enable       boolean        not null default true,
     created_at      timestamp      not null default current_timestamp,

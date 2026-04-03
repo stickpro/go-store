@@ -87,6 +87,7 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 		Minimum:        d.Minimum,
 		SortOrder:      d.SortOrder,
 		IsEnable:       d.IsEnable,
+		Image:          pgtypeutils.EncodeText(d.Image),
 	}
 
 	var prd *models.Product
@@ -111,7 +112,6 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 			MetaH1:          pgtypeutils.EncodeText(d.Variant.MetaH1),
 			MetaDescription: pgtypeutils.EncodeText(d.Variant.MetaDescription),
 			MetaKeyword:     pgtypeutils.EncodeText(d.Variant.MetaKeyword),
-			Image:           pgtypeutils.EncodeText(d.Variant.Image),
 			SortOrder:       d.Variant.SortOrder,
 			IsEnable:        d.Variant.IsEnable,
 			Viewed:          0,
@@ -212,6 +212,7 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 		Mpn:            pgtypeutils.EncodeText(d.Mpn),
 		Location:       pgtypeutils.EncodeText(d.Location),
 		Quantity:       d.Quantity,
+		Image:          pgtypeutils.EncodeText(d.Image),
 		StockStatus:    d.StockStatus,
 		PriceRetail:    d.PriceRetail,
 		PriceBusiness:  d.PriceBusiness,
@@ -250,7 +251,6 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 			MetaH1:          pgtypeutils.EncodeText(d.Variant.MetaH1),
 			MetaDescription: pgtypeutils.EncodeText(d.Variant.MetaDescription),
 			MetaKeyword:     pgtypeutils.EncodeText(d.Variant.MetaKeyword),
-			Image:           pgtypeutils.EncodeText(d.Variant.Image),
 			SortOrder:       d.Variant.SortOrder,
 			IsEnable:        d.Variant.IsEnable,
 			Viewed:          0,

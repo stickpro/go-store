@@ -16,9 +16,9 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO products (external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, now())
-	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at
+INSERT INTO products (external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, now())
+	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at
 `
 
 type CreateParams struct {
@@ -42,6 +42,7 @@ type CreateParams struct {
 	Height         decimal.Decimal      `db:"height" json:"height"`
 	Subtract       bool                 `db:"subtract" json:"subtract"`
 	Minimum        int64                `db:"minimum" json:"minimum"`
+	Image          pgtype.Text          `db:"image" json:"image"`
 	SortOrder      int32                `db:"sort_order" json:"sort_order"`
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
 }
@@ -68,6 +69,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		arg.Height,
 		arg.Subtract,
 		arg.Minimum,
+		arg.Image,
 		arg.SortOrder,
 		arg.IsEnable,
 	)
@@ -94,6 +96,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		&i.Height,
 		&i.Subtract,
 		&i.Minimum,
+		&i.Image,
 		&i.SortOrder,
 		&i.IsEnable,
 		&i.CreatedAt,
@@ -107,9 +110,9 @@ UPDATE products
 	SET external_id=$1, manufacturer_id=$2, sku=$3, upc=$4, ean=$5, jan=$6, 
 		isbn=$7, mpn=$8, location=$9, quantity=$10, stock_status=$11, price_retail=$12, 
 		price_business=$13, price_wholesale=$14, weight=$15, length=$16, width=$17, height=$18, 
-		subtract=$19, minimum=$20, sort_order=$21, is_enable=$22, updated_at=now()
-	WHERE id=$23
-	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, sort_order, is_enable, created_at, updated_at
+		subtract=$19, minimum=$20, image=$21, sort_order=$22, is_enable=$23, updated_at=now()
+	WHERE id=$24
+	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at
 `
 
 type UpdateParams struct {
@@ -133,6 +136,7 @@ type UpdateParams struct {
 	Height         decimal.Decimal      `db:"height" json:"height"`
 	Subtract       bool                 `db:"subtract" json:"subtract"`
 	Minimum        int64                `db:"minimum" json:"minimum"`
+	Image          pgtype.Text          `db:"image" json:"image"`
 	SortOrder      int32                `db:"sort_order" json:"sort_order"`
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
 	ID             uuid.UUID            `db:"id" json:"id"`
@@ -160,6 +164,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		arg.Height,
 		arg.Subtract,
 		arg.Minimum,
+		arg.Image,
 		arg.SortOrder,
 		arg.IsEnable,
 		arg.ID,
@@ -187,6 +192,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		&i.Height,
 		&i.Subtract,
 		&i.Minimum,
+		&i.Image,
 		&i.SortOrder,
 		&i.IsEnable,
 		&i.CreatedAt,

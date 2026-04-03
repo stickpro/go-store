@@ -15,7 +15,6 @@ type CreateProductVariantRequest struct {
 	MetaH1          *string    `json:"meta_h1,omitempty"`
 	MetaDescription *string    `json:"meta_description,omitempty"`
 	MetaKeyword     *string    `json:"meta_keyword,omitempty"`
-	Image           *string    `json:"image,omitempty"`
 	SortOrder       int32      `json:"sort_order"`
 	IsEnable        bool       `json:"is_enable"`
 } //	@name	CreateProductVariantRequest
@@ -29,6 +28,7 @@ type CreateProductRequest struct {
 	Mpn            *string                     `json:"mpn,omitempty"`
 	Location       *string                     `json:"location,omitempty"`
 	Quantity       int64                       `json:"quantity"`
+	Image          *string                     `json:"image,omitempty"`
 	StockStatus    string                      `json:"stock_status"`
 	ManufacturerID *uuid.UUID                  `json:"manufacturer_id,omitempty" validate:"omitempty,uuid"`
 	PriceRetail    decimal.Decimal             `json:"price_retail" validate:"numeric"`

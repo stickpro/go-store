@@ -20,7 +20,6 @@ type ProductVariantResponse struct {
 	MetaH1          *string       `json:"meta_h1"`
 	MetaDescription *string       `json:"meta_description"`
 	MetaKeyword     *string       `json:"meta_keyword"`
-	Image           *string       `json:"image"`
 	SortOrder       int32         `json:"sort_order"`
 	IsEnable        bool          `json:"is_enable"`
 } //	@name	ProductVariantResponse
@@ -35,6 +34,7 @@ type ProductResponse struct {
 	Mpn            *string                `json:"mpn"`
 	Location       *string                `json:"location"`
 	Quantity       int64                  `json:"quantity"`
+	Image          *string                `json:"image,omitempty"`
 	StockStatus    string                 `json:"stock_status"`
 	ManufacturerID uuid.NullUUID          `json:"manufacturer_id"`
 	PriceRetail    decimal.Decimal        `json:"price_retail"`
@@ -62,6 +62,7 @@ func NewFromModels(product *models.Product, variant *models.ProductVariant) Prod
 		Mpn:            pgtypeutils.DecodeText(product.Mpn),
 		Location:       pgtypeutils.DecodeText(product.Location),
 		Quantity:       product.Quantity,
+		Image:          pgtypeutils.DecodeText(product.Image),
 		StockStatus:    product.StockStatus.String(),
 		ManufacturerID: product.ManufacturerID,
 		PriceRetail:    product.PriceRetail,
@@ -88,7 +89,6 @@ func NewFromModels(product *models.Product, variant *models.ProductVariant) Prod
 			MetaH1:          pgtypeutils.DecodeText(variant.MetaH1),
 			MetaDescription: pgtypeutils.DecodeText(variant.MetaDescription),
 			MetaKeyword:     pgtypeutils.DecodeText(variant.MetaKeyword),
-			Image:           pgtypeutils.DecodeText(variant.Image),
 			SortOrder:       variant.SortOrder,
 			IsEnable:        variant.IsEnable,
 		}
@@ -128,7 +128,6 @@ func NewVariantFromModel(variant *models.ProductVariant) ProductVariantResponse 
 		MetaH1:          pgtypeutils.DecodeText(variant.MetaH1),
 		MetaDescription: pgtypeutils.DecodeText(variant.MetaDescription),
 		MetaKeyword:     pgtypeutils.DecodeText(variant.MetaKeyword),
-		Image:           pgtypeutils.DecodeText(variant.Image),
 		SortOrder:       variant.SortOrder,
 		IsEnable:        variant.IsEnable,
 	}

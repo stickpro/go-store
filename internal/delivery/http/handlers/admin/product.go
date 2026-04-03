@@ -114,7 +114,6 @@ func (h *Handler) createProductVariant(c fiber.Ctx) error {
 		MetaH1:          req.MetaH1,
 		MetaDescription: req.MetaDescription,
 		MetaKeyword:     req.MetaKeyword,
-		Image:           req.Image,
 		SortOrder:       req.SortOrder,
 		IsEnable:        req.IsEnable,
 	}

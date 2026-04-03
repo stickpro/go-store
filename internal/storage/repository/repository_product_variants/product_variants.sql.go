@@ -13,7 +13,7 @@ import (
 )
 
 const getByProductID = `-- name: GetByProductID :many
-SELECT id, product_id, category_id, name, slug, description, model, meta_title, meta_h1, meta_description, meta_keyword, image, sort_order, is_enable, viewed, created_at, updated_at FROM product_variants WHERE product_id = $1 ORDER BY sort_order ASC
+SELECT id, product_id, category_id, name, slug, description, model, meta_title, meta_h1, meta_description, meta_keyword, sort_order, is_enable, viewed, created_at, updated_at FROM product_variants WHERE product_id = $1 ORDER BY sort_order ASC
 `
 
 func (q *Queries) GetByProductID(ctx context.Context, productID uuid.UUID) ([]*models.ProductVariant, error) {
@@ -37,7 +37,6 @@ func (q *Queries) GetByProductID(ctx context.Context, productID uuid.UUID) ([]*m
 			&i.MetaH1,
 			&i.MetaDescription,
 			&i.MetaKeyword,
-			&i.Image,
 			&i.SortOrder,
 			&i.IsEnable,
 			&i.Viewed,
@@ -55,7 +54,7 @@ func (q *Queries) GetByProductID(ctx context.Context, productID uuid.UUID) ([]*m
 }
 
 const getBySlug = `-- name: GetBySlug :one
-SELECT id, product_id, category_id, name, slug, description, model, meta_title, meta_h1, meta_description, meta_keyword, image, sort_order, is_enable, viewed, created_at, updated_at FROM product_variants WHERE slug = $1 LIMIT 1
+SELECT id, product_id, category_id, name, slug, description, model, meta_title, meta_h1, meta_description, meta_keyword, sort_order, is_enable, viewed, created_at, updated_at FROM product_variants WHERE slug = $1 LIMIT 1
 `
 
 func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.ProductVariant, error) {
@@ -73,7 +72,6 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.ProductVa
 		&i.MetaH1,
 		&i.MetaDescription,
 		&i.MetaKeyword,
-		&i.Image,
 		&i.SortOrder,
 		&i.IsEnable,
 		&i.Viewed,

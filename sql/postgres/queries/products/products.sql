@@ -19,7 +19,7 @@ SELECT p.id       AS product_id,
        pv.id       AS variant_id,
        pv.name,
        pv.slug,
-       pv.image,
+       p.image,
        pv.is_enable AS variant_enabled
 FROM products p
          JOIN product_variants pv ON pv.product_id = p.id

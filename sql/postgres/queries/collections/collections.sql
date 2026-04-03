@@ -29,7 +29,7 @@ SELECT c.*,
        p.price_business      AS product_price_business,
        p.price_wholesale     AS product_price_wholesale,
        p.is_enable           AS product_is_enable,
-       pv.image              AS product_image
+       p.image               AS product_image
 FROM collections c
          LEFT JOIN collection_variants cv ON cv.collection_id = c.id
          LEFT JOIN product_variants pv ON pv.id = cv.variant_id
@@ -47,7 +47,7 @@ SELECT c.*,
        p.price_business      AS product_price_business,
        p.price_wholesale     AS product_price_wholesale,
        p.is_enable           AS product_is_enable,
-       pv.image              AS product_image
+       p.image               AS product_image
 FROM collections c
          LEFT JOIN collection_variants cv ON cv.collection_id = c.id
          LEFT JOIN product_variants pv ON pv.id = cv.variant_id

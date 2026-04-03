@@ -174,6 +174,7 @@ type Product struct {
 	Height         decimal.Decimal      `db:"height" json:"height"`
 	Subtract       bool                 `db:"subtract" json:"subtract"`
 	Minimum        int64                `db:"minimum" json:"minimum"`
+	Image          pgtype.Text          `db:"image" json:"image"`
 	SortOrder      int32                `db:"sort_order" json:"sort_order"`
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
 	CreatedAt      pgtype.Timestamp     `db:"created_at" json:"created_at"`
@@ -218,7 +219,6 @@ type ProductVariant struct {
 	MetaH1          pgtype.Text      `db:"meta_h1" json:"meta_h1"`
 	MetaDescription pgtype.Text      `db:"meta_description" json:"meta_description"`
 	MetaKeyword     pgtype.Text      `db:"meta_keyword" json:"meta_keyword"`
-	Image           pgtype.Text      `db:"image" json:"image"`
 	SortOrder       int32            `db:"sort_order" json:"sort_order"`
 	IsEnable        bool             `db:"is_enable" json:"is_enable"`
 	Viewed          int64            `db:"viewed" json:"viewed"`
