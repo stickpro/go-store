@@ -2919,6 +2919,109 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/product/variant/:variant_id/categories": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get additional categories for a product variant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Get Variant Categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_VariantCategoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/product/variant/:variant_id/sync-categories": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sync additional categories for a product variant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Product"
+                ],
+                "summary": "Sync Variant Categories",
+                "parameters": [
+                    {
+                        "description": "Sync variant categories",
+                        "name": "update",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SyncVariantCategoriesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/product/variant/:variant_id/sync-related-products": {
             "post": {
                 "description": "Sync Related Products",
@@ -4152,8 +4255,7 @@ const docTemplate = `{
         "CreateProductRequest": {
             "type": "object",
             "required": [
-                "minimum",
-                "variant"
+                "minimum"
             ],
             "properties": {
                 "ean": {
@@ -4161,6 +4263,9 @@ const docTemplate = `{
                 },
                 "height": {
                     "type": "number"
+                },
+                "image": {
+                    "type": "string"
                 },
                 "is_enable": {
                     "type": "boolean"
@@ -4219,9 +4324,6 @@ const docTemplate = `{
                 "upc": {
                     "type": "string"
                 },
-                "variant": {
-                    "$ref": "#/definitions/CreateProductVariantRequest"
-                },
                 "weight": {
                     "type": "number"
                 },
@@ -4242,9 +4344,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
-                },
-                "image": {
                     "type": "string"
                 },
                 "is_enable": {
@@ -4807,6 +4906,23 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-array_VariantCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VariantCategoryResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeValueDTO": {
             "type": "object",
             "properties": {
@@ -4968,6 +5084,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "image": {
+                    "type": "string"
+                },
                 "is_enable": {
                     "type": "boolean"
                 },
@@ -5074,9 +5193,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "image": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
                 "is_enable": {
                     "type": "boolean"
                 },
@@ -5125,9 +5241,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "image": {
                     "type": "string"
                 },
                 "is_enable": {
@@ -5374,6 +5487,17 @@ const docTemplate = `{
                 }
             }
         },
+        "SyncVariantCategoriesRequest": {
+            "type": "object",
+            "properties": {
+                "category_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "TrackViewedRequest": {
             "type": "object",
             "required": [
@@ -5554,9 +5678,6 @@ const docTemplate = `{
         },
         "UpdateProductRequest": {
             "type": "object",
-            "required": [
-                "variant"
-            ],
             "properties": {
                 "ean": {
                     "type": "string"
@@ -5624,9 +5745,6 @@ const docTemplate = `{
                 "upc": {
                     "type": "string"
                 },
-                "variant": {
-                    "$ref": "#/definitions/UpdateProductVariantRequest"
-                },
                 "weight": {
                     "type": "number"
                 },
@@ -5638,7 +5756,8 @@ const docTemplate = `{
         "UpdateProductVariantRequest": {
             "type": "object",
             "required": [
-                "id"
+                "id",
+                "model"
             ],
             "properties": {
                 "category_id": {
@@ -5666,6 +5785,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "meta_title": {
+                    "type": "string"
+                },
+                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -5714,6 +5836,23 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "format": "date-time"
+                }
+            }
+        },
+        "VariantCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string"
+                },
+                "category_is_enable": {
+                    "type": "boolean"
+                },
+                "category_name": {
+                    "type": "string"
+                },
+                "category_slug": {
+                    "type": "string"
                 }
             }
         },
@@ -6045,6 +6184,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "image": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
                 "is_enable": {
                     "type": "boolean"
                 },
@@ -6124,6 +6266,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/pgtype.Text"
                 },
                 "is_enable": {
                     "type": "boolean"

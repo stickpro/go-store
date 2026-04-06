@@ -13,6 +13,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_personal_access_tokens"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_attribute_values"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_reviews"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_product_variant_categories"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_variants"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_users"
@@ -34,45 +35,48 @@ type IRepository interface {
 	Attributes(opts ...Option) repository_attributes.ICustomQueries
 	AttributeValues(opts ...Option) repository_attribute_values.ICustomQueries
 	ProductAttributeValues(opts ...Option) repository_product_attribute_values.Querier
+	ProductVariantCategories(opts ...Option) repository_product_variant_categories.Querier
 	Cities(opts ...Option) repository_cities.Querier
 	Collections(opts ...Option) repository_collections.ICustomQueries
 }
 
 type repository struct {
-	users                  *repository_users.Queries
-	personalAccessToken    *repository_personal_access_tokens.Queries
-	categories             *repository_categories.CustomQueries
-	categoryPaths          *repository_category_paths.Queries
-	products               *repository_products.CustomQueries
-	productVariants        *repository_product_variants.CustomQueries
-	productReviews         *repository_product_reviews.CustomQueries
-	manufacturer           *repository_manufacturers.CustomQueries
-	media                  *repository_media.Queries
-	attributeGroups        *repository_attribute_groups.CustomQueries
-	attributes             *repository_attributes.CustomQueries
-	attributeValues        *repository_attribute_values.CustomQueries
-	productAttributeValues *repository_product_attribute_values.Queries
-	cities                 *repository_cities.Queries
-	collections            *repository_collections.CustomQueries
+	users                    *repository_users.Queries
+	personalAccessToken      *repository_personal_access_tokens.Queries
+	categories               *repository_categories.CustomQueries
+	categoryPaths            *repository_category_paths.Queries
+	products                 *repository_products.CustomQueries
+	productVariants          *repository_product_variants.CustomQueries
+	productReviews           *repository_product_reviews.CustomQueries
+	manufacturer             *repository_manufacturers.CustomQueries
+	media                    *repository_media.Queries
+	attributeGroups          *repository_attribute_groups.CustomQueries
+	attributes               *repository_attributes.CustomQueries
+	attributeValues          *repository_attribute_values.CustomQueries
+	productAttributeValues   *repository_product_attribute_values.Queries
+	productVariantCategories *repository_product_variant_categories.Queries
+	cities                   *repository_cities.Queries
+	collections              *repository_collections.CustomQueries
 }
 
 func InitRepository(psql *database.PostgresClient, _ key_value.IKeyValue) IRepository {
 	return &repository{
-		users:                  repository_users.New(psql.DB),
-		personalAccessToken:    repository_personal_access_tokens.New(psql.DB),
-		categories:             repository_categories.NewCustom(psql.DB),
-		categoryPaths:          repository_category_paths.New(psql.DB),
-		products:               repository_products.NewCustom(psql.DB),
-		productVariants:        repository_product_variants.NewCustom(psql.DB),
-		productReviews:         repository_product_reviews.NewCustom(psql.DB),
-		manufacturer:           repository_manufacturers.NewCustom(psql.DB),
-		media:                  repository_media.New(psql.DB),
-		attributeGroups:        repository_attribute_groups.NewCustom(psql.DB),
-		attributes:             repository_attributes.NewCustom(psql.DB),
-		attributeValues:        repository_attribute_values.NewCustom(psql.DB),
-		productAttributeValues: repository_product_attribute_values.New(psql.DB),
-		cities:                 repository_cities.New(psql.DB),
-		collections:            repository_collections.NewCustom(psql.DB),
+		users:                    repository_users.New(psql.DB),
+		personalAccessToken:      repository_personal_access_tokens.New(psql.DB),
+		categories:               repository_categories.NewCustom(psql.DB),
+		categoryPaths:            repository_category_paths.New(psql.DB),
+		products:                 repository_products.NewCustom(psql.DB),
+		productVariants:          repository_product_variants.NewCustom(psql.DB),
+		productReviews:           repository_product_reviews.NewCustom(psql.DB),
+		manufacturer:             repository_manufacturers.NewCustom(psql.DB),
+		media:                    repository_media.New(psql.DB),
+		attributeGroups:          repository_attribute_groups.NewCustom(psql.DB),
+		attributes:               repository_attributes.NewCustom(psql.DB),
+		attributeValues:          repository_attribute_values.NewCustom(psql.DB),
+		productAttributeValues:   repository_product_attribute_values.New(psql.DB),
+		productVariantCategories: repository_product_variant_categories.New(psql.DB),
+		cities:                   repository_cities.New(psql.DB),
+		collections:              repository_collections.NewCustom(psql.DB),
 	}
 }
 
@@ -194,4 +198,12 @@ func (r *repository) ProductAttributeValues(opts ...Option) repository_product_a
 		return r.productAttributeValues.WithTx(options.Tx)
 	}
 	return r.productAttributeValues
+}
+
+func (r *repository) ProductVariantCategories(opts ...Option) repository_product_variant_categories.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.productVariantCategories.WithTx(options.Tx)
+	}
+	return r.productVariantCategories
 }

@@ -61,7 +61,6 @@ type CreateProductDTO struct {
 	SortOrder      int32
 	IsEnable       bool
 	MediaIDs       []*uuid.UUID
-	Variant        CreateProductVariantDTO
 }
 
 type UpdateProductVariantDTO struct {
@@ -105,7 +104,6 @@ type UpdateProductDTO struct {
 	SortOrder      int32
 	IsEnable       bool
 	MediaIDs       []*uuid.UUID
-	Variant        UpdateProductVariantDTO
 }
 
 type ProductWithMediaDTO struct {
@@ -124,6 +122,18 @@ type EnrichedVariantDTO struct {
 	StockStatus    constant.StockStatus `json:"stock_status"`
 }
 
+type SyncVariantCategoriesDTO struct {
+	VariantID   uuid.UUID   `json:"variant_id"`
+	CategoryIDs []uuid.UUID `json:"category_ids"` //nolint:tagliatelle
+}
+
+type VariantCategoryDTO struct {
+	CategoryID       uuid.UUID `json:"category_id"`
+	CategoryName     string    `json:"category_name"`
+	CategorySlug     string    `json:"category_slug"`
+	CategoryIsEnable bool      `json:"category_is_enable"`
+}
+
 type SyncAttributeProductDTO struct {
 	ProductID         uuid.UUID   `json:"product_id"`
 	AttributeValueIDs []uuid.UUID `json:"attribute_value_ids"` //nolint:tagliatelle
@@ -133,11 +143,6 @@ func RequestToCreateProductDTO(req *product_request.CreateProductRequest) Create
 	var manufacturerID uuid.NullUUID
 	if req.ManufacturerID != nil {
 		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
-	}
-
-	var categoryID uuid.NullUUID
-	if req.Variant.CategoryID != nil {
-		categoryID = uuid.NullUUID{UUID: *req.Variant.CategoryID, Valid: true}
 	}
 
 	return CreateProductDTO{
@@ -164,18 +169,6 @@ func RequestToCreateProductDTO(req *product_request.CreateProductRequest) Create
 		IsEnable:       req.IsEnable,
 		MediaIDs:       req.MediaIDs,
 		Image:          req.Image,
-		Variant: CreateProductVariantDTO{
-			Name:            req.Variant.Name,
-			Slug:            req.Variant.Slug,
-			CategoryID:      categoryID,
-			Description:     req.Variant.Description,
-			MetaTitle:       req.Variant.MetaTitle,
-			MetaH1:          req.Variant.MetaH1,
-			MetaDescription: req.Variant.MetaDescription,
-			MetaKeyword:     req.Variant.MetaKeyword,
-			SortOrder:       req.Variant.SortOrder,
-			IsEnable:        req.Variant.IsEnable,
-		},
 	}
 }
 
@@ -183,11 +176,6 @@ func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uui
 	var manufacturerID uuid.NullUUID
 	if req.ManufacturerID != nil {
 		manufacturerID = uuid.NullUUID{UUID: *req.ManufacturerID, Valid: true}
-	}
-
-	var categoryID uuid.NullUUID
-	if req.Variant.CategoryID != nil {
-		categoryID = uuid.NullUUID{UUID: *req.Variant.CategoryID, Valid: true}
 	}
 
 	return UpdateProductDTO{
@@ -214,20 +202,6 @@ func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uui
 		SortOrder:      req.SortOrder,
 		IsEnable:       req.IsEnable,
 		MediaIDs:       req.MediaIDs,
-		Variant: UpdateProductVariantDTO{
-			ID:              req.Variant.ID,
-			Name:            req.Variant.Name,
-			Slug:            req.Variant.Slug,
-			CategoryID:      categoryID,
-			Description:     req.Variant.Description,
-			MetaTitle:       req.Variant.MetaTitle,
-			MetaH1:          req.Variant.MetaH1,
-			MetaDescription: req.Variant.MetaDescription,
-			MetaKeyword:     req.Variant.MetaKeyword,
-			Image:           req.Variant.Image,
-			SortOrder:       req.Variant.SortOrder,
-			IsEnable:        req.Variant.IsEnable,
-		},
 	}
 }
 

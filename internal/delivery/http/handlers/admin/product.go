@@ -35,11 +35,11 @@ func (h *Handler) createProduct(c fiber.Ctx) error {
 	}
 	d := dto.RequestToCreateProductDTO(req)
 
-	prd, variant, err := h.services.ProductService.CreateProduct(c.Context(), d)
+	prd, err := h.services.ProductService.CreateProduct(c.Context(), d)
 	if err != nil {
 		return h.handleError(err, "product")
 	}
-	return c.JSON(response.OkByData(product_response.NewFromModels(prd, variant)))
+	return c.JSON(response.OkByData(product_response.NewFromProductOnly(prd)))
 }
 
 // updateProduct is a function update product
@@ -67,11 +67,11 @@ func (h *Handler) updateProduct(c fiber.Ctx) error {
 	}
 	d := dto.RequestToUpdateProductDTO(req, id)
 
-	prd, variant, err := h.services.ProductService.UpdateProduct(c.Context(), d)
+	prd, err := h.services.ProductService.UpdateProduct(c.Context(), d)
 	if err != nil {
 		return h.handleError(err, "product")
 	}
-	return c.JSON(response.OkByData(product_response.NewFromModels(prd, variant)))
+	return c.JSON(response.OkByData(product_response.NewFromProductOnly(prd)))
 }
 
 // createProductVariant adds a new variant to an existing product
@@ -211,6 +211,7 @@ func (h *Handler) updateProductVariant(c fiber.Ctx) error {
 		Name:            req.Name,
 		Slug:            req.Slug,
 		Description:     req.Description,
+		Model:           req.Model,
 		MetaTitle:       req.MetaTitle,
 		MetaH1:          req.MetaH1,
 		MetaDescription: req.MetaDescription,
@@ -378,6 +379,68 @@ func (h *Handler) getVariantsWithPagination(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(variants))
 }
 
+// getVariantCategories returns additional categories for a product variant
+//
+//	@Summary		Get Variant Categories
+//	@Description	Get additional categories for a product variant
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			variant_id	path		uuid.UUID	true	"Variant ID"
+//	@Success		200			{object}	response.Result[[]product_response.VariantCategoryResponse]
+//	@Failure		400			{object}	apierror.Errors
+//	@Failure		404			{object}	apierror.Errors
+//	@Failure		500			{object}	apierror.Errors
+//	@Router			/v1/product/variant/:variant_id/categories [GET]
+//	@Security		BearerAuth
+func (h *Handler) getVariantCategories(c fiber.Ctx) error {
+	variantID, err := uuid.Parse(c.Params("variant_id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+
+	categories, err := h.services.ProductService.GetVariantCategories(c.Context(), variantID)
+	if err != nil {
+		return h.handleError(err, "variant categories")
+	}
+	return c.JSON(response.OkByData(product_response.NewVariantCategoriesFromDTO(categories)))
+}
+
+// syncVariantCategories syncs additional categories for a product variant
+//
+//	@Summary		Sync Variant Categories
+//	@Description	Sync additional categories for a product variant
+//	@Tags			Product
+//	@Accept			json
+//	@Produce		json
+//	@Param			variant_id	path		uuid.UUID										true	"Variant ID"
+//	@Param			update		body		product_request.SyncVariantCategoriesRequest	true	"Sync variant categories"
+//	@Success		200			{object}	response.Result[string]
+//	@Failure		400			{object}	apierror.Errors
+//	@Failure		422			{object}	apierror.Errors
+//	@Failure		500			{object}	apierror.Errors
+//	@Router			/v1/product/variant/:variant_id/sync-categories [POST]
+//	@Security		BearerAuth
+func (h *Handler) syncVariantCategories(c fiber.Ctx) error {
+	variantID, err := uuid.Parse(c.Params("variant_id"))
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
+	}
+	req := &product_request.SyncVariantCategoriesRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	err = h.services.ProductService.SyncVariantCategories(c.Context(), dto.SyncVariantCategoriesDTO{
+		VariantID:   variantID,
+		CategoryIDs: req.CategoryIDs,
+	})
+	if err != nil {
+		return h.handleError(err, "variant categories")
+	}
+	return c.JSON(response.OkByMessage("Variant categories synced"))
+}
+
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Post("/", h.createProduct)
@@ -391,4 +454,6 @@ func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p.Delete("/:id/variants/:variant_id", h.deleteProductVariant)
 	p.Post("/:id/sync-attribute", h.syncProductAttribute)
 	p.Post("/variant/:variant_id/sync-related-products", h.syncRelatedProducts)
+	p.Get("/variant/:variant_id/categories", h.getVariantCategories)
+	p.Post("/variant/:variant_id/sync-categories", h.syncVariantCategories)
 }

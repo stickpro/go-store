@@ -217,10 +217,10 @@ func (h *Handler) getRelatedProducts(c fiber.Ctx) error {
 //	@Tags			Product
 //	@Accept			json
 //	@Produce		json
-//	@Param			get		body		product_request.GetRelatedProductsBatchRequest	true	"List of variant IDs"
-//	@Success		200		{object}	response.Result[map[string][]models.ShortProduct]
-//	@Failure		400		{object}	apierror.Errors
-//	@Failure		500		{object}	apierror.Errors
+//	@Param			get	body		product_request.GetRelatedProductsBatchRequest	true	"List of variant IDs"
+//	@Success		200	{object}	response.Result[map[string][]models.ShortProduct]
+//	@Failure		400	{object}	apierror.Errors
+//	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/product/variant/related-products/batch [post]
 func (h *Handler) getRelatedProductsBatch(c fiber.Ctx) error {
 	req := &product_request.GetRelatedProductsBatchRequest{}

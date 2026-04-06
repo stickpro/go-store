@@ -226,6 +226,12 @@ type ProductVariant struct {
 	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
 }
 
+type ProductVariantCategory struct {
+	ProductVariantID uuid.UUID        `db:"product_variant_id" json:"product_variant_id"`
+	CategoryID       uuid.UUID        `db:"category_id" json:"category_id"`
+	CreatedAt        pgtype.Timestamp `db:"created_at" json:"created_at"`
+}
+
 type RelatedProduct struct {
 	VariantID        uuid.UUID `db:"variant_id" json:"variant_id"`
 	RelatedVariantID uuid.UUID `db:"related_variant_id" json:"related_variant_id"`

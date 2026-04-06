@@ -15,7 +15,6 @@ import (
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_attribute_values"
-	"github.com/stickpro/go-store/internal/storage/repository/repository_product_variants"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -24,8 +23,8 @@ import (
 
 type IProductService interface { //nolint:interfacebloat
 	// Base product CRUD
-	CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, *models.ProductVariant, error)
-	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, *models.ProductVariant, error)
+	CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, error)
+	UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error)
 	// UpsertProductByExternalID
 	UpsertProductByExternalID(ctx context.Context, externalID string, d dto.ProductUpsertDTO, opts ...repository.Option) (*models.Product, error)
 	GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
@@ -46,6 +45,9 @@ type IProductService interface { //nolint:interfacebloat
 
 	// Variant operations (slug-based lookups + variant CRUD)
 	IVariantProductService
+
+	// Variant category operations
+	IVariantCategoryService
 }
 
 type Service struct {
@@ -64,7 +66,7 @@ func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, ss 
 	}
 }
 
-func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, *models.ProductVariant, error) {
+func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*models.Product, error) {
 	productParams := repository_products.CreateParams{
 		ManufacturerID: d.ManufacturerID,
 		Sku:            pgtypeutils.EncodeText(d.Sku),
@@ -91,7 +93,6 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 	}
 
 	var prd *models.Product
-	var variant *models.ProductVariant
 	var err error
 
 	err = repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
@@ -99,27 +100,6 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
 			s.logger.Error("failed to create product", parsedErr)
-			return parsedErr
-		}
-
-		variantParams := repository_product_variants.CreateParams{
-			ProductID:       prd.ID,
-			CategoryID:      d.Variant.CategoryID,
-			Name:            d.Variant.Name,
-			Slug:            d.Variant.Slug,
-			Description:     pgtypeutils.EncodeText(d.Variant.Description),
-			MetaTitle:       pgtypeutils.EncodeText(d.Variant.MetaTitle),
-			MetaH1:          pgtypeutils.EncodeText(d.Variant.MetaH1),
-			MetaDescription: pgtypeutils.EncodeText(d.Variant.MetaDescription),
-			MetaKeyword:     pgtypeutils.EncodeText(d.Variant.MetaKeyword),
-			SortOrder:       d.Variant.SortOrder,
-			IsEnable:        d.Variant.IsEnable,
-			Viewed:          0,
-		}
-		variant, err = s.storage.ProductVariants(repository.WithTx(tx)).Create(ctx, variantParams)
-		if err != nil {
-			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to create product variant", parsedErr)
 			return parsedErr
 		}
 
@@ -135,18 +115,13 @@ func (s *Service) CreateProduct(ctx context.Context, d dto.CreateProductDTO) (*m
 			}
 		}
 
-		err = s.IndexVariant(ctx, variant, prd)
-		if err != nil {
-			s.logger.Error("failed to index variant", "error", err)
-			return err
-		}
 		return nil
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return prd, variant, nil
+	return prd, nil
 }
 
 func (s *Service) GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error) {
@@ -200,7 +175,7 @@ func (s *Service) GetProductByExternalID(ctx context.Context, externalID string)
 	return prd, nil
 }
 
-func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, *models.ProductVariant, error) {
+func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error) {
 	productParams := repository_products.UpdateParams{
 		ID:             d.ID,
 		ManufacturerID: d.ManufacturerID,
@@ -228,7 +203,6 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 	}
 
 	var prd *models.Product
-	var variant *models.ProductVariant
 	var err error
 
 	err = repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
@@ -236,29 +210,6 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 		if err != nil {
 			parsedErr := pgerror.ParseError(err)
 			s.logger.Error("failed to update product", parsedErr)
-			return parsedErr
-		}
-
-		variantParams := repository_product_variants.UpdateParams{
-			ID:              d.Variant.ID,
-			ProductID:       prd.ID,
-			CategoryID:      d.Variant.CategoryID,
-			Name:            d.Variant.Name,
-			Slug:            d.Variant.Slug,
-			Model:           d.Variant.Model,
-			Description:     pgtypeutils.EncodeText(d.Variant.Description),
-			MetaTitle:       pgtypeutils.EncodeText(d.Variant.MetaTitle),
-			MetaH1:          pgtypeutils.EncodeText(d.Variant.MetaH1),
-			MetaDescription: pgtypeutils.EncodeText(d.Variant.MetaDescription),
-			MetaKeyword:     pgtypeutils.EncodeText(d.Variant.MetaKeyword),
-			SortOrder:       d.Variant.SortOrder,
-			IsEnable:        d.Variant.IsEnable,
-			Viewed:          0,
-		}
-		variant, err = s.storage.ProductVariants(repository.WithTx(tx)).Update(ctx, variantParams)
-		if err != nil {
-			parsedErr := pgerror.ParseError(err)
-			s.logger.Error("failed to update product variant", parsedErr)
 			return parsedErr
 		}
 
@@ -280,18 +231,13 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 			}
 		}
 
-		err = s.IndexVariant(ctx, variant, prd)
-		if err != nil {
-			s.logger.Error("failed to index variant", "error", err)
-			return err
-		}
 		return nil
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return prd, variant, nil
+	return prd, nil
 }
 
 func (s *Service) GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*dto.ProductWithMediaDTO, error) {
@@ -322,7 +268,7 @@ func (s *Service) GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*d
 	}, nil
 }
 
-func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error {
+func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error { //nolint:dupl
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
 		err := s.storage.ProductAttributeValues(repository.WithTx(tx)).RemoveAll(ctx, d.ProductID)
 		if err != nil {

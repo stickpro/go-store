@@ -489,6 +489,8 @@ definitions:
         type: string
       height:
         type: number
+      image:
+        type: string
       is_enable:
         type: boolean
       isbn:
@@ -527,23 +529,18 @@ definitions:
         type: boolean
       upc:
         type: string
-      variant:
-        $ref: '#/definitions/CreateProductVariantRequest'
       weight:
         type: number
       width:
         type: number
     required:
     - minimum
-    - variant
     type: object
   CreateProductVariantRequest:
     properties:
       category_id:
         type: string
       description:
-        type: string
-      image:
         type: string
       is_enable:
         type: boolean
@@ -910,6 +907,17 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_VariantCategoryResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/VariantCategoryResponse'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_github_com_stickpro_go-store_internal_dto_AttributeValueDTO:
     properties:
       code:
@@ -1015,6 +1023,8 @@ definitions:
         type: number
       id:
         type: string
+      image:
+        type: string
       is_enable:
         type: boolean
       isbn:
@@ -1085,8 +1095,6 @@ definitions:
         $ref: '#/definitions/pgtype.Text'
       id:
         type: string
-      image:
-        $ref: '#/definitions/pgtype.Text'
       is_enable:
         type: boolean
       meta_description:
@@ -1119,8 +1127,6 @@ definitions:
       description:
         type: string
       id:
-        type: string
-      image:
         type: string
       is_enable:
         type: boolean
@@ -1280,6 +1286,13 @@ definitions:
   SyncRelatedProductRequest:
     properties:
       variant_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  SyncVariantCategoriesRequest:
+    properties:
+      category_ids:
         items:
           type: string
         type: array
@@ -1456,14 +1469,10 @@ definitions:
         type: boolean
       upc:
         type: string
-      variant:
-        $ref: '#/definitions/UpdateProductVariantRequest'
       weight:
         type: number
       width:
         type: number
-    required:
-    - variant
     type: object
   UpdateProductVariantRequest:
     properties:
@@ -1485,6 +1494,8 @@ definitions:
         type: string
       meta_title:
         type: string
+      model:
+        type: string
       name:
         type: string
       slug:
@@ -1493,6 +1504,7 @@ definitions:
         type: integer
     required:
     - id
+    - model
     type: object
   UserInfoResponse:
     properties:
@@ -1520,6 +1532,17 @@ definitions:
     required:
     - email
     - location
+    type: object
+  VariantCategoryResponse:
+    properties:
+      category_id:
+        type: string
+      category_is_enable:
+        type: boolean
+      category_name:
+        type: string
+      category_slug:
+        type: string
     type: object
   ViewedItemResponse:
     properties:
@@ -1736,6 +1759,8 @@ definitions:
         type: number
       id:
         type: string
+      image:
+        $ref: '#/definitions/pgtype.Text'
       is_enable:
         type: boolean
       isbn:
@@ -1789,6 +1814,8 @@ definitions:
         type: number
       id:
         type: string
+      image:
+        $ref: '#/definitions/pgtype.Text'
       is_enable:
         type: boolean
       isbn:
@@ -3949,6 +3976,71 @@ paths:
       security:
       - BearerAuth: []
       summary: Get products without variants
+      tags:
+      - Product
+  /v1/product/variant/:variant_id/categories:
+    get:
+      consumes:
+      - application/json
+      description: Get additional categories for a product variant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_VariantCategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get Variant Categories
+      tags:
+      - Product
+  /v1/product/variant/:variant_id/sync-categories:
+    post:
+      consumes:
+      - application/json
+      description: Sync additional categories for a product variant
+      parameters:
+      - description: Sync variant categories
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/SyncVariantCategoriesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-string'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Sync Variant Categories
       tags:
       - Product
   /v1/product/variant/:variant_id/sync-related-products:
