@@ -131,19 +131,27 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 }
 
 const getCartItemsByVariantIDs = `-- name: GetCartItemsByVariantIDs :many
-SELECT p.id       AS product_id,
+SELECT p.id        AS product_id,
        p.price_retail,
        p.price_business,
        p.price_wholesale,
-       p.quantity  AS max_quantity,
-       p.is_enable AS product_enabled,
-       pv.id       AS variant_id,
+       p.quantity   AS max_quantity,
+       p.is_enable  AS product_enabled,
+       pv.id        AS variant_id,
        pv.name,
        pv.slug,
-       p.image,
-       pv.is_enable AS variant_enabled
+       pv.is_enable AS variant_enabled,
+       img.id       AS image_id,
+       img.path     AS image_path,
+       img.width    AS image_width,
+       img.height   AS image_height
 FROM products p
          JOIN product_variants pv ON pv.product_id = p.id
+         LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
 WHERE pv.id = ANY ($1::uuid[])
 `
 
@@ -157,8 +165,11 @@ type GetCartItemsByVariantIDsRow struct {
 	VariantID      uuid.UUID       `db:"variant_id" json:"variant_id"`
 	Name           string          `db:"name" json:"name"`
 	Slug           string          `db:"slug" json:"slug"`
-	Image          pgtype.Text     `db:"image" json:"image"`
 	VariantEnabled bool            `db:"variant_enabled" json:"variant_enabled"`
+	ImageID        uuid.NullUUID   `db:"image_id" json:"image_id"`
+	ImagePath      pgtype.Text     `db:"image_path" json:"image_path"`
+	ImageWidth     pgtype.Int4     `db:"image_width" json:"image_width"`
+	ImageHeight    pgtype.Int4     `db:"image_height" json:"image_height"`
 }
 
 func (q *Queries) GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetCartItemsByVariantIDsRow, error) {
@@ -180,8 +191,11 @@ func (q *Queries) GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.
 			&i.VariantID,
 			&i.Name,
 			&i.Slug,
-			&i.Image,
 			&i.VariantEnabled,
+			&i.ImageID,
+			&i.ImagePath,
+			&i.ImageWidth,
+			&i.ImageHeight,
 		); err != nil {
 			return nil, err
 		}

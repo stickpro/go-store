@@ -25,7 +25,7 @@ import (
 // SyncProductImages downloads new images, reuses existing ones, removes stale ones.
 // Images uploaded via admin UI (source_url IS NULL) are never touched.
 // TODO main image set for product or product_variant?
-func (s Service) SyncProductImages(ctx context.Context, productID uuid.UUID, imageMain *string, images []string) error {
+func (s *Service) SyncProductImages(ctx context.Context, productID uuid.UUID, imageMain *string, images []string) error {
 	// Build ordered URL list: main first, then the rest (deduplicated)
 	seen := make(map[string]struct{})
 	var orderedURLs []string
@@ -120,7 +120,7 @@ func (s Service) SyncProductImages(ctx context.Context, productID uuid.UUID, ima
 }
 
 // resolveImage returns an existing media record for the URL or downloads and creates a new one.
-func (s Service) resolveImage(ctx context.Context, rawURL string) (*models.Medium, error) {
+func (s *Service) resolveImage(ctx context.Context, rawURL string) (*models.Medium, error) {
 	existing, err := s.storage.Media().GetBySourceURL(ctx, pgtype.Text{String: rawURL, Valid: true})
 	if err == nil {
 		return existing, nil

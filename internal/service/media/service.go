@@ -74,7 +74,7 @@ func New(cfg *config.Config, l logger.Logger, st storage.IStorage) *Service {
 	}
 }
 
-func (s Service) Save(ctx context.Context, d SaveMediumDTO) (*models.Medium, error) {
+func (s *Service) Save(ctx context.Context, d SaveMediumDTO) (*models.Medium, error) {
 	var medium *models.Medium
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
 		fPath, err := s.objectStorage.Save(ctx, d.Path, d.Data)
@@ -109,7 +109,7 @@ func (s Service) Save(ctx context.Context, d SaveMediumDTO) (*models.Medium, err
 	return medium, nil
 }
 
-func (s Service) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
 	mediaInfo, err := s.storage.Media().Get(ctx, id)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)

@@ -8,7 +8,10 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/key_value"
 	"github.com/stickpro/go-store/pkg/logger"
@@ -26,13 +29,14 @@ type IViewedService interface {
 }
 
 type Service struct {
+	cfg     *config.Config
 	logger  logger.Logger
 	storage storage.IStorage
 	kv      key_value.IKeyValue
 }
 
-func New(l logger.Logger, st storage.IStorage, kv key_value.IKeyValue) *Service {
-	return &Service{logger: l, storage: st, kv: kv}
+func New(cfg *config.Config, l logger.Logger, st storage.IStorage, kv key_value.IKeyValue) *Service {
+	return &Service{cfg: cfg, logger: l, storage: st, kv: kv}
 }
 
 // Track adds variantID to the front of the viewed list, deduplicates, and trims to maxViewedItems.
@@ -101,16 +105,12 @@ func (s Service) enrich(ctx context.Context, ids []uuid.UUID) (*dto.ViewedDTO, e
 
 	rowByVariant := make(map[uuid.UUID]*dto.ViewedItemDTO, len(rows))
 	for _, r := range rows {
-		imageURL := ""
-		if r.Image.Valid {
-			imageURL = r.Image.String
-		}
 		rowByVariant[r.VariantID] = &dto.ViewedItemDTO{
 			ProductID: r.ProductID,
 			VariantID: r.VariantID,
 			Name:      r.Name,
 			Slug:      r.Slug,
-			ImageURL:  imageURL,
+			Image:     s.shortImage(r.ImageID, r.ImagePath, r.ImageWidth, r.ImageHeight, r.Name),
 			Price:     r.PriceRetail, // todo get price by user group retail/business/wholesale, not just retail.
 		}
 	}
@@ -125,6 +125,16 @@ func (s Service) enrich(ctx context.Context, ids []uuid.UUID) (*dto.ViewedDTO, e
 	}
 
 	return result, nil
+}
+
+// shortImage builds the ImageDTO for a viewed row from nullable media columns,
+// or nil when the product has no gallery image.
+func (s Service) shortImage(id uuid.NullUUID, imgPath pgtype.Text, w, h pgtype.Int4, alt string) *models.ImageDTO {
+	if !id.Valid || !imgPath.Valid {
+		return nil
+	}
+	img := dto.NewImageDTO(id.UUID, imgPath.String, w.Int32, h.Int32, alt, s.cfg.Images.ResolvedPresets())
+	return &img
 }
 
 func viewedKey(owner dto.Owner) string {

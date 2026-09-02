@@ -3,6 +3,7 @@ package dto
 import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/stickpro/go-store/internal/models"
 )
 
 type ViewedDTO struct {
@@ -14,6 +15,6 @@ type ViewedItemDTO struct {
 	VariantID uuid.UUID
 	Name      string
 	Slug      string
-	ImageURL  string
+	Image     *models.ImageDTO
 	Price     decimal.Decimal
 }

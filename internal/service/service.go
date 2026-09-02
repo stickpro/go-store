@@ -59,7 +59,7 @@ func InitService(
 	geoService := geo.New(conf, logger, storage, searchService)
 
 	cartService := cart.New(conf, logger, storage, storage.KeyValue())
-	viewedService := viewed.New(logger, storage, storage.KeyValue())
+	viewedService := viewed.New(conf, logger, storage, storage.KeyValue())
 	return &Services{
 		UserService:          userService,
 		AuthService:          authService,

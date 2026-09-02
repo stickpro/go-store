@@ -170,8 +170,8 @@ definitions:
     properties:
       available:
         type: boolean
-      image_url:
-        type: string
+      image:
+        $ref: '#/definitions/ImageDTO'
       max_quantity:
         type: integer
       name:
@@ -1603,8 +1603,8 @@ definitions:
     type: object
   ViewedItemResponse:
     properties:
-      image_url:
-        type: string
+      image:
+        $ref: '#/definitions/ImageDTO'
       name:
         type: string
       price:

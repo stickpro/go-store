@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/delivery/http/request/cart_request"
+	"github.com/stickpro/go-store/internal/models"
 )
 
 type CartDTO struct {
@@ -16,7 +17,7 @@ type CartItemsDTO struct {
 	VariantID   uuid.UUID
 	Name        string
 	Slug        string
-	ImageURL    string
+	Image       *models.ImageDTO
 	Price       decimal.Decimal
 	Quantity    int64
 	MaxQuantity int64

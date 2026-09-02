@@ -4,18 +4,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/models"
 )
 
 type CartItemResponse struct {
-	ProductID   uuid.UUID       `json:"product_id"`
-	VariantID   uuid.UUID       `json:"variant_id"`
-	Name        string          `json:"name"`
-	Slug        string          `json:"slug"`
-	ImageURL    string          `json:"image_url"`
-	Price       decimal.Decimal `json:"price"`
-	Quantity    int64           `json:"quantity"`
-	MaxQuantity int64           `json:"max_quantity"`
-	Available   bool            `json:"available"`
+	ProductID   uuid.UUID        `json:"product_id"`
+	VariantID   uuid.UUID        `json:"variant_id"`
+	Name        string           `json:"name"`
+	Slug        string           `json:"slug"`
+	Image       *models.ImageDTO `json:"image"`
+	Price       decimal.Decimal  `json:"price"`
+	Quantity    int64            `json:"quantity"`
+	MaxQuantity int64            `json:"max_quantity"`
+	Available   bool             `json:"available"`
 } //	@name	CartItemResponse
 
 type CartResponse struct {
@@ -31,7 +32,7 @@ func NewFromDTO(d *dto.CartDTO) *CartResponse {
 			VariantID:   item.VariantID,
 			Name:        item.Name,
 			Slug:        item.Slug,
-			ImageURL:    item.ImageURL,
+			Image:       item.Image,
 			Price:       item.Price,
 			Quantity:    item.Quantity,
 			MaxQuantity: item.MaxQuantity,

@@ -4031,8 +4031,8 @@ const docTemplate = `{
                 "available": {
                     "type": "boolean"
                 },
-                "image_url": {
-                    "type": "string"
+                "image": {
+                    "$ref": "#/definitions/ImageDTO"
                 },
                 "max_quantity": {
                     "type": "integer"
@@ -6180,8 +6180,8 @@ const docTemplate = `{
         "ViewedItemResponse": {
             "type": "object",
             "properties": {
-                "image_url": {
-                    "type": "string"
+                "image": {
+                    "$ref": "#/definitions/ImageDTO"
                 },
                 "name": {
                     "type": "string"

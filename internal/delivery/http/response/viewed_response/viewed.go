@@ -4,15 +4,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/models"
 )
 
 type ViewedItemResponse struct {
-	ProductID uuid.UUID       `json:"product_id"`
-	VariantID uuid.UUID       `json:"variant_id"`
-	Name      string          `json:"name"`
-	Slug      string          `json:"slug"`
-	ImageURL  string          `json:"image_url"`
-	Price     decimal.Decimal `json:"price"`
+	ProductID uuid.UUID        `json:"product_id"`
+	VariantID uuid.UUID        `json:"variant_id"`
+	Name      string           `json:"name"`
+	Slug      string           `json:"slug"`
+	Image     *models.ImageDTO `json:"image"`
+	Price     decimal.Decimal  `json:"price"`
 } //	@name	ViewedItemResponse
 
 type ViewedResponse struct {
@@ -27,7 +28,7 @@ func NewFromDTO(d *dto.ViewedDTO) *ViewedResponse {
 			VariantID: item.VariantID,
 			Name:      item.Name,
 			Slug:      item.Slug,
-			ImageURL:  item.ImageURL,
+			Image:     item.Image,
 			Price:     item.Price,
 		}
 	}

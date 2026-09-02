@@ -8,6 +8,7 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/dto"
@@ -48,7 +49,7 @@ func New(cfg *config.Config, l logger.Logger, st storage.IStorage, kv key_value.
 	}
 }
 
-func (s Service) GetCart(ctx context.Context, owner dto.Owner) (*dto.CartDTO, error) {
+func (s *Service) GetCart(ctx context.Context, owner dto.Owner) (*dto.CartDTO, error) {
 	cart, err := s.loadCart(ctx, owner)
 	if err != nil {
 		return nil, fmt.Errorf("load cart: %w", err)
@@ -60,7 +61,7 @@ func (s Service) GetCart(ctx context.Context, owner dto.Owner) (*dto.CartDTO, er
 	return s.enrichCart(ctx, cart)
 }
 
-func (s Service) AddItem(ctx context.Context, owner dto.Owner, d dto.AddCartItemDTO) (*dto.CartDTO, error) {
+func (s *Service) AddItem(ctx context.Context, owner dto.Owner, d dto.AddCartItemDTO) (*dto.CartDTO, error) {
 	cart, err := s.loadCart(ctx, owner)
 	if err != nil {
 		return nil, fmt.Errorf("load cart: %w", err)
@@ -90,7 +91,7 @@ func (s Service) AddItem(ctx context.Context, owner dto.Owner, d dto.AddCartItem
 	return s.enrichCart(ctx, cart)
 }
 
-func (s Service) UpdateQuantity(ctx context.Context, owner dto.Owner, variantID uuid.UUID, qty int64) (*dto.CartDTO, error) {
+func (s *Service) UpdateQuantity(ctx context.Context, owner dto.Owner, variantID uuid.UUID, qty int64) (*dto.CartDTO, error) {
 	cart, err := s.loadCart(ctx, owner)
 	if err != nil {
 		return nil, fmt.Errorf("load cart: %w", err)
@@ -109,7 +110,7 @@ func (s Service) UpdateQuantity(ctx context.Context, owner dto.Owner, variantID 
 	return nil, fmt.Errorf("variant %s not found in cart", variantID)
 }
 
-func (s Service) RemoveItem(ctx context.Context, owner dto.Owner, variantID uuid.UUID) (*dto.CartDTO, error) {
+func (s *Service) RemoveItem(ctx context.Context, owner dto.Owner, variantID uuid.UUID) (*dto.CartDTO, error) {
 	cart, err := s.loadCart(ctx, owner)
 	if err != nil {
 		return nil, fmt.Errorf("load cart: %w", err)
@@ -128,14 +129,14 @@ func (s Service) RemoveItem(ctx context.Context, owner dto.Owner, variantID uuid
 	return nil, fmt.Errorf("variant %s not found in cart", variantID)
 }
 
-func (s Service) ClearCart(ctx context.Context, owner dto.Owner) error {
+func (s *Service) ClearCart(ctx context.Context, owner dto.Owner) error {
 	return s.kv.Delete(ctx, cartKey(owner))
 }
 
 // MergeCarts merges a guest cart into a user cart after login.
 // Items present in both are combined (quantities are summed).
 // The session cart is deleted afterwards.
-func (s Service) MergeCarts(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID) (*dto.CartDTO, error) {
+func (s *Service) MergeCarts(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID) (*dto.CartDTO, error) {
 	sessionOwner := dto.Owner{SessionID: &sessionID}
 	userOwner := dto.Owner{UserID: &userID}
 
@@ -178,7 +179,7 @@ func (s Service) MergeCarts(ctx context.Context, sessionID uuid.UUID, userID uui
 
 // loadCart reads the raw cart (only IDs + quantities) from Redis.
 // Returns an empty cart if the key does not exist yet.
-func (s Service) loadCart(ctx context.Context, owner dto.Owner) (*models.Cart, error) {
+func (s *Service) loadCart(ctx context.Context, owner dto.Owner) (*models.Cart, error) {
 	data, err := s.kv.Get(ctx, cartKey(owner))
 	if err != nil {
 		if errors.Is(err, key_value.ErrEntryNotFound) {
@@ -197,7 +198,7 @@ func (s Service) loadCart(ctx context.Context, owner dto.Owner) (*models.Cart, e
 // enrichCart fetches actual prices, names and availability from the DB
 // and maps the raw cart into CartDTO.
 // TODO: get price by user group retail/business/wholesale, not just retail.
-func (s Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDTO, error) {
+func (s *Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDTO, error) {
 	variantIDs := make([]uuid.UUID, len(cart.Items))
 	for i, item := range cart.Items {
 		variantIDs[i] = item.VariantID
@@ -229,17 +230,12 @@ func (s Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDT
 		available := row.ProductEnabled && row.VariantEnabled && row.MaxQuantity > 0
 		qty := min(item.Quantity, int(row.MaxQuantity))
 
-		imageURL := ""
-		if row.Image.Valid {
-			imageURL = row.Image.String
-		}
-
 		result.Items = append(result.Items, dto.CartItemsDTO{
 			ProductID:   row.ProductID,
 			VariantID:   row.VariantID,
 			Name:        row.Name,
 			Slug:        row.Slug,
-			ImageURL:    imageURL,
+			Image:       s.shortImage(row.ImageID, row.ImagePath, row.ImageWidth, row.ImageHeight, row.Name),
 			Price:       row.PriceRetail, // todo get price by user group retail/business/wholesale, not just retail.
 			Quantity:    int64(qty),
 			MaxQuantity: row.MaxQuantity,
@@ -253,8 +249,18 @@ func (s Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartDT
 	return result, nil
 }
 
+// shortImage builds the ImageDTO for a cart row from nullable media columns,
+// or nil when the product has no gallery image.
+func (s *Service) shortImage(id uuid.NullUUID, imgPath pgtype.Text, w, h pgtype.Int4, alt string) *models.ImageDTO {
+	if !id.Valid || !imgPath.Valid {
+		return nil
+	}
+	img := dto.NewImageDTO(id.UUID, imgPath.String, w.Int32, h.Int32, alt, s.cfg.Images.ResolvedPresets())
+	return &img
+}
+
 // saveCart serialises the cart and writes it to Redis with the appropriate TTL.
-func (s Service) saveCart(ctx context.Context, owner dto.Owner, cart *models.Cart) error {
+func (s *Service) saveCart(ctx context.Context, owner dto.Owner, cart *models.Cart) error {
 	data, err := json.Marshal(cart)
 	if err != nil {
 		return fmt.Errorf("marshal cart: %w", err)
