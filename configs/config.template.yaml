@@ -10,6 +10,7 @@ http:
   cors:
     enabled: true
     allowed_origins: []
+  max_body_limit: 100
 postgres:
   addr: ""
   db_name: ""
@@ -41,3 +42,19 @@ search_engine:
   type: meili_search
   host: http://localhost:7700
   api_key: ""
+kafka:
+  brokers: []
+  topics:
+    products: store.products
+    variants: store.product-variants
+  producer:
+    required_acks: all
+  consumer:
+    group_id: go-store
+workers:
+  image_sync: 3
+images:
+  jpeg_quality: 82
+  webp_quality: 80
+  max_source_pixels: 40000000
+  presets: []

@@ -141,6 +141,7 @@ func (s Service) resolveImage(ctx context.Context, rawURL string) (*models.Mediu
 		return nil, fmt.Errorf("save to storage: %w", err)
 	}
 
+	w, h := s.probeDimensions(data)
 	medium, err := s.storage.Media().CreateWithSourceURL(ctx, repository_media.CreateWithSourceURLParams{
 		Name:      fileName,
 		Path:      fPath,
@@ -149,6 +150,8 @@ func (s Service) resolveImage(ctx context.Context, rawURL string) (*models.Mediu
 		DiskType:  s.cfg.FileStorage.Type,
 		Size:      int64(len(data)),
 		SourceUrl: pgtype.Text{String: rawURL, Valid: true},
+		Width:     w,
+		Height:    h,
 	})
 	if err != nil {
 		_ = s.objectStorage.Delete(ctx, fPath)

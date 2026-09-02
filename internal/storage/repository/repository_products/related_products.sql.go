@@ -32,18 +32,27 @@ func (q *Queries) DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteS
 
 const getRelatedProductsBySlug = `-- name: GetRelatedProductsBySlug :many
 SELECT pv.id,
+       pv.product_id,
        pv.name,
        pv.slug,
-       p.image,
        pv.is_enable,
        pv.model,
        p.price_retail,
        p.price_business,
        p.price_wholesale,
-       p.stock_status
+       p.stock_status,
+       img.id            AS image_id,
+       img.path          AS image_path,
+       img.width         AS image_width,
+       img.height        AS image_height
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id
          JOIN products p ON pv.product_id = p.id
+ LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
 WHERE rp.variant_id = (SELECT id FROM product_variants pv2 WHERE pv2.slug = $1)
   AND pv.is_enable = true
 ORDER BY pv.name
@@ -51,15 +60,19 @@ ORDER BY pv.name
 
 type GetRelatedProductsBySlugRow struct {
 	ID             uuid.UUID            `db:"id" json:"id"`
+	ProductID      uuid.UUID            `db:"product_id" json:"product_id"`
 	Name           string               `db:"name" json:"name"`
 	Slug           string               `db:"slug" json:"slug"`
-	Image          pgtype.Text          `db:"image" json:"image"`
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
 	Model          string               `db:"model" json:"model"`
 	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
 	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
 	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
 	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
+	ImageID        uuid.NullUUID        `db:"image_id" json:"image_id"`
+	ImagePath      pgtype.Text          `db:"image_path" json:"image_path"`
+	ImageWidth     pgtype.Int4          `db:"image_width" json:"image_width"`
+	ImageHeight    pgtype.Int4          `db:"image_height" json:"image_height"`
 }
 
 func (q *Queries) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error) {
@@ -73,15 +86,19 @@ func (q *Queries) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]
 		var i GetRelatedProductsBySlugRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.ProductID,
 			&i.Name,
 			&i.Slug,
-			&i.Image,
 			&i.IsEnable,
 			&i.Model,
 			&i.PriceRetail,
 			&i.PriceBusiness,
 			&i.PriceWholesale,
 			&i.StockStatus,
+			&i.ImageID,
+			&i.ImagePath,
+			&i.ImageWidth,
+			&i.ImageHeight,
 		); err != nil {
 			return nil, err
 		}
@@ -95,18 +112,27 @@ func (q *Queries) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]
 
 const getRelatedProductsByVariantID = `-- name: GetRelatedProductsByVariantID :many
 SELECT pv.id,
+       pv.product_id,
        pv.name,
        pv.slug,
-       p.image,
        pv.is_enable,
        pv.model,
        p.price_retail,
        p.price_business,
        p.price_wholesale,
-       p.stock_status
+       p.stock_status,
+       img.id            AS image_id,
+       img.path          AS image_path,
+       img.width         AS image_width,
+       img.height        AS image_height
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id
          JOIN products p ON pv.product_id = p.id
+ LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
 WHERE rp.variant_id = $1
   AND pv.is_enable = true
 ORDER BY pv.name
@@ -114,15 +140,19 @@ ORDER BY pv.name
 
 type GetRelatedProductsByVariantIDRow struct {
 	ID             uuid.UUID            `db:"id" json:"id"`
+	ProductID      uuid.UUID            `db:"product_id" json:"product_id"`
 	Name           string               `db:"name" json:"name"`
 	Slug           string               `db:"slug" json:"slug"`
-	Image          pgtype.Text          `db:"image" json:"image"`
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
 	Model          string               `db:"model" json:"model"`
 	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
 	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
 	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
 	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
+	ImageID        uuid.NullUUID        `db:"image_id" json:"image_id"`
+	ImagePath      pgtype.Text          `db:"image_path" json:"image_path"`
+	ImageWidth     pgtype.Int4          `db:"image_width" json:"image_width"`
+	ImageHeight    pgtype.Int4          `db:"image_height" json:"image_height"`
 }
 
 func (q *Queries) GetRelatedProductsByVariantID(ctx context.Context, variantID uuid.UUID) ([]*GetRelatedProductsByVariantIDRow, error) {
@@ -136,15 +166,19 @@ func (q *Queries) GetRelatedProductsByVariantID(ctx context.Context, variantID u
 		var i GetRelatedProductsByVariantIDRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.ProductID,
 			&i.Name,
 			&i.Slug,
-			&i.Image,
 			&i.IsEnable,
 			&i.Model,
 			&i.PriceRetail,
 			&i.PriceBusiness,
 			&i.PriceWholesale,
 			&i.StockStatus,
+			&i.ImageID,
+			&i.ImagePath,
+			&i.ImageWidth,
+			&i.ImageHeight,
 		); err != nil {
 			return nil, err
 		}
@@ -159,18 +193,27 @@ func (q *Queries) GetRelatedProductsByVariantID(ctx context.Context, variantID u
 const getRelatedProductsByVariantIDs = `-- name: GetRelatedProductsByVariantIDs :many
 SELECT rp.variant_id,
        pv.id,
+       pv.product_id,
        pv.name,
        pv.slug,
-       p.image,
        pv.is_enable,
        pv.model,
        p.price_retail,
        p.price_business,
        p.price_wholesale,
-       p.stock_status
+       p.stock_status,
+       img.id            AS image_id,
+       img.path          AS image_path,
+       img.width         AS image_width,
+       img.height        AS image_height
 FROM related_products rp
          JOIN product_variants pv ON rp.related_variant_id = pv.id
          JOIN products p ON pv.product_id = p.id
+ LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
 WHERE rp.variant_id = ANY($1::uuid[])
   AND pv.is_enable = true
 ORDER BY rp.variant_id, pv.name
@@ -179,15 +222,19 @@ ORDER BY rp.variant_id, pv.name
 type GetRelatedProductsByVariantIDsRow struct {
 	VariantID      uuid.UUID            `db:"variant_id" json:"variant_id"`
 	ID             uuid.UUID            `db:"id" json:"id"`
+	ProductID      uuid.UUID            `db:"product_id" json:"product_id"`
 	Name           string               `db:"name" json:"name"`
 	Slug           string               `db:"slug" json:"slug"`
-	Image          pgtype.Text          `db:"image" json:"image"`
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
 	Model          string               `db:"model" json:"model"`
 	PriceRetail    decimal.Decimal      `db:"price_retail" json:"price_retail"`
 	PriceBusiness  decimal.Decimal      `db:"price_business" json:"price_business"`
 	PriceWholesale decimal.Decimal      `db:"price_wholesale" json:"price_wholesale"`
 	StockStatus    constant.StockStatus `db:"stock_status" json:"stock_status"`
+	ImageID        uuid.NullUUID        `db:"image_id" json:"image_id"`
+	ImagePath      pgtype.Text          `db:"image_path" json:"image_path"`
+	ImageWidth     pgtype.Int4          `db:"image_width" json:"image_width"`
+	ImageHeight    pgtype.Int4          `db:"image_height" json:"image_height"`
 }
 
 func (q *Queries) GetRelatedProductsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetRelatedProductsByVariantIDsRow, error) {
@@ -202,15 +249,19 @@ func (q *Queries) GetRelatedProductsByVariantIDs(ctx context.Context, dollar_1 [
 		if err := rows.Scan(
 			&i.VariantID,
 			&i.ID,
+			&i.ProductID,
 			&i.Name,
 			&i.Slug,
-			&i.Image,
 			&i.IsEnable,
 			&i.Model,
 			&i.PriceRetail,
 			&i.PriceBusiness,
 			&i.PriceWholesale,
 			&i.StockStatus,
+			&i.ImageID,
+			&i.ImagePath,
+			&i.ImageWidth,
+			&i.ImageHeight,
 		); err != nil {
 			return nil, err
 		}

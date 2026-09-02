@@ -1591,6 +1591,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/category/{slug}/breadcrumbs": {
+            "get": {
+                "description": "Get breadcrumb trail for a category by its slug",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Get category breadcrumbs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_BreadcrumbDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/category/{slug}/filters": {
             "get": {
                 "description": "Get the full filter set with counts for a category and its subcategories",
@@ -4600,6 +4644,32 @@ const docTemplate = `{
                 }
             }
         },
+        "ImageDTO": {
+            "type": "object",
+            "properties": {
+                "alt": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "presets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "width": {
+                    "type": "integer"
+                }
+            }
+        },
         "JSONResponse-AttributeGroupResponse": {
             "type": "object",
             "properties": {
@@ -5286,6 +5356,9 @@ const docTemplate = `{
                 "file_name": {
                     "type": "string"
                 },
+                "height": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -5299,6 +5372,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "size": {
+                    "type": "integer"
+                },
+                "width": {
                     "type": "integer"
                 }
             }
@@ -5506,10 +5582,10 @@ const docTemplate = `{
         "ProductWithMediumResponse": {
             "type": "object",
             "properties": {
-                "medium": {
+                "images": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/MediumResponse"
+                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.ImageDTO"
                     }
                 },
                 "product": {
@@ -5657,7 +5733,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "image": {
-                    "$ref": "#/definitions/pgtype.Text"
+                    "$ref": "#/definitions/ImageDTO"
                 },
                 "is_enable": {
                     "type": "boolean"
@@ -5686,7 +5762,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "image": {
-                    "$ref": "#/definitions/pgtype.Text"
+                    "$ref": "#/definitions/ImageDTO"
                 },
                 "is_enable": {
                     "type": "boolean"
@@ -6352,6 +6428,14 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "image": {
+                    "description": "Image is the product's main image (first by product_media.sort_order), baked into\nthe search document; nil when the product has no gallery.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_stickpro_go-store_internal_dto.ImageDTO"
+                        }
+                    ]
+                },
                 "is_enable": {
                     "type": "boolean"
                 },
@@ -6401,6 +6485,32 @@ const docTemplate = `{
                     "$ref": "#/definitions/pgtype.Timestamp"
                 },
                 "viewed": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_stickpro_go-store_internal_dto.ImageDTO": {
+            "type": "object",
+            "properties": {
+                "alt": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "presets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "width": {
                     "type": "integer"
                 }
             }

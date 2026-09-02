@@ -255,6 +255,26 @@ func (h *Handler) getCategoryFilters(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(filters))
 }
 
+// getCategoryBreadcrumbs returns the breadcrumb trail (root -> ... -> category) for a category by its slug.
+//
+//	@Summary		Get category breadcrumbs
+//	@Description	Get breadcrumb trail for a category by its slug
+//	@Tags			Category
+//	@Accept			json
+//	@Produce		json
+//	@Param			slug	path		string	true	"Category Slug"
+//	@Success		200		{object}	response.Result[[]dto.BreadcrumbDTO]
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@Router			/v1/category/{slug}/breadcrumbs [get]
+func (h *Handler) getCategoryBreadcrumbs(c fiber.Ctx) error {
+	breadcrumbs, err := h.services.CategoryService.GetBreadcrumbsByCategorySlug(c.Context(), c.Params("slug"))
+	if err != nil {
+		return h.handleError(err, "category breadcrumbs")
+	}
+	return c.JSON(response.OkByData(breadcrumbs))
+}
+
 func (h *Handler) initCategoryRoutes(v1 fiber.Router) {
 	c := v1.Group("/category")
 	c.Get("/", h.getCategories)
@@ -262,5 +282,6 @@ func (h *Handler) initCategoryRoutes(v1 fiber.Router) {
 	c.Get("/:slug", h.getCategoryBySlug)
 	c.Get("/:slug/products", h.getCategoryProducts)
 	c.Get("/:slug/filters", h.getCategoryFilters)
+	c.Get("/:slug/breadcrumbs", h.getCategoryBreadcrumbs)
 	c.Get("/id/:id", h.getCategoryByID)
 }

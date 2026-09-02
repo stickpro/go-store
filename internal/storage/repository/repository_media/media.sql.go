@@ -14,9 +14,9 @@ import (
 )
 
 const createWithSourceURL = `-- name: CreateWithSourceURL :one
-INSERT INTO media (name, path, file_name, mime_type, disk_type, size, source_url, created_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, now())
-RETURNING id, name, path, file_name, mime_type, disk_type, size, created_at, source_url
+INSERT INTO media (name, path, file_name, mime_type, disk_type, size, source_url, width, height, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
+RETURNING id, name, path, file_name, mime_type, disk_type, size, created_at, source_url, width, height
 `
 
 type CreateWithSourceURLParams struct {
@@ -27,6 +27,8 @@ type CreateWithSourceURLParams struct {
 	DiskType  string      `db:"disk_type" json:"disk_type"`
 	Size      int64       `db:"size" json:"size"`
 	SourceUrl pgtype.Text `db:"source_url" json:"source_url"`
+	Width     int32       `db:"width" json:"width"`
+	Height    int32       `db:"height" json:"height"`
 }
 
 func (q *Queries) CreateWithSourceURL(ctx context.Context, arg CreateWithSourceURLParams) (*models.Medium, error) {
@@ -38,6 +40,8 @@ func (q *Queries) CreateWithSourceURL(ctx context.Context, arg CreateWithSourceU
 		arg.DiskType,
 		arg.Size,
 		arg.SourceUrl,
+		arg.Width,
+		arg.Height,
 	)
 	var i models.Medium
 	err := row.Scan(
@@ -50,12 +54,14 @@ func (q *Queries) CreateWithSourceURL(ctx context.Context, arg CreateWithSourceU
 		&i.Size,
 		&i.CreatedAt,
 		&i.SourceUrl,
+		&i.Width,
+		&i.Height,
 	)
 	return &i, err
 }
 
 const get = `-- name: Get :one
-SELECT id, name, path, file_name, mime_type, disk_type, size, created_at, source_url FROM media WHERE id = $1 LIMIT 1
+SELECT id, name, path, file_name, mime_type, disk_type, size, created_at, source_url, width, height FROM media WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) Get(ctx context.Context, id uuid.UUID) (*models.Medium, error) {
@@ -71,12 +77,14 @@ func (q *Queries) Get(ctx context.Context, id uuid.UUID) (*models.Medium, error)
 		&i.Size,
 		&i.CreatedAt,
 		&i.SourceUrl,
+		&i.Width,
+		&i.Height,
 	)
 	return &i, err
 }
 
 const getBySourceURL = `-- name: GetBySourceURL :one
-SELECT id, name, path, file_name, mime_type, disk_type, size, created_at, source_url FROM media WHERE source_url = $1 LIMIT 1
+SELECT id, name, path, file_name, mime_type, disk_type, size, created_at, source_url, width, height FROM media WHERE source_url = $1 LIMIT 1
 `
 
 func (q *Queries) GetBySourceURL(ctx context.Context, sourceUrl pgtype.Text) (*models.Medium, error) {
@@ -92,6 +100,8 @@ func (q *Queries) GetBySourceURL(ctx context.Context, sourceUrl pgtype.Text) (*m
 		&i.Size,
 		&i.CreatedAt,
 		&i.SourceUrl,
+		&i.Width,
+		&i.Height,
 	)
 	return &i, err
 }

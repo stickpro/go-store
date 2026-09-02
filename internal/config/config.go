@@ -18,6 +18,7 @@ type (
 		SearchEngine SearchEngine  `yaml:"search_engine"`
 		Kafka        KafkaConfig   `yaml:"kafka"`
 		Workers      WorkersConfig `yaml:"workers"`
+		Images       ImagesConfig  `yaml:"images"`
 	}
 
 	AppConfig struct {
@@ -53,7 +54,44 @@ type (
 	WorkersConfig struct {
 		ImageSync int `yaml:"image_sync" default:"3"`
 	}
+
+	// ImagesConfig controls on-the-fly image resizing. Variants are generated on the
+	// first request to /storage/public/images/<base>_<size>.<webp|jpg> and cached on
+	// disk next to the originals (delete the *_<size>.* files to force regeneration).
+	ImagesConfig struct {
+		JpegQuality     int           `yaml:"jpeg_quality" default:"82"`
+		WebpQuality     int           `yaml:"webp_quality" default:"80"`
+		MaxSourcePixels int           `yaml:"max_source_pixels" default:"40000000"`
+		Presets         []ImagePreset `yaml:"presets"`
+	}
+
+	ImagePreset struct {
+		Name string `yaml:"name"`
+		// Size is the target square box (both dimensions) and the "_<size>" URL suffix.
+		Size      int    `yaml:"size"`
+		Fit       string `yaml:"fit" default:"cover" example:"cover / contain"`
+		NoUpscale bool   `yaml:"no_upscale"`
+	}
 )
+
+// DefaultImagePresets is used when config.images.presets is empty. Sizes match the
+// front-end contract (thumb 160, card 400, pdp 1320, zoom 1920).
+func DefaultImagePresets() []ImagePreset {
+	return []ImagePreset{
+		{Name: "thumb", Size: 160, Fit: "cover"},
+		{Name: "card", Size: 400, Fit: "cover"},
+		{Name: "pdp", Size: 1320, Fit: "contain", NoUpscale: true},
+		{Name: "zoom", Size: 1920, Fit: "contain", NoUpscale: true},
+	}
+}
+
+// ResolvedPresets returns the configured presets, or the built-in defaults if none are set.
+func (c ImagesConfig) ResolvedPresets() []ImagePreset {
+	if len(c.Presets) == 0 {
+		return DefaultImagePresets()
+	}
+	return c.Presets
+}
 
 type KeyValueEngine string
 

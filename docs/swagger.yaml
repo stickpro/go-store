@@ -588,6 +588,23 @@ definitions:
           type: string
         type: array
     type: object
+  ImageDTO:
+    properties:
+      alt:
+        type: string
+      height:
+        type: integer
+      id:
+        type: string
+      presets:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        type: object
+      width:
+        type: integer
+    type: object
   JSONResponse-AttributeGroupResponse:
     properties:
       code:
@@ -1031,6 +1048,8 @@ definitions:
         type: string
       file_name:
         type: string
+      height:
+        type: integer
       id:
         type: string
       mime_type:
@@ -1040,6 +1059,8 @@ definitions:
       path:
         type: string
       size:
+        type: integer
+      width:
         type: integer
     type: object
   ProductResponse:
@@ -1176,9 +1197,9 @@ definitions:
     type: object
   ProductWithMediumResponse:
     properties:
-      medium:
+      images:
         items:
-          $ref: '#/definitions/MediumResponse'
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.ImageDTO'
         type: array
       product:
         $ref: '#/definitions/ProductResponse'
@@ -1276,7 +1297,7 @@ definitions:
       id:
         type: string
       image:
-        $ref: '#/definitions/pgtype.Text'
+        $ref: '#/definitions/ImageDTO'
       is_enable:
         type: boolean
       model:
@@ -1295,7 +1316,7 @@ definitions:
       id:
         type: string
       image:
-        $ref: '#/definitions/pgtype.Text'
+        $ref: '#/definitions/ImageDTO'
       is_enable:
         type: boolean
       model:
@@ -1747,6 +1768,12 @@ definitions:
         $ref: '#/definitions/pgtype.Text'
       id:
         type: string
+      image:
+        allOf:
+        - $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.ImageDTO'
+        description: |-
+          Image is the product's main image (first by product_media.sort_order), baked into
+          the search document; nil when the product has no gallery.
       is_enable:
         type: boolean
       manufacturer_id:
@@ -1780,6 +1807,23 @@ definitions:
       updated_at:
         $ref: '#/definitions/pgtype.Timestamp'
       viewed:
+        type: integer
+    type: object
+  github_com_stickpro_go-store_internal_dto.ImageDTO:
+    properties:
+      alt:
+        type: string
+      height:
+        type: integer
+      id:
+        type: string
+      presets:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        type: object
+      width:
         type: integer
     type: object
   github_com_stickpro_go-store_internal_models.Attribute:
@@ -3069,6 +3113,35 @@ paths:
           schema:
             $ref: '#/definitions/APIErrors'
       summary: Category
+      tags:
+      - Category
+  /v1/category/{slug}/breadcrumbs:
+    get:
+      consumes:
+      - application/json
+      description: Get breadcrumb trail for a category by its slug
+      parameters:
+      - description: Category Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_BreadcrumbDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get category breadcrumbs
       tags:
       - Category
   /v1/category/{slug}/filters:

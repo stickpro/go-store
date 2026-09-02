@@ -10,10 +10,11 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/service/search"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
-	_ "github.com/stickpro/go-store/internal/models"
 	_ "github.com/stickpro/go-store/internal/storage/base"
 	_ "github.com/stickpro/go-store/internal/storage/repository/repository_products"
 )
@@ -38,7 +39,16 @@ func (h *Handler) getProductBySlug(c fiber.Ctx) error {
 		return h.handleError(err, "product")
 	}
 
-	return c.JSON(response.OkByData(product_response.NewFromModelsWithMedium(prd.Product, prd.Variant, prd.Medium)))
+	images := h.services.MediaService.Images(prd.Medium, productImageAlt(prd.Variant))
+	return c.JSON(response.OkByData(product_response.NewFromModelsWithImages(prd.Product, prd.Variant, images)))
+}
+
+// productImageAlt returns the alt text for a product's images (the variant name).
+func productImageAlt(variant *models.ProductVariant) string {
+	if variant == nil {
+		return ""
+	}
+	return variant.Name
 }
 
 // getProductByID returns a product by its base product ID
@@ -114,7 +124,8 @@ func (h *Handler) getProductWithMediaByID(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "product")
 	}
-	return c.JSON(response.OkByData(product_response.NewFromModelsWithMedium(prd.Product, prd.Variant, prd.Medium)))
+	images := h.services.MediaService.Images(prd.Medium, productImageAlt(prd.Variant))
+	return c.JSON(response.OkByData(product_response.NewFromModelsWithImages(prd.Product, prd.Variant, images)))
 }
 
 // findProduct searches for a product by name via search index
@@ -134,11 +145,15 @@ func (h *Handler) findProduct(c fiber.Ctx) error {
 	if product == "" {
 		return apierror.New().AddError(fmt.Errorf("product is requered")).SetHttpCode(fiber.StatusBadRequest)
 	}
-	products, err := h.services.SearchService.Search(constant.ProductVariantsIndex, product, 10, 0)
+	res, err := h.services.SearchService.Search(constant.ProductVariantsIndex, product, 10, 0)
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
-	return c.JSON(response.OkByData(products.Hits))
+	items, err := search.UnmarshalHits[*dto.EnrichedVariantDTO](res.Hits)
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+	}
+	return c.JSON(response.OkByData(items))
 }
 
 // getProductAttributes returns all attribute groups with values for a product by variant slug

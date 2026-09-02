@@ -12,6 +12,15 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteAllCategoryPaths = `-- name: DeleteAllCategoryPaths :exec
+DELETE FROM category_paths
+`
+
+func (q *Queries) DeleteAllCategoryPaths(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, deleteAllCategoryPaths)
+	return err
+}
+
 const deleteCategoryPaths = `-- name: DeleteCategoryPaths :exec
 DELETE FROM category_paths
 WHERE descendant_id IN (
@@ -421,4 +430,24 @@ func (q *Queries) IsCategoryDescendantOf(ctx context.Context, arg IsCategoryDesc
 	var is_descendant bool
 	err := row.Scan(&is_descendant)
 	return is_descendant, err
+}
+
+const rebuildAllCategoryPaths = `-- name: RebuildAllCategoryPaths :exec
+WITH RECURSIVE tree AS (
+    SELECT id AS ancestor_id, id AS descendant_id, 0 AS depth
+    FROM categories
+    UNION ALL
+    SELECT t.ancestor_id, c.id, t.depth + 1
+    FROM tree t
+    JOIN categories c ON c.parent_id = t.descendant_id
+    WHERE t.depth < 100
+)
+INSERT INTO category_paths (ancestor_id, descendant_id, depth)
+SELECT ancestor_id, descendant_id, depth FROM tree
+ON CONFLICT (ancestor_id, descendant_id) DO NOTHING
+`
+
+func (q *Queries) RebuildAllCategoryPaths(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, rebuildAllCategoryPaths)
+	return err
 }

@@ -13,7 +13,7 @@ OUT_BIN ?= ./.bin/go-store
 GO_LDFLAGS ?=
 GO_OPT_BASE := -ldflags "-X main.version=$(VERSION) $(GO_LDFLAGS) -X main.commitHash=$(COMMIT_HASH)"
 
-BUILD_ENV := CGO_ENABLED=0
+BUILD_ENV := CGO_ENABLED=1
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	BUILD_ENV += GOOS=linux

@@ -79,7 +79,7 @@ func (s *Service) GetCollectionByID(ctx context.Context, id uuid.UUID) (*dto.Wit
 		s.l.Debug("failed to get collection by ID ", parsedErr)
 		return nil, parsedErr
 	}
-	d := mapper.MapCollectionToDTO(rows)
+	d := mapper.MapCollectionToDTO(rows, s.cfg.Images.ResolvedPresets())
 	return d, nil
 }
 
@@ -93,7 +93,7 @@ func (s *Service) GetCollectionBySlug(ctx context.Context, slug string) (*dto.Wi
 	if len(rows) == 0 {
 		return nil, &pgerror.NotFoundError{Detail: "collection not found by slug: " + slug}
 	}
-	d := mapper.MapCollectionBySlugToDTO(rows)
+	d := mapper.MapCollectionBySlugToDTO(rows, s.cfg.Images.ResolvedPresets())
 	return d, nil
 }
 

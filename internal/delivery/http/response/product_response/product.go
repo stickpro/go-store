@@ -3,7 +3,6 @@ package product_response
 import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
-	"github.com/stickpro/go-store/internal/delivery/http/response/medium_response"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -97,14 +96,14 @@ func NewFromModels(product *models.Product, variant *models.ProductVariant) Prod
 }
 
 type ProductWithMediumResponse struct {
-	Product ProductResponse                  `json:"product"`
-	Medium  []medium_response.MediumResponse `json:"medium"`
+	Product ProductResponse `json:"product"`
+	Images  []dto.ImageDTO  `json:"images"`
 } //	@name	ProductWithMediumResponse
 
-func NewFromModelsWithMedium(product *models.Product, variant *models.ProductVariant, medium []*models.Medium) ProductWithMediumResponse {
+func NewFromModelsWithImages(product *models.Product, variant *models.ProductVariant, images []dto.ImageDTO) ProductWithMediumResponse {
 	return ProductWithMediumResponse{
 		Product: NewFromModels(product, variant),
-		Medium:  medium_response.NewFromModels(medium),
+		Images:  images,
 	}
 }
 

@@ -13,11 +13,15 @@ import (
 	"github.com/stickpro/go-store/internal/server"
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/storage"
+	"github.com/stickpro/go-store/pkg/imageprocessor"
 	"github.com/stickpro/go-store/pkg/logger"
 	"github.com/stickpro/go-store/pkg/queue"
 )
 
 func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
+	imageprocessor.Startup()
+	defer imageprocessor.Shutdown()
+
 	st, err := storage.InitStore(ctx, conf)
 	if err != nil {
 		l.Fatal("failed to init store", err)

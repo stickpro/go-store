@@ -2,7 +2,6 @@ package dto
 
 import (
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
@@ -123,6 +122,9 @@ type EnrichedVariantDTO struct {
 	// CategoryIDs holds the variant's category plus all its ancestors (and the same
 	// for its additional categories) so the search index can filter a whole subtree.
 	CategoryIDs []uuid.UUID `json:"category_ids"` //nolint:tagliatelle
+	// Image is the product's main image (first by product_media.sort_order), baked into
+	// the search document; nil when the product has no gallery.
+	Image *ImageDTO `json:"image,omitempty"`
 }
 
 type SyncVariantCategoriesDTO struct {
@@ -214,7 +216,7 @@ type ShortProductDTO struct {
 	Name           string
 	Model          string
 	Slug           string
-	Image          pgtype.Text
+	Image          *models.ImageDTO
 	PriceRetail    decimal.Decimal
 	PriceBusiness  decimal.Decimal
 	PriceWholeSale decimal.Decimal

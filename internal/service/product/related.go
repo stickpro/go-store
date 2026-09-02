@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
@@ -26,13 +28,14 @@ func (s *Service) GetRelatedProducts(ctx context.Context, variantID uuid.UUID) (
 	resp := make([]*models.ShortProduct, 0, len(products))
 	for _, p := range products {
 		resp = append(resp, &models.ShortProduct{
-			ID:       p.ID,
-			Name:     p.Name,
-			Slug:     p.Slug,
-			Model:    p.Model,
-			Price:    p.PriceRetail,
-			IsEnable: p.IsEnable,
-			Image:    p.Image,
+			ID:        p.ID,
+			ProductID: p.ProductID,
+			Name:      p.Name,
+			Slug:      p.Slug,
+			Model:     p.Model,
+			Price:     p.PriceRetail,
+			IsEnable:  p.IsEnable,
+			Image:     s.shortImage(p.ImageID, p.ImagePath, p.ImageWidth, p.ImageHeight, p.Name),
 		})
 	}
 	return resp, nil
@@ -49,13 +52,14 @@ func (s *Service) GetRelatedProductsBatch(ctx context.Context, variantIDs []uuid
 	result := make(map[uuid.UUID][]*models.ShortProduct, len(variantIDs))
 	for _, row := range rows {
 		result[row.VariantID] = append(result[row.VariantID], &models.ShortProduct{
-			ID:       row.ID,
-			Name:     row.Name,
-			Slug:     row.Slug,
-			Model:    row.Model,
-			Price:    row.PriceRetail,
-			IsEnable: row.IsEnable,
-			Image:    row.Image,
+			ID:        row.ID,
+			ProductID: row.ProductID,
+			Name:      row.Name,
+			Slug:      row.Slug,
+			Model:     row.Model,
+			Price:     row.PriceRetail,
+			IsEnable:  row.IsEnable,
+			Image:     s.shortImage(row.ImageID, row.ImagePath, row.ImageWidth, row.ImageHeight, row.Name),
 		})
 	}
 	return result, nil
@@ -71,13 +75,14 @@ func (s *Service) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]
 	resp := make([]*models.ShortProduct, 0, len(products))
 	for _, p := range products {
 		resp = append(resp, &models.ShortProduct{
-			ID:       p.ID,
-			Name:     p.Name,
-			Slug:     p.Slug,
-			Model:    p.Model,
-			Price:    p.PriceRetail,
-			IsEnable: p.IsEnable,
-			Image:    p.Image,
+			ID:        p.ID,
+			ProductID: p.ProductID,
+			Name:      p.Name,
+			Slug:      p.Slug,
+			Model:     p.Model,
+			Price:     p.PriceRetail,
+			IsEnable:  p.IsEnable,
+			Image:     s.shortImage(p.ImageID, p.ImagePath, p.ImageWidth, p.ImageHeight, p.Name),
 		})
 	}
 	return resp, nil
@@ -94,4 +99,13 @@ func (s *Service) SyncRelatedProducts(ctx context.Context, variantID uuid.UUID, 
 		return parsedErr
 	}
 	return nil
+}
+
+// shortImage builds the ImageDTO for a related/listing row, or nil when the product has no image.
+func (s *Service) shortImage(id uuid.NullUUID, imgPath pgtype.Text, w, h pgtype.Int4, alt string) *models.ImageDTO {
+	if !id.Valid || !imgPath.Valid {
+		return nil
+	}
+	img := dto.NewImageDTO(id.UUID, imgPath.String, w.Int32, h.Int32, alt, s.cfg.Images.ResolvedPresets())
+	return &img
 }

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
@@ -22,14 +21,14 @@ type CollectionResponse struct {
 } //	@name	CollectionResponse
 
 type ShortProductResponse struct {
-	ID        uuid.UUID       `json:"id"`
-	ProductID uuid.UUID       `json:"product_id"`
-	Name      string          `json:"name"`
-	Model     string          `json:"model"`
-	Slug      string          `json:"slug"`
-	Image     pgtype.Text     `json:"image"`
-	Price     decimal.Decimal `json:"price"`
-	IsEnable  bool            `json:"is_enable"`
+	ID        uuid.UUID        `json:"id"`
+	ProductID uuid.UUID        `json:"product_id"`
+	Name      string           `json:"name"`
+	Model     string           `json:"model"`
+	Slug      string           `json:"slug"`
+	Image     *models.ImageDTO `json:"image,omitempty"`
+	Price     decimal.Decimal  `json:"price"`
+	IsEnable  bool             `json:"is_enable"`
 } //	@name	ShortProductResponse
 
 type CollectionResponseWithProducts struct {

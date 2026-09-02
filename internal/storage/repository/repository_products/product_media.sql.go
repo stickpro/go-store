@@ -51,8 +51,55 @@ func (q *Queries) DeleteProductMediaByMediaIDs(ctx context.Context, arg DeletePr
 	return err
 }
 
+const getMainMediaByProductIDs = `-- name: GetMainMediaByProductIDs :many
+SELECT DISTINCT ON (pm.product_id)
+    pm.product_id,
+    m.id,
+    m.path,
+    m.width,
+    m.height
+FROM product_media pm
+         JOIN media m ON m.id = pm.media_id
+WHERE pm.product_id = ANY($1::uuid[])
+ORDER BY pm.product_id, pm.sort_order
+`
+
+type GetMainMediaByProductIDsRow struct {
+	ProductID uuid.UUID `db:"product_id" json:"product_id"`
+	ID        uuid.UUID `db:"id" json:"id"`
+	Path      string    `db:"path" json:"path"`
+	Width     int32     `db:"width" json:"width"`
+	Height    int32     `db:"height" json:"height"`
+}
+
+func (q *Queries) GetMainMediaByProductIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetMainMediaByProductIDsRow, error) {
+	rows, err := q.db.Query(ctx, getMainMediaByProductIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetMainMediaByProductIDsRow{}
+	for rows.Next() {
+		var i GetMainMediaByProductIDsRow
+		if err := rows.Scan(
+			&i.ProductID,
+			&i.ID,
+			&i.Path,
+			&i.Width,
+			&i.Height,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMediaByProductID = `-- name: GetMediaByProductID :many
-SELECT m.id, m.name, m.path, m.file_name, m.mime_type, m.disk_type, m.size, m.created_at, m.source_url
+SELECT m.id, m.name, m.path, m.file_name, m.mime_type, m.disk_type, m.size, m.created_at, m.source_url, m.width, m.height
 FROM product_media pm
          JOIN media m ON pm.media_id = m.id
 WHERE pm.product_id = $1
@@ -78,6 +125,8 @@ func (q *Queries) GetMediaByProductID(ctx context.Context, productID uuid.UUID) 
 			&i.Size,
 			&i.CreatedAt,
 			&i.SourceUrl,
+			&i.Width,
+			&i.Height,
 		); err != nil {
 			return nil, err
 		}

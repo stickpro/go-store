@@ -96,6 +96,7 @@ func (s *Service) IndexVariant(ctx context.Context, variant *models.ProductVaria
 
 func (s *Service) buildVariantDocuments(ctx context.Context, variants []*dto.EnrichedVariantDTO) []map[string]any {
 	s.attachCategoryIDs(ctx, variants)
+	s.attachMainImage(ctx, variants)
 
 	attrCache := make(map[uuid.UUID][]*repository_product_attribute_values.GetByProductIDRow)
 
@@ -128,6 +129,7 @@ func (s *Service) buildVariantDocument(ctx context.Context, variant *models.Prod
 	}
 
 	s.attachCategoryIDs(ctx, []*dto.EnrichedVariantDTO{enriched})
+	s.attachMainImage(ctx, []*dto.EnrichedVariantDTO{enriched})
 
 	attrs, err := s.storage.ProductAttributeValues().GetByProductID(ctx, product.ID)
 	if err != nil {
@@ -147,6 +149,7 @@ func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*reposito
 		"product_id":      v.ProductID,
 		"category_id":     v.CategoryID,
 		"category_ids":    v.CategoryIDs,
+		"image":           v.Image,
 		"name":            v.Name,
 		"slug":            v.Slug,
 		"description":     v.Description.String,
@@ -181,6 +184,43 @@ func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*reposito
 	}
 
 	return doc
+}
+
+// attachMainImage sets EnrichedVariantDTO.Image to the product's first gallery image
+// (product_media ordered by sort_order), so the search document carries the ready
+// ImageDTO for listings. Requires a reindex when the preset scheme changes.
+func (s *Service) attachMainImage(ctx context.Context, variants []*dto.EnrichedVariantDTO) {
+	if len(variants) == 0 {
+		return
+	}
+
+	productIDs := make([]uuid.UUID, 0, len(variants))
+	seen := make(map[uuid.UUID]struct{}, len(variants))
+	for _, v := range variants {
+		if _, ok := seen[v.ProductID]; !ok {
+			seen[v.ProductID] = struct{}{}
+			productIDs = append(productIDs, v.ProductID)
+		}
+	}
+
+	rows, err := s.storage.Products().GetMainMediaByProductIDs(ctx, productIDs)
+	if err != nil {
+		s.logger.Warn("Failed to load main media for index", "error", err)
+		return
+	}
+
+	presets := s.cfg.Images.ResolvedPresets()
+	byProduct := make(map[uuid.UUID]dto.ImageDTO, len(rows))
+	for _, r := range rows {
+		byProduct[r.ProductID] = dto.NewImageDTO(r.ID, r.Path, r.Width, r.Height, "", presets)
+	}
+
+	for _, v := range variants {
+		if img, ok := byProduct[v.ProductID]; ok {
+			img.Alt = v.Name
+			v.Image = &img
+		}
+	}
 }
 
 // attachCategoryIDs fills EnrichedVariantDTO.CategoryIDs for each variant with the

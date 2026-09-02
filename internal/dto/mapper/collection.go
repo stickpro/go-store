@@ -1,12 +1,13 @@
 package mapper
 
 import (
+	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
 
-func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProductsByIDRow) *dto.WithProductsCollectionDTO { //nolint:dupl
+func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProductsByIDRow, presets []config.ImagePreset) *dto.WithProductsCollectionDTO { //nolint:dupl
 	d := &dto.WithProductsCollectionDTO{
 		ID:        rows[0].ID,
 		Name:      rows[0].Name,
@@ -35,14 +36,14 @@ func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProducts
 			PriceBusiness:  row.ProductPriceBusiness.Decimal,
 			PriceWholeSale: row.ProductPriceWholesale.Decimal,
 			IsEnable:       row.ProductIsEnable.Bool,
-			Image:          row.ProductImage,
+			Image:          shortImage(row.ImageID, row.ImagePath, row.ImageWidth, row.ImageHeight, row.ProductName, presets),
 		})
 	}
 
 	return d
 }
 
-func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithProductsBySlugRow) *dto.WithProductsCollectionDTO { //nolint:dupl
+func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithProductsBySlugRow, presets []config.ImagePreset) *dto.WithProductsCollectionDTO { //nolint:dupl
 	d := &dto.WithProductsCollectionDTO{
 		ID:        rows[0].ID,
 		Name:      rows[0].Name,
@@ -71,7 +72,7 @@ func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithPr
 			PriceBusiness:  row.ProductPriceBusiness.Decimal,
 			PriceWholeSale: row.ProductPriceWholesale.Decimal,
 			IsEnable:       row.ProductIsEnable.Bool,
-			Image:          row.ProductImage,
+			Image:          shortImage(row.ImageID, row.ImagePath, row.ImageWidth, row.ImageHeight, row.ProductName, presets),
 		})
 	}
 

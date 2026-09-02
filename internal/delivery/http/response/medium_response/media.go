@@ -15,6 +15,8 @@ type MediumResponse struct {
 	MimeType  string    `db:"mime_type" json:"mime_type"`
 	DiskType  string    `db:"disk_type" json:"disk_type"`
 	Size      int64     `db:"size" json:"size"`
+	Width     int32     `db:"width" json:"width"`
+	Height    int32     `db:"height" json:"height"`
 	CreatedAt time.Time `json:"created_at"`
 } //	@name	MediumResponse
 
@@ -27,6 +29,8 @@ func NewFromModel(medium *models.Medium) MediumResponse {
 		MimeType:  medium.MimeType,
 		DiskType:  medium.DiskType,
 		Size:      medium.Size,
+		Width:     medium.Width,
+		Height:    medium.Height,
 		CreatedAt: medium.CreatedAt.Time,
 	}
 }

@@ -14,9 +14,9 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO media (name, path, file_name, mime_type, disk_type, size, created_at, source_url)
-	VALUES ($1, $2, $3, $4, $5, $6, now(), $7)
-	RETURNING id, name, path, file_name, mime_type, disk_type, size, created_at, source_url
+INSERT INTO media (name, path, file_name, mime_type, disk_type, size, created_at, source_url, width, height)
+	VALUES ($1, $2, $3, $4, $5, $6, now(), $7, $8, $9)
+	RETURNING id, name, path, file_name, mime_type, disk_type, size, created_at, source_url, width, height
 `
 
 type CreateParams struct {
@@ -27,6 +27,8 @@ type CreateParams struct {
 	DiskType  string      `db:"disk_type" json:"disk_type"`
 	Size      int64       `db:"size" json:"size"`
 	SourceUrl pgtype.Text `db:"source_url" json:"source_url"`
+	Width     int32       `db:"width" json:"width"`
+	Height    int32       `db:"height" json:"height"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Medium, error) {
@@ -38,6 +40,8 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Medium,
 		arg.DiskType,
 		arg.Size,
 		arg.SourceUrl,
+		arg.Width,
+		arg.Height,
 	)
 	var i models.Medium
 	err := row.Scan(
@@ -50,6 +54,8 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Medium,
 		&i.Size,
 		&i.CreatedAt,
 		&i.SourceUrl,
+		&i.Width,
+		&i.Height,
 	)
 	return &i, err
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_category_paths"
@@ -16,6 +17,7 @@ type IBreadcrumb interface {
 	GetBreadcrumbsByCategorySlug(ctx context.Context, categorySlug string) ([]*dto.BreadcrumbDTO, error)
 	GetDirectChildren(ctx context.Context, categoryID uuid.UUID) ([]*dto.CategoryChildDTO, error)
 	RebuildCategoryPaths(ctx context.Context, categoryID uuid.UUID) error
+	RebuildAllCategoryPaths(ctx context.Context) error
 }
 
 // GetBreadcrumbsByProductSlug returns the full breadcrumb path for a product by its slug
@@ -115,6 +117,26 @@ func (s *Service) GetDirectChildren(ctx context.Context, categoryID uuid.UUID) (
 
 func (s *Service) RebuildCategoryPaths(ctx context.Context, categoryID uuid.UUID) error {
 	return s.rebuildCategoryPathsWithOpts(ctx, categoryID)
+}
+
+// RebuildAllCategoryPaths recomputes the entire category_paths closure table from
+// categories.parent_id in a single transaction. Unlike RebuildCategoryPaths (which
+// repairs one subtree and relies on the table already being mostly correct), this
+// works from an empty or corrupted table — use it after bulk imports.
+func (s *Service) RebuildAllCategoryPaths(ctx context.Context) error {
+	return repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
+		paths := s.storage.CategoryPaths(repository.WithTx(tx))
+		if err := paths.DeleteAllCategoryPaths(ctx); err != nil {
+			s.logger.Error("failed to clear category paths", "error", err)
+			return err
+		}
+		if err := paths.RebuildAllCategoryPaths(ctx); err != nil {
+			s.logger.Error("failed to rebuild category paths", "error", err)
+			return err
+		}
+		s.logger.Info("successfully rebuilt all category paths")
+		return nil
+	})
 }
 
 func (s *Service) rebuildCategoryPathsWithOpts(ctx context.Context, categoryID uuid.UUID, opts ...repository.Option) error {

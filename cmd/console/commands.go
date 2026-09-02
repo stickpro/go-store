@@ -53,6 +53,18 @@ func InitCommands(currentAppVersion, appName, _ string) []*cli.Command {
 			Flags:       []cli.Flag{cfgPathsFlag()},
 			Commands:    prepareGeoCommands(appName, currentAppVersion),
 		},
+		{
+			Name:        "search",
+			Description: "search index commands",
+			Flags:       []cli.Flag{cfgPathsFlag()},
+			Commands:    prepareSearchCommands(appName, currentAppVersion),
+		},
+		{
+			Name:        "media",
+			Description: "media commands",
+			Flags:       []cli.Flag{cfgPathsFlag()},
+			Commands:    prepareMediaCommands(appName, currentAppVersion),
+		},
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	DeleteAllCategoryPaths(ctx context.Context) error
 	DeleteCategoryPaths(ctx context.Context, ancestorID uuid.UUID) error
 	GetAllAncestors(ctx context.Context, descendantID uuid.UUID) ([]*GetAllAncestorsRow, error)
 	GetAllDescendants(ctx context.Context, ancestorID uuid.UUID) ([]*GetAllDescendantsRow, error)
@@ -22,6 +23,7 @@ type Querier interface {
 	GetDirectChildren(ctx context.Context, ancestorID uuid.UUID) ([]*GetDirectChildrenRow, error)
 	InsertCategoryPath(ctx context.Context, arg InsertCategoryPathParams) error
 	IsCategoryDescendantOf(ctx context.Context, arg IsCategoryDescendantOfParams) (bool, error)
+	RebuildAllCategoryPaths(ctx context.Context) error
 }
 
 var _ Querier = (*Queries)(nil)

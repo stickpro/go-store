@@ -77,11 +77,19 @@ SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
        p.price_business      AS product_price_business,
        p.price_wholesale     AS product_price_wholesale,
        p.is_enable           AS product_is_enable,
-       p.image               AS product_image
+       img.id                AS image_id,
+       img.path              AS image_path,
+       img.width             AS image_width,
+       img.height            AS image_height
 FROM collections c
          LEFT JOIN collection_variants cv ON cv.collection_id = c.id
          LEFT JOIN product_variants pv ON pv.id = cv.variant_id
          LEFT JOIN products p ON p.id = pv.product_id
+         LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
 WHERE c.id = $1
 `
 
@@ -101,7 +109,10 @@ type GetCollectionWithProductsByIDRow struct {
 	ProductPriceBusiness  decimal.NullDecimal `db:"product_price_business" json:"product_price_business"`
 	ProductPriceWholesale decimal.NullDecimal `db:"product_price_wholesale" json:"product_price_wholesale"`
 	ProductIsEnable       pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
-	ProductImage          pgtype.Text         `db:"product_image" json:"product_image"`
+	ImageID               uuid.NullUUID       `db:"image_id" json:"image_id"`
+	ImagePath             pgtype.Text         `db:"image_path" json:"image_path"`
+	ImageWidth            pgtype.Int4         `db:"image_width" json:"image_width"`
+	ImageHeight           pgtype.Int4         `db:"image_height" json:"image_height"`
 }
 
 func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUID) ([]*GetCollectionWithProductsByIDRow, error) {
@@ -129,7 +140,10 @@ func (q *Queries) GetCollectionWithProductsByID(ctx context.Context, id uuid.UUI
 			&i.ProductPriceBusiness,
 			&i.ProductPriceWholesale,
 			&i.ProductIsEnable,
-			&i.ProductImage,
+			&i.ImageID,
+			&i.ImagePath,
+			&i.ImageWidth,
+			&i.ImageHeight,
 		); err != nil {
 			return nil, err
 		}
@@ -152,11 +166,19 @@ SELECT c.id, c.name, c.description, c.slug, c.created_at, c.updated_at,
        p.price_business      AS product_price_business,
        p.price_wholesale     AS product_price_wholesale,
        p.is_enable           AS product_is_enable,
-       p.image               AS product_image
+       img.id                AS image_id,
+       img.path              AS image_path,
+       img.width             AS image_width,
+       img.height            AS image_height
 FROM collections c
          LEFT JOIN collection_variants cv ON cv.collection_id = c.id
          LEFT JOIN product_variants pv ON pv.id = cv.variant_id
          LEFT JOIN products p ON p.id = pv.product_id
+         LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
 WHERE c.slug = $1
 `
 
@@ -176,7 +198,10 @@ type GetCollectionWithProductsBySlugRow struct {
 	ProductPriceBusiness  decimal.NullDecimal `db:"product_price_business" json:"product_price_business"`
 	ProductPriceWholesale decimal.NullDecimal `db:"product_price_wholesale" json:"product_price_wholesale"`
 	ProductIsEnable       pgtype.Bool         `db:"product_is_enable" json:"product_is_enable"`
-	ProductImage          pgtype.Text         `db:"product_image" json:"product_image"`
+	ImageID               uuid.NullUUID       `db:"image_id" json:"image_id"`
+	ImagePath             pgtype.Text         `db:"image_path" json:"image_path"`
+	ImageWidth            pgtype.Int4         `db:"image_width" json:"image_width"`
+	ImageHeight           pgtype.Int4         `db:"image_height" json:"image_height"`
 }
 
 func (q *Queries) GetCollectionWithProductsBySlug(ctx context.Context, slug string) ([]*GetCollectionWithProductsBySlugRow, error) {
@@ -204,7 +229,10 @@ func (q *Queries) GetCollectionWithProductsBySlug(ctx context.Context, slug stri
 			&i.ProductPriceBusiness,
 			&i.ProductPriceWholesale,
 			&i.ProductIsEnable,
-			&i.ProductImage,
+			&i.ImageID,
+			&i.ImagePath,
+			&i.ImageWidth,
+			&i.ImageHeight,
 		); err != nil {
 			return nil, err
 		}

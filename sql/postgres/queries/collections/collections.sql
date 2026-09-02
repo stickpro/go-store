@@ -29,11 +29,19 @@ SELECT c.*,
        p.price_business      AS product_price_business,
        p.price_wholesale     AS product_price_wholesale,
        p.is_enable           AS product_is_enable,
-       p.image               AS product_image
+       img.id                AS image_id,
+       img.path              AS image_path,
+       img.width             AS image_width,
+       img.height            AS image_height
 FROM collections c
          LEFT JOIN collection_variants cv ON cv.collection_id = c.id
          LEFT JOIN product_variants pv ON pv.id = cv.variant_id
          LEFT JOIN products p ON p.id = pv.product_id
+         LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
 WHERE c.slug = $1;
 
 -- name: GetCollectionWithProductsByID :many
@@ -47,9 +55,17 @@ SELECT c.*,
        p.price_business      AS product_price_business,
        p.price_wholesale     AS product_price_wholesale,
        p.is_enable           AS product_is_enable,
-       p.image               AS product_image
+       img.id                AS image_id,
+       img.path              AS image_path,
+       img.width             AS image_width,
+       img.height            AS image_height
 FROM collections c
          LEFT JOIN collection_variants cv ON cv.collection_id = c.id
          LEFT JOIN product_variants pv ON pv.id = cv.variant_id
          LEFT JOIN products p ON p.id = pv.product_id
+         LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
 WHERE c.id = $1;

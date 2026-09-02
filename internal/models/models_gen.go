@@ -2,11 +2,12 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/constant"
-	"time"
 )
 
 type Attribute struct {
@@ -134,6 +135,8 @@ type Medium struct {
 	Size      int64            `db:"size" json:"size"`
 	CreatedAt pgtype.Timestamp `db:"created_at" json:"created_at"`
 	SourceUrl pgtype.Text      `db:"source_url" json:"source_url"`
+	Width     int32            `db:"width" json:"width"`
+	Height    int32            `db:"height" json:"height"`
 }
 
 type PersonalAccessToken struct {

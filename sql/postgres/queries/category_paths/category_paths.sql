@@ -110,6 +110,23 @@ INSERT INTO category_paths (ancestor_id, descendant_id, depth)
 VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING;
 
+-- name: DeleteAllCategoryPaths :exec
+DELETE FROM category_paths;
+
+-- name: RebuildAllCategoryPaths :exec
+WITH RECURSIVE tree AS (
+    SELECT id AS ancestor_id, id AS descendant_id, 0 AS depth
+    FROM categories
+    UNION ALL
+    SELECT t.ancestor_id, c.id, t.depth + 1
+    FROM tree t
+    JOIN categories c ON c.parent_id = t.descendant_id
+    WHERE t.depth < 100
+)
+INSERT INTO category_paths (ancestor_id, descendant_id, depth)
+SELECT ancestor_id, descendant_id, depth FROM tree
+ON CONFLICT (ancestor_id, descendant_id) DO NOTHING;
+
 -- name: GetCategoryPathsBatch :many
 SELECT
     cp.ancestor_id,
