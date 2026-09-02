@@ -20,7 +20,7 @@ func (s *CustomQueries) GetWithPaginate(
 	params ManufacturersWithPaginationParams,
 ) (*base.FindResponseWithFullPagination[*models.Manufacturer], error) {
 	return base.Paginate[*models.Manufacturer](ctx, s.db, params.CommonFindParams, base.PaginationConfig[*models.Manufacturer]{
-		TableName:    "manufactures",
+		TableName:    "manufacturers",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,
 		AllowedFieldOrder: map[string]bool{

@@ -82,6 +82,8 @@ func (s *Service) CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO)
 		return nil, parsedErr
 	}
 
+	s.invalidateFilterableAttributesCache(ctx)
+
 	err = s.IndexAttribute(attribute)
 	if err != nil {
 		s.logger.Error("failed to index attribute", err)
@@ -138,6 +140,9 @@ func (s *Service) UpdateAttribute(ctx context.Context, d dto.UpdateAttributeDTO,
 		s.logger.Error("failed to update attribute", "error", parsedErr)
 		return nil, parsedErr
 	}
+
+	s.invalidateFilterableAttributesCache(ctx)
+
 	err = s.IndexAttribute(attribute)
 	if err != nil {
 		s.logger.Error("failed to index attribute", err)
@@ -153,7 +158,17 @@ func (s *Service) DeleteAttribute(ctx context.Context, id uuid.UUID) error {
 		s.logger.Error("failed to delete attribute", "error", parsedErr)
 		return parsedErr
 	}
+
+	s.invalidateFilterableAttributesCache(ctx)
 	return nil
+}
+
+// invalidateFilterableAttributesCache drops the cached filterable-attributes list so the
+// catalog picks up attribute changes without waiting for the TTL.
+func (s *Service) invalidateFilterableAttributesCache(ctx context.Context) {
+	if err := s.storage.KeyValue().Delete(ctx, constant.CacheKeyFilterableAttributes); err != nil {
+		s.logger.Warn("failed to invalidate filterable attributes cache", "error", err)
+	}
 }
 
 func (s *Service) SearchAttributes(ctx context.Context, q string, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.Attribute], error) {

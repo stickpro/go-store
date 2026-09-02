@@ -7,5 +7,5 @@ type VariantPayload struct {
 	Name              string     `json:"name"`
 	Slug              string     `json:"slug"`
 	CategoryID        *uuid.UUID `json:"category_id,omitempty"`
-	IsEnable          bool       `json:"is_enable"`
+	IsEnable          bool       `json:"is_enable,string"`
 }

@@ -5,8 +5,6 @@ INSERT INTO categories (parent_id, name, slug, description, image_path, meta_tit
 
 -- name: Update :one
 UPDATE categories
-	SET parent_id=$1, name=$2, slug=$3, description=$4, image_path=$5, meta_title=$6, 
-		meta_h1=$7, meta_description=$8, meta_keyword=$9, is_enable=$10, updated_at=now()
-	WHERE id=$11
+	SET parent_id=$1, name=$2, slug=$3, description=$4, image_path=$5, meta_title=$6, meta_h1=$7, meta_description=$8, meta_keyword=$9, is_enable=$10, updated_at=now()
+WHERE id=$11
 	RETURNING *;
-

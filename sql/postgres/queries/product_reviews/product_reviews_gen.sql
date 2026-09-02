@@ -8,8 +8,6 @@ DELETE FROM product_reviews WHERE id=$1;
 
 -- name: Update :one
 UPDATE product_reviews
-	SET variant_id=$1, user_id=$2, order_id=$3, rating=$4, title=$5, body=$6, 
-		status=$7, updated_at=now(), deleted_at=$8
-	WHERE id=$9
+	SET variant_id=$1, user_id=$2, order_id=$3, rating=$4, title=$5, body=$6, status=$7, updated_at=now(), deleted_at=$8
+WHERE id=$9
 	RETURNING *;
-

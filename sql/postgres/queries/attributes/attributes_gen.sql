@@ -11,8 +11,6 @@ SELECT * FROM attributes ORDER BY sort_order DESC LIMIT $1 OFFSET $2;
 
 -- name: Update :one
 UPDATE attributes
-	SET attribute_group_id=$1, name=$2, slug=$3, type=$4, unit=$5, is_filterable=$6, 
-		is_visible=$7, is_required=$8, sort_order=$9, updated_at=now()
-	WHERE id=$10
+	SET attribute_group_id=$1, name=$2, slug=$3, type=$4, unit=$5, is_filterable=$6, is_visible=$7, is_required=$8, sort_order=$9, updated_at=now()
+WHERE id=$10
 	RETURNING *;
-

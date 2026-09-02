@@ -37,10 +37,10 @@ func (s *Service) CreateProductVariantIndex(ctx context.Context, reindex bool) e
 	indexOptions := searchtypes.IndexOptions{
 		SearchableAttributes: []string{"name", "description", "meta_keyword", "model"},
 		FilterableAttributes: append(
-			[]string{"price", "category_id", "manufacturer_id", "is_enable", "stock_status"},
+			[]string{"price", "category_id", "category_ids", "manufacturer_id", "is_enable", "stock_status"},
 			filterableAttrs...,
 		),
-		SortableAttributes: []string{"price", "created_at", "name"},
+		SortableAttributes: []string{"price", "created_at", "name", "sort_order", "viewed"},
 	}
 
 	page := uint64(1)
@@ -95,6 +95,8 @@ func (s *Service) IndexVariant(ctx context.Context, variant *models.ProductVaria
 }
 
 func (s *Service) buildVariantDocuments(ctx context.Context, variants []*dto.EnrichedVariantDTO) []map[string]any {
+	s.attachCategoryIDs(ctx, variants)
+
 	attrCache := make(map[uuid.UUID][]*repository_product_attribute_values.GetByProductIDRow)
 
 	docs := make([]map[string]any, 0, len(variants))
@@ -125,6 +127,8 @@ func (s *Service) buildVariantDocument(ctx context.Context, variant *models.Prod
 		StockStatus:    product.StockStatus,
 	}
 
+	s.attachCategoryIDs(ctx, []*dto.EnrichedVariantDTO{enriched})
+
 	attrs, err := s.storage.ProductAttributeValues().GetByProductID(ctx, product.ID)
 	if err != nil {
 		s.logger.Warn("Failed to get attributes for product", "product_id", product.ID, "error", err)
@@ -134,10 +138,15 @@ func (s *Service) buildVariantDocument(ctx context.Context, variant *models.Prod
 }
 
 func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*repository_product_attribute_values.GetByProductIDRow) map[string]any {
+	// price is stored as a plain number (decimal marshals to a JSON string, which Meili
+	// cannot filter/sort/facet numerically) — retail price is the storefront-facing one.
+	priceRetail, _ := v.PriceRetail.Float64()
+
 	doc := map[string]any{
 		"id":              v.ID,
 		"product_id":      v.ProductID,
 		"category_id":     v.CategoryID,
+		"category_ids":    v.CategoryIDs,
 		"name":            v.Name,
 		"slug":            v.Slug,
 		"description":     v.Description.String,
@@ -146,6 +155,7 @@ func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*reposito
 		"sort_order":      v.SortOrder,
 		"viewed":          v.Viewed,
 		"created_at":      v.CreatedAt,
+		"price":           priceRetail,
 		"price_retail":    v.PriceRetail,
 		"price_business":  v.PriceBusiness,
 		"price_wholesale": v.PriceWholesale,
@@ -173,8 +183,82 @@ func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*reposito
 	return doc
 }
 
+// attachCategoryIDs fills EnrichedVariantDTO.CategoryIDs for each variant with the
+// closure of its primary category and every additional (junction) category — i.e.
+// each of those categories plus all of their ancestors. This lets the search index
+// match a whole subtree with a single `category_ids = <id>` filter.
+func (s *Service) attachCategoryIDs(ctx context.Context, variants []*dto.EnrichedVariantDTO) {
+	if len(variants) == 0 {
+		return
+	}
+
+	variantIDs := make([]uuid.UUID, 0, len(variants))
+	for _, v := range variants {
+		variantIDs = append(variantIDs, v.ID)
+	}
+
+	junction := make(map[uuid.UUID][]uuid.UUID)
+	rows, err := s.storage.ProductVariantCategories().GetByVariantIDs(ctx, variantIDs)
+	if err != nil {
+		s.logger.Warn("Failed to load variant categories for index", "error", err)
+	}
+	for _, r := range rows {
+		junction[r.ProductVariantID] = append(junction[r.ProductVariantID], r.CategoryID)
+	}
+
+	seedSet := make(map[uuid.UUID]struct{})
+	for _, v := range variants {
+		if v.CategoryID.Valid {
+			seedSet[v.CategoryID.UUID] = struct{}{}
+		}
+		for _, c := range junction[v.ID] {
+			seedSet[c] = struct{}{}
+		}
+	}
+	if len(seedSet) == 0 {
+		return
+	}
+
+	seeds := make([]uuid.UUID, 0, len(seedSet))
+	for id := range seedSet {
+		seeds = append(seeds, id)
+	}
+
+	// descendant category id -> its ancestor ids (the closure table includes the self row at depth 0)
+	ancestors := make(map[uuid.UUID][]uuid.UUID)
+	pathRows, err := s.storage.CategoryPaths().GetCategoryPathsBatch(ctx, seeds)
+	if err != nil {
+		s.logger.Warn("Failed to load category paths for index", "error", err)
+	}
+	for _, r := range pathRows {
+		ancestors[r.DescendantID] = append(ancestors[r.DescendantID], r.AncestorID)
+	}
+
+	for _, v := range variants {
+		set := make(map[uuid.UUID]struct{})
+		collect := func(id uuid.UUID) {
+			set[id] = struct{}{}
+			for _, a := range ancestors[id] {
+				set[a] = struct{}{}
+			}
+		}
+		if v.CategoryID.Valid {
+			collect(v.CategoryID.UUID)
+		}
+		for _, c := range junction[v.ID] {
+			collect(c)
+		}
+
+		ids := make([]uuid.UUID, 0, len(set))
+		for id := range set {
+			ids = append(ids, id)
+		}
+		v.CategoryIDs = ids
+	}
+}
+
 func (s *Service) getFilterableAttributeSlugs(ctx context.Context) ([]string, error) {
-	attributes, err := s.storage.Attributes().GetFilterableAttributes(ctx)
+	attributes, err := s.filterableAttributes(ctx)
 	if err != nil {
 		return nil, err
 	}

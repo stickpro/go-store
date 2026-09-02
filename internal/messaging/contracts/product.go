@@ -22,7 +22,7 @@ type ProductPayload struct {
 	PriceWholesale decimal.Decimal      `json:"price_wholesale"`
 	StockStatus    constant.StockStatus `json:"stock_status"`
 	Quantity       int64                `json:"quantity"`
-	IsEnable       bool                 `json:"is_enable"`
+	IsEnable       bool                 `json:"is_enable,string"`
 	Attributes     []AttributeItem      `json:"attributes,omitempty"`
 	ImageMain      *string              `json:"image_main,omitempty"`
 	Images         []string             `json:"images,omitempty"`

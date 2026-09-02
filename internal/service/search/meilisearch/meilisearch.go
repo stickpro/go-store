@@ -57,10 +57,29 @@ func (e *SearchEngine) CreateIndex(nameIndex string, data []map[string]interface
 }
 
 func (e *SearchEngine) Search(nameIndex string, query string, limit, offset int64) (*searchtypes.SearchResult, error) {
-	searchResult, err := e.client.Index(nameIndex).Search(query, &meilisearchSDK.SearchRequest{
+	return e.SearchWithParams(nameIndex, searchtypes.SearchParams{
+		Query:  query,
 		Limit:  limit,
 		Offset: offset,
 	})
+}
+
+func (e *SearchEngine) SearchWithParams(nameIndex string, params searchtypes.SearchParams) (*searchtypes.SearchResult, error) {
+	req := &meilisearchSDK.SearchRequest{
+		Limit:  params.Limit,
+		Offset: params.Offset,
+	}
+	if params.Filter != "" {
+		req.Filter = params.Filter
+	}
+	if len(params.Sort) > 0 {
+		req.Sort = params.Sort
+	}
+	if len(params.Facets) > 0 {
+		req.Facets = params.Facets
+	}
+
+	searchResult, err := e.client.Index(nameIndex).Search(params.Query, req)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +90,38 @@ func (e *SearchEngine) Search(nameIndex string, query string, limit, offset int6
 		Limit:     searchResult.Limit,
 		TotalHits: searchResult.EstimatedTotalHits,
 	}
+	if len(params.Facets) > 0 {
+		result.Facets = parseFacetDistribution(searchResult.FacetDistribution)
+		result.FacetStats = parseFacetStats(searchResult.FacetStats)
+	}
 	return result, nil
+}
+
+// parseFacetStats converts Meili's facetStats payload ({ "<facet>": {"min": n, "max": n} }).
+func parseFacetStats(raw interface{}) map[string]searchtypes.FacetStat {
+	result := make(map[string]searchtypes.FacetStat)
+
+	statsMap, ok := raw.(map[string]interface{})
+	if !ok {
+		return result
+	}
+
+	for facetName, facetData := range statsMap {
+		dataMap, ok := facetData.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		stat := searchtypes.FacetStat{}
+		if v, ok := dataMap["min"].(float64); ok {
+			stat.Min = v
+		}
+		if v, ok := dataMap["max"].(float64); ok {
+			stat.Max = v
+		}
+		result[facetName] = stat
+	}
+
+	return result
 }
 
 func (e *SearchEngine) CheckIndex(nameIndex string) (bool, error) {
@@ -107,25 +157,31 @@ func (e *SearchEngine) GetFacetDistribution(nameIndex string, facets []string) (
 		return nil, fmt.Errorf("failed to get facet distribution: %w", err)
 	}
 
-	// Преобразуем map[string]interface{} в map[string]map[string]int64
+	return parseFacetDistribution(searchResult.FacetDistribution), nil
+}
+
+// parseFacetDistribution converts Meili's map[string]interface{} facet payload into map[string]map[string]int64.
+func parseFacetDistribution(raw interface{}) map[string]map[string]int64 {
 	result := make(map[string]map[string]int64)
-	if searchResult.FacetDistribution != nil { //nolint:nestif
-		if facetDist, ok := searchResult.FacetDistribution.(map[string]interface{}); ok {
-			for facetName, facetData := range facetDist {
-				facetMap := make(map[string]int64)
-				if dataMap, ok := facetData.(map[string]interface{}); ok {
-					for key, value := range dataMap {
-						if count, ok := value.(float64); ok {
-							facetMap[key] = int64(count)
-						}
-					}
-				}
-				result[facetName] = facetMap
-			}
-		}
+
+	facetDist, ok := raw.(map[string]interface{})
+	if !ok {
+		return result
 	}
 
-	return result, nil
+	for facetName, facetData := range facetDist {
+		facetMap := make(map[string]int64)
+		if dataMap, ok := facetData.(map[string]interface{}); ok {
+			for key, value := range dataMap {
+				if count, ok := value.(float64); ok {
+					facetMap[key] = int64(count)
+				}
+			}
+		}
+		result[facetName] = facetMap
+	}
+
+	return result
 }
 
 func (e *SearchEngine) Close() {

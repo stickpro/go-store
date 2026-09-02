@@ -759,6 +759,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_dto_EnrichedVariantDTO:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_dto_EnrichedVariantDTO'
+      message:
+        type: string
+    type: object
   JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute:
     properties:
       code:
@@ -948,6 +957,24 @@ definitions:
         items:
           $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Product'
         type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-github_com_stickpro_go-store_internal_dto_CategoryFiltersDTO:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFiltersDTO'
+      message:
+        type: string
+    type: object
+  JSONResponse-github_com_stickpro_go-store_internal_dto_CategoryProductsResultDTO:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryProductsResultDTO'
       message:
         type: string
     type: object
@@ -1186,6 +1213,15 @@ definitions:
       items:
         items:
           $ref: '#/definitions/ProductVariantListItem'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
+  ResponseWithFullPagination-github_com_stickpro_go-store_internal_dto_EnrichedVariantDTO:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.EnrichedVariantDTO'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
@@ -1607,6 +1643,144 @@ definitions:
         type: string
       value_numeric:
         $ref: '#/definitions/decimal.NullDecimal'
+    type: object
+  github_com_stickpro_go-store_internal_dto.CategoryAttributeFilterDTO:
+    properties:
+      group_name:
+        type: string
+      group_slug:
+        type: string
+      max:
+        description: number attributes only
+        type: number
+      min:
+        description: number attributes only
+        type: number
+      name:
+        type: string
+      options:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFilterOptionDTO'
+        type: array
+      slug:
+        type: string
+      type:
+        description: select | number | boolean | text
+        type: string
+      unit:
+        type: string
+    type: object
+  github_com_stickpro_go-store_internal_dto.CategoryFacetStat:
+    properties:
+      max:
+        type: number
+      min:
+        type: number
+    type: object
+  github_com_stickpro_go-store_internal_dto.CategoryFilterOptionDTO:
+    properties:
+      count:
+        type: integer
+      label:
+        type: string
+      value:
+        type: string
+    type: object
+  github_com_stickpro_go-store_internal_dto.CategoryFiltersDTO:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryAttributeFilterDTO'
+        type: array
+      manufacturers:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFilterOptionDTO'
+        type: array
+      price:
+        $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryPriceRangeDTO'
+      stock_statuses:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFilterOptionDTO'
+        type: array
+    type: object
+  github_com_stickpro_go-store_internal_dto.CategoryPriceRangeDTO:
+    properties:
+      max:
+        type: number
+      min:
+        type: number
+    type: object
+  github_com_stickpro_go-store_internal_dto.CategoryProductsResultDTO:
+    properties:
+      facet_stats:
+        additionalProperties:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFacetStat'
+        type: object
+      facets:
+        additionalProperties:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        type: object
+      items:
+        items:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.EnrichedVariantDTO'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
+  github_com_stickpro_go-store_internal_dto.EnrichedVariantDTO:
+    properties:
+      category_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      category_ids:
+        description: |-
+          CategoryIDs holds the variant's category plus all its ancestors (and the same
+          for its additional categories) so the search index can filter a whole subtree.
+        items:
+          type: string
+        type: array
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      id:
+        type: string
+      is_enable:
+        type: boolean
+      manufacturer_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      meta_description:
+        $ref: '#/definitions/pgtype.Text'
+      meta_h1:
+        $ref: '#/definitions/pgtype.Text'
+      meta_keyword:
+        $ref: '#/definitions/pgtype.Text'
+      meta_title:
+        $ref: '#/definitions/pgtype.Text'
+      model:
+        type: string
+      name:
+        type: string
+      price_business:
+        type: number
+      price_retail:
+        type: number
+      price_wholesale:
+        type: number
+      product_id:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        type: integer
+      stock_status:
+        $ref: '#/definitions/StockStatus'
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      viewed:
+        type: integer
     type: object
   github_com_stickpro_go-store_internal_models.Attribute:
     properties:
@@ -2832,6 +3006,38 @@ paths:
       summary: Update Category
       tags:
       - Category
+  /v1/category/:id/products:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated product variants of a category and its subcategories
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_dto_EnrichedVariantDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get Category Products
+      tags:
+      - Category
   /v1/category/{slug}/:
     get:
       consumes:
@@ -2863,6 +3069,96 @@ paths:
           schema:
             $ref: '#/definitions/APIErrors'
       summary: Category
+      tags:
+      - Category
+  /v1/category/{slug}/filters:
+    get:
+      consumes:
+      - application/json
+      description: Get the full filter set with counts for a category and its subcategories
+      parameters:
+      - description: Category Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_dto_CategoryFiltersDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get category filters
+      tags:
+      - Category
+  /v1/category/{slug}/products:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated, filtered and faceted product variants of a category
+        and its subcategories
+      parameters:
+      - description: Category Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - in: query
+        name: facets
+        type: boolean
+      - description: comma-separated UUIDs
+        in: query
+        name: manufacturer_id
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: price_max
+        type: string
+      - in: query
+        name: price_min
+        type: string
+      - description: price_asc | price_desc | new | popular | name
+        in: query
+        name: sort
+        type: string
+      - description: comma-separated statuses
+        in: query
+        name: stock_status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_dto_CategoryProductsResultDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get category products
       tags:
       - Category
   /v1/category/id/{id}/:

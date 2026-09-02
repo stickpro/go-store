@@ -15,6 +15,5 @@ SELECT * FROM collections WHERE id=$1 LIMIT 1;
 -- name: Update :one
 UPDATE collections
 	SET name=$1, description=$2, slug=$3, updated_at=now()
-	WHERE id=$4
+WHERE id=$4
 	RETURNING *;
-

@@ -4,7 +4,7 @@ create table products
         primary key,
     external_id     varchar(128)            default null unique,
     manufacturer_id uuid                    default null,
-    sku             varchar(64)             default null unique,
+    sku             varchar(255)             default null unique,
     upc             varchar(12)             default null,
     ean             varchar(14)             default null,
     jan             varchar(13)             default null,

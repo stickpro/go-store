@@ -21,6 +21,22 @@ import (
 // defaultAttributeGroupID — фиксированный UUID дефолтной группы, созданной миграцией.
 var defaultAttributeGroupID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
+// validAttributeTypes отражает check-constraint attributes_type_check.
+var validAttributeTypes = map[string]struct{}{
+	"select":  {},
+	"number":  {},
+	"boolean": {},
+	"text":    {},
+}
+
+func isValidAttributeItem(item dto.AttributeKafkaItem) bool {
+	if item.Slug == "" || item.Name == "" {
+		return false
+	}
+	_, ok := validAttributeTypes[item.Type]
+	return ok
+}
+
 func (s *Service) RunInTx(ctx context.Context, fn func(...repository.Option) error) error {
 	return repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
 		return fn(repository.WithTx(tx))
@@ -31,6 +47,15 @@ func (s *Service) SyncAttributesFromKafka(ctx context.Context, productID uuid.UU
 	valueIDs := make([]uuid.UUID, 0, len(items))
 
 	for _, item := range items {
+		if !isValidAttributeItem(item) {
+			s.logger.Warnw("skipping invalid attribute from kafka payload",
+				"name", item.Name,
+				"slug", item.Slug,
+				"type", item.Type,
+			)
+			continue
+		}
+
 		attr, err := s.storage.Attributes(opts...).GetOrCreate(ctx, repository_attributes.GetOrCreateParams{
 			AttributeGroupID: uuid.NullUUID{UUID: defaultAttributeGroupID, Valid: true},
 			Name:             item.Name,

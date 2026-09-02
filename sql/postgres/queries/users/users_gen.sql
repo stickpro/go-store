@@ -12,6 +12,5 @@ SELECT * FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 O
 -- name: Update :one
 UPDATE users
 	SET location=$1, language=$2, updated_at=$3, is_admin=$4, banned=$5
-	WHERE id=$6
+WHERE id=$6
 	RETURNING *;
-

@@ -5,8 +5,6 @@ INSERT INTO manufacturers (name, slug, description, image_path, meta_title, meta
 
 -- name: Update :one
 UPDATE manufacturers
-	SET name=$1, slug=$2, description=$3, image_path=$4, meta_title=$5, meta_h1=$6, 
-		meta_description=$7, meta_keyword=$8, is_enable=$9, updated_at=now()
-	WHERE id=$10
+	SET name=$1, slug=$2, description=$3, image_path=$4, meta_title=$5, meta_h1=$6, meta_description=$7, meta_keyword=$8, is_enable=$9, updated_at=now()
+WHERE id=$10
 	RETURNING *;
-

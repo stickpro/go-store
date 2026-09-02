@@ -14,9 +14,6 @@ SELECT * FROM product_variants WHERE id=$1 LIMIT 1;
 
 -- name: Update :one
 UPDATE product_variants
-	SET product_id=$1, category_id=$2, name=$3, slug=$4, description=$5, model=$6, 
-		meta_title=$7, meta_h1=$8, meta_description=$9, meta_keyword=$10, sort_order=$11, is_enable=$12, 
-		viewed=$13, updated_at=now()
-	WHERE id=$14
+	SET product_id=$1, category_id=$2, name=$3, slug=$4, description=$5, model=$6, meta_title=$7, meta_h1=$8, meta_description=$9, meta_keyword=$10, sort_order=$11, is_enable=$12, viewed=$13, updated_at=now()
+WHERE id=$14
 	RETURNING *;
-

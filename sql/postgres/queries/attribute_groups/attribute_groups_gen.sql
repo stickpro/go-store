@@ -12,6 +12,5 @@ SELECT * FROM attribute_groups ORDER BY name DESC LIMIT $1 OFFSET $2;
 -- name: Update :one
 UPDATE attribute_groups
 	SET name=$1, slug=$2, description=$3, updated_at=now()
-	WHERE id=$4
+WHERE id=$4
 	RETURNING *;
-

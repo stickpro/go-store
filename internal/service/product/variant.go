@@ -22,6 +22,12 @@ type IVariantProductService interface { //nolint:interfacebloat
 	DeleteProductVariant(ctx context.Context, variantID uuid.UUID) error
 	GetVariantsWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_product_variants.FindRow], error)
 	GetEnrichedVariantsWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO], error)
+	// GetEnrichedVariantsByCategoryWithPagination reads straight from the DB (always consistent) — used by admin.
+	GetEnrichedVariantsByCategoryWithPagination(ctx context.Context, categoryID uuid.UUID, d dto.GetDTO) (*base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO], error)
+	// SearchVariantsByCategory reads from the search index (pre-enriched docs, faceted filtering) — used by the storefront.
+	SearchVariantsByCategory(ctx context.Context, d dto.CategoryProductsFilterDTO) (*dto.CategoryProductsResultDTO, error)
+	// GetCategoryFilters returns the full filter set (with counts) for a category listing — used by the storefront.
+	GetCategoryFilters(ctx context.Context, categorySlug string) (*dto.CategoryFiltersDTO, error)
 
 	// Slug-based methods
 	GetVariantBySlug(ctx context.Context, slug string) (*models.ProductVariant, error)
@@ -133,12 +139,47 @@ func (s *Service) GetEnrichedVariantsWithPagination(ctx context.Context, d dto.G
 		return nil, err
 	}
 
+	return s.enrichVariantRows(ctx, variantRows), nil
+}
+
+// GetEnrichedVariantsByCategoryWithPagination returns a paginated list of enriched variants
+// that belong to the category or any of its descendants, read directly from the database.
+func (s *Service) GetEnrichedVariantsByCategoryWithPagination(
+	ctx context.Context,
+	categoryID uuid.UUID,
+	d dto.GetDTO,
+) (*base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO], error) {
+	commonParams := base.NewCommonFindParams()
+	if d.PageSize != nil {
+		commonParams.PageSize = d.PageSize
+	}
+	if d.Page != nil {
+		commonParams.Page = d.Page
+	}
+
+	variantRows, err := s.storage.ProductVariants().GetWithPaginate(ctx, repository_product_variants.VariantsWithPaginationParams{
+		CommonFindParams: *commonParams,
+		CategoryID:       &categoryID,
+	})
+	if err != nil {
+		return nil, pgerror.ParseError(err)
+	}
+
+	return s.enrichVariantRows(ctx, variantRows), nil
+}
+
+// enrichVariantRows augments paginated variant rows with product-level fields (prices, stock, manufacturer).
+func (s *Service) enrichVariantRows(
+	ctx context.Context,
+	variantRows *base.FindResponseWithFullPagination[*repository_product_variants.FindRow],
+) *base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO] {
 	productCache := make(map[uuid.UUID]*models.Product)
 	items := make([]*dto.EnrichedVariantDTO, 0, len(variantRows.Items))
 
 	for _, row := range variantRows.Items {
 		product, ok := productCache[row.ProductID]
 		if !ok {
+			var err error
 			product, err = s.storage.Products().GetByID(ctx, row.ProductID)
 			if err != nil {
 				s.logger.Warn("Failed to get product for variant", "variant_id", row.ID, "error", err)
@@ -160,7 +201,7 @@ func (s *Service) GetEnrichedVariantsWithPagination(ctx context.Context, d dto.G
 	return &base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO]{
 		Items:      items,
 		Pagination: variantRows.Pagination,
-	}, nil
+	}
 }
 
 func (s *Service) GetVariantBySlug(ctx context.Context, slug string) (*models.ProductVariant, error) {

@@ -120,6 +120,9 @@ type EnrichedVariantDTO struct {
 	PriceWholesale decimal.Decimal      `json:"price_wholesale"`
 	ManufacturerID uuid.NullUUID        `json:"manufacturer_id"`
 	StockStatus    constant.StockStatus `json:"stock_status"`
+	// CategoryIDs holds the variant's category plus all its ancestors (and the same
+	// for its additional categories) so the search index can filter a whole subtree.
+	CategoryIDs []uuid.UUID `json:"category_ids"` //nolint:tagliatelle
 }
 
 type SyncVariantCategoriesDTO struct {

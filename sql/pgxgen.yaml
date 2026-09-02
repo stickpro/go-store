@@ -1,274 +1,304 @@
-version: "1"
-sqlc:
-  - schema_dir: postgres/migrations
-    models:
-      replace_sqlc_nullable_types: true
-      move:
+version: "2"
+schemas:
+    - name: main
+      engine: postgresql
+      schema_dir: postgres/migrations
+      models:
         output_dir: ../internal/models
         output_file_name: models_gen.go
         package_name: models
         package_path: github.com/stickpro/go-store/internal/models
-    crud:
-      auto_remove_generated_files: true
-      exclude_table_name_from_methods: true
+        emit_json_tags: true
+        emit_db_tags: true
+      sqlc:
+        defaults:
+            sql_package: pgx/v5
+            emit_prepared_queries: false
+            emit_interface: true
+            emit_json_tags: true
+            emit_db_tags: true
+            emit_exported_queries: false
+            emit_exact_table_names: false
+            emit_empty_slices: true
+            emit_result_struct_pointers: true
+            emit_params_struct_pointers: false
+            emit_enum_valid_method: true
+            emit_all_enum_values: true
+        overrides:
+            types:
+                - db_type: uuid
+                  go_type: github.com/google/uuid.UUID
+                - db_type: uuid
+                  go_type: github.com/google/uuid.NullUUID
+                  nullable: true
+                - db_type: pg_catalog.numeric
+                  go_type: github.com/shopspring/decimal.Decimal
+                - db_type: pg_catalog.numeric
+                  go_type: github.com/shopspring/decimal.NullDecimal
+                  nullable: true
+            columns:
+                - column: users.email
+                  go_struct_tag: validate:"required,email"
+                - column: users.password
+                  go_struct_tag: validate:"required,min=8,max=32"
+                - column: users.location
+                  go_type:
+                    type: string
+                  go_struct_tag: validate:"required,timezone"
+                - column: personal_access_tokens.expires_at
+                  go_type:
+                    type: '*time.Time'
+                - column: products.stock_status
+                  go_type: github.com/stickpro/go-store/internal/constant.StockStatus
+                - column: media.size
+                  go_type: int64
+      defaults:
+        queries_dir_prefix: postgres/queries
+        output_dir_prefix: ../internal/storage/repository
+        package_prefix: repository_
+        crud:
+            auto_clean: true
+            exclude_table_name: true
       tables:
-        # Users
-        users:
-          output_dir: postgres/queries/users
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            find:
-              name: GetAll
-              skip_columns:
-                - password
-              where:
-                deleted_at:
-                  value: "IS NULL"
-              order:
-                by: created_at
-              limit: true
-              offset: true
-            update:
-              skip_columns:
-                - id
-                - email
-                - email_verified_at
-                - password
-                - remember_token
-                - deleted_at
-                - created_at
-              returning: "*"
-            delete:
-        # PersonalAccessTokens
-        personal_access_tokens:
-          output_dir: postgres/queries/personal_access_tokens
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-                - last_used_at
-              returning: "*"
-        # Categories
-        categories:
-          output_dir: postgres/queries/categories
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            update:
-              name: Update
-              skip_columns:
-                - id
-                - created_at
-              column_values:
-                updated_at: now()
-              returning: "*"
-        # Products
-        products:
-          output_dir: postgres/queries/products
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            update:
-              name: Update
-              skip_columns:
-                - id
-                - created_at
-              column_values:
-                updated_at: now()
-              returning: "*"
-        # Product reviews
-        product_reviews:
-          output_dir: postgres/queries/product_reviews
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            update:
-              name: Update
-              skip_columns:
-                - id
-                - created_at
-              column_values:
-                updated_at: now()
-              returning: "*"
-            delete:
-        # files
-        media:
-          output_dir: postgres/queries/media
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-              returning: "*"
-              column_values:
-                created_at: now()
-            delete:
-        # Manufacturers
-        manufacturers:
-          output_dir: postgres/queries/manufacturers
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            update:
-              name: Update
-              skip_columns:
-                - id
-                - created_at
-              column_values:
-                updated_at: now()
-              returning: "*"
-        # Attribute Groups
         attribute_groups:
-          output_dir: postgres/queries/attribute_groups
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            update:
-              name: Update
-              skip_columns:
-                - id
-                - created_at
-              column_values:
-                updated_at: now()
-              returning: "*"
-            find:
-              name: GetAll
-              order:
-                by: name
-              limit: true
-              offset: true
-            delete:
-        # Attributes
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    delete: {}
+                    find:
+                        name: GetAll
+                        limit: true
+                        order:
+                            by: name
+                    update:
+                        name: Update
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            updated_at: now()
         attributes:
-          output_dir: postgres/queries/attributes
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            update:
-              name: Update
-              skip_columns:
-                - id
-                - created_at
-              column_values:
-                updated_at: now()
-              returning: "*"
-            find:
-              name: GetAll
-              order:
-                by: sort_order
-              limit: true
-              offset: true
-            find_by_group:
-              name: GetByGroup
-              where:
-                attribute_group_id:
-                  value: "= $1"
-              order:
-                by: sort_order
-              limit: true
-              offset: true
-            delete:
-        # Cities
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    delete: {}
+                    find:
+                        name: GetAll
+                        limit: true
+                        order:
+                            by: sort_order
+                    update:
+                        name: Update
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            updated_at: now()
+        categories:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    update:
+                        name: Update
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            updated_at: now()
         cities:
-          output_dir: postgres/queries/cities
-          primary_column: id
-          methods:
-            find:
-              name: GetAll
-        # Collections
+            primary_column: id
+            crud:
+                methods:
+                    find:
+                        name: GetAll
         collections:
-          output_dir: postgres/queries/collections
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            update:
-              name: Update
-              skip_columns:
-                - id
-                - created_at
-              column_values:
-                updated_at: now()
-              returning: "*"
-            find:
-              name: GetAll
-              limit: true
-              offset: true
-            get:
-            delete:
-        # Product Variants
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    delete: {}
+                    find:
+                        name: GetAll
+                        limit: true
+                    get: {}
+                    update:
+                        name: Update
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            updated_at: now()
+        manufacturers:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    update:
+                        name: Update
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            updated_at: now()
+        media:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                        column_values:
+                            created_at: now()
+                    delete: {}
+        personal_access_tokens:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                            - last_used_at
+        product_reviews:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    delete: {}
+                    update:
+                        name: Update
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            updated_at: now()
         product_variants:
-          output_dir: postgres/queries/product_variants
-          primary_column: id
-          methods:
-            create:
-              skip_columns:
-                - id
-                - updated_at
-              returning: "*"
-              column_values:
-                created_at: now()
-            update:
-              name: Update
-              skip_columns:
-                - id
-                - created_at
-              column_values:
-                updated_at: now()
-              returning: "*"
-            find:
-              name: GetAll
-              limit: true
-              offset: true
-            get:
-            delete:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    delete: {}
+                    find:
+                        name: GetAll
+                        limit: true
+                    get: {}
+                    update:
+                        name: Update
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            updated_at: now()
+        products:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    update:
+                        name: Update
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            updated_at: now()
+        users:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - updated_at
+                        column_values:
+                            created_at: now()
+                    delete: {}
+                    find:
+                        name: GetAll
+                        where:
+                            deleted_at:
+                                value: IS NULL
+                        skip_columns:
+                            - password
+                        limit: true
+                        order:
+                            by: created_at
+                    update:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - email
+                            - email_verified_at
+                            - password
+                            - remember_token
+                            - deleted_at
+                            - created_at
+        attribute_values:
+            primary_column: id
+        category_paths:
+            primary_column: ancestor_id
+        product_attribute_values:
+            primary_column: product_id
+        product_variant_categories:
+            primary_column: product_variant_id

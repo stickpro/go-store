@@ -11,3 +11,5 @@ configs/config.yaml
 /tmp
 storage/*/*
 !storage/geo/.gitkeep
+# pgxgen v2 transient sqlc config
+sql/.pgxgen/
