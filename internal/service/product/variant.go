@@ -25,7 +25,10 @@ type IVariantProductService interface { //nolint:interfacebloat
 	// GetEnrichedVariantsByCategoryWithPagination reads straight from the DB (always consistent) — used by admin.
 	GetEnrichedVariantsByCategoryWithPagination(ctx context.Context, categoryID uuid.UUID, d dto.GetDTO) (*base.FindResponseWithFullPagination[*dto.EnrichedVariantDTO], error)
 	// SearchVariantsByCategory reads from the search index (pre-enriched docs, faceted filtering) — used by the storefront.
-	SearchVariantsByCategory(ctx context.Context, d dto.CategoryProductsFilterDTO) (*dto.CategoryProductsResultDTO, error)
+	SearchVariantsByCategory(ctx context.Context, d dto.CategoryProductsFilterDTO) (*dto.VariantListDTO, error)
+	// SearchVariants is the full-text storefront search over the variant index with optional
+	// category / price / manufacturer / attribute filtering.
+	SearchVariants(ctx context.Context, d dto.VariantSearchDTO) (*dto.VariantListDTO, error)
 	// GetCategoryFilters returns the full filter set (with counts) for a category listing — used by the storefront.
 	GetCategoryFilters(ctx context.Context, categorySlug string) (*dto.CategoryFiltersDTO, error)
 

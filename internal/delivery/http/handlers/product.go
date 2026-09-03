@@ -1,17 +1,14 @@
 package handlers
 
 import (
-	"fmt"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
-	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
+	"github.com/stickpro/go-store/internal/delivery/http/response/category_response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
-	"github.com/stickpro/go-store/internal/service/search"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
@@ -84,7 +81,7 @@ func (h *Handler) getProductByID(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			string	query		product_request.GetProductWithPagination	true	"GetProductWithPagination"
-//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[repository_products.FindRow]]
+//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[product_response.ProductResponse]]
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Router			/v1/product/ [get]
@@ -99,7 +96,7 @@ func (h *Handler) getProducts(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "product")
 	}
-	return c.JSON(response.OkByData(prds))
+	return c.JSON(response.OkByData(product_response.NewPaginatedProducts(prds)))
 }
 
 // getProductWithMediaByID returns a product with media by its base product ID
@@ -126,34 +123,6 @@ func (h *Handler) getProductWithMediaByID(c fiber.Ctx) error {
 	}
 	images := h.services.MediaService.Images(prd.Medium, productImageAlt(prd.Variant))
 	return c.JSON(response.OkByData(product_response.NewFromModelsWithImages(prd.Product, prd.Variant, images)))
-}
-
-// findProduct searches for a product by name via search index
-//
-//	@Summary		Find product
-//	@Description	Find product by name
-//	@Tags			Product
-//	@Accept			json
-//	@Produce		json
-//	@Param			product	query		string	true	"Product name"
-//	@Success		200		{object}	response.Result[[]models.Product]
-//	@Failure		400		{object}	apierror.Errors
-//	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/product/find [get]
-func (h *Handler) findProduct(c fiber.Ctx) error {
-	product := c.Query("product")
-	if product == "" {
-		return apierror.New().AddError(fmt.Errorf("product is requered")).SetHttpCode(fiber.StatusBadRequest)
-	}
-	res, err := h.services.SearchService.Search(constant.ProductVariantsIndex, product, 10, 0)
-	if err != nil {
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
-	}
-	items, err := search.UnmarshalHits[*dto.EnrichedVariantDTO](res.Hits)
-	if err != nil {
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
-	}
-	return c.JSON(response.OkByData(items))
 }
 
 // getProductAttributes returns all attribute groups with values for a product by variant slug
@@ -186,7 +155,7 @@ func (h *Handler) getProductAttributes(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			slug	path		string	true	"Product Slug"
-//	@Success		200		{object}	response.Result[[]dto.BreadcrumbDTO]
+//	@Success		200		{object}	response.Result[[]category_response.BreadcrumbResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
@@ -197,7 +166,7 @@ func (h *Handler) getProductBreadcrumbs(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "product breadcrumbs")
 	}
-	return c.JSON(response.OkByData(breadcrumbs))
+	return c.JSON(response.OkByData(category_response.NewBreadcrumbs(breadcrumbs)))
 }
 
 // getRelatedProducts returns related products for a variant by variant ID
@@ -208,7 +177,7 @@ func (h *Handler) getProductBreadcrumbs(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Variant ID"
-//	@Success		200	{object}	response.Result[[]models.ShortProduct]
+//	@Success		200	{object}	response.Result[[]product_response.VariantCardResponse]
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
@@ -222,7 +191,7 @@ func (h *Handler) getRelatedProducts(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "related products")
 	}
-	return c.JSON(response.OkByData(prd))
+	return c.JSON(response.OkByData(product_response.NewVariantCards(prd)))
 }
 
 // getRelatedProductsBatch returns related products for multiple variants in one request
@@ -233,7 +202,7 @@ func (h *Handler) getRelatedProducts(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			get	body		product_request.GetRelatedProductsBatchRequest	true	"List of variant IDs"
-//	@Success		200	{object}	response.Result[map[string][]models.ShortProduct]
+//	@Success		200	{object}	response.Result[map[string][]product_response.VariantCardResponse]
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/product/variant/related-products/batch [post]
@@ -246,7 +215,11 @@ func (h *Handler) getRelatedProductsBatch(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "related products")
 	}
-	return c.JSON(response.OkByData(result))
+	out := make(map[uuid.UUID][]product_response.VariantCardResponse, len(result))
+	for variantID, cards := range result {
+		out[variantID] = product_response.NewVariantCards(cards)
+	}
+	return c.JSON(response.OkByData(out))
 }
 
 // getRelatedProductsBySlug returns related products for a variant by variant slug
@@ -257,7 +230,7 @@ func (h *Handler) getRelatedProductsBatch(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			slug	path		string	true	"Variant slug"
-//	@Success		200		{object}	response.Result[[]models.ShortProduct]
+//	@Success		200		{object}	response.Result[[]product_response.VariantCardResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
@@ -268,7 +241,7 @@ func (h *Handler) getRelatedProductsBySlug(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "related products")
 	}
-	return c.JSON(response.OkByData(prd))
+	return c.JSON(response.OkByData(product_response.NewVariantCards(prd)))
 }
 
 // getProductAttributesByID returns all attribute groups with values for a product by product ID
@@ -299,7 +272,6 @@ func (h *Handler) getProductAttributesByID(c fiber.Ctx) error {
 func (h *Handler) initProductRoutes(v1 fiber.Router) {
 	p := v1.Group("/product")
 	p.Get("/", h.getProducts)
-	p.Get("/find", h.findProduct)
 	// by slug
 	p.Get("/:slug", h.getProductBySlug)
 	p.Get("/:slug/attributes", h.getProductAttributes)

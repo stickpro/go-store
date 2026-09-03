@@ -32,17 +32,17 @@ definitions:
     type: object
   AttributeGroupResponse:
     properties:
-      created_at:
+      attributes:
+        items:
+          $ref: '#/definitions/AttributeResponse'
+        type: array
+      group_description:
         type: string
-      description:
+      group_id:
         type: string
-      id:
+      group_name:
         type: string
-      name:
-        type: string
-      slug:
-        type: string
-      updated_at:
+      group_slug:
         type: string
     type: object
   AttributeGroupWithValuesDTO:
@@ -64,56 +64,40 @@ definitions:
     properties:
       groups:
         items:
-          $ref: '#/definitions/AttributeGroupWithValuesDTO'
+          $ref: '#/definitions/AttributeGroupResponse'
         type: array
     type: object
   AttributeResponse:
     properties:
-      attribute_group_id:
-        $ref: '#/definitions/uuid.NullUUID'
-      created_at:
-        type: string
       id:
         type: string
       is_filterable:
-        type: boolean
-      is_required:
-        type: boolean
-      is_visible:
         type: boolean
       name:
         type: string
       slug:
         type: string
-      sort_order:
-        type: integer
       type:
         type: string
       unit:
         type: string
-      updated_at:
-        type: string
+      values:
+        items:
+          $ref: '#/definitions/AttributeValueResponse'
+        type: array
     type: object
   AttributeValueResponse:
     properties:
-      attribute_id:
-        type: string
-      created_at:
-        type: string
       display_order:
         type: integer
       id:
-        type: string
-      is_active:
-        type: boolean
-      updated_at:
         type: string
       value:
         type: string
       value_normalized:
         type: string
       value_numeric:
-        type: number
+        $ref: '#/definitions/decimal.NullDecimal'
     type: object
   AttributeWithValuesDTO:
     properties:
@@ -151,7 +135,7 @@ definitions:
       token:
         type: string
     type: object
-  BreadcrumbDTO:
+  BreadcrumbResponse:
     properties:
       depth:
         type: integer
@@ -196,6 +180,62 @@ definitions:
       total_price:
         type: number
     type: object
+  CategoryAttributeFilterResponse:
+    properties:
+      group_name:
+        type: string
+      group_slug:
+        type: string
+      max:
+        type: number
+      min:
+        type: number
+      name:
+        type: string
+      options:
+        items:
+          $ref: '#/definitions/CategoryFilterOptionResponse'
+        type: array
+      slug:
+        type: string
+      type:
+        type: string
+      unit:
+        type: string
+    type: object
+  CategoryFilterOptionResponse:
+    properties:
+      count:
+        type: integer
+      label:
+        type: string
+      value:
+        type: string
+    type: object
+  CategoryFiltersResponse:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/CategoryAttributeFilterResponse'
+        type: array
+      manufacturers:
+        items:
+          $ref: '#/definitions/CategoryFilterOptionResponse'
+        type: array
+      price:
+        $ref: '#/definitions/CategoryPriceRangeResponse'
+      stock_statuses:
+        items:
+          $ref: '#/definitions/CategoryFilterOptionResponse'
+        type: array
+    type: object
+  CategoryPriceRangeResponse:
+    properties:
+      max:
+        type: number
+      min:
+        type: number
+    type: object
   CategoryResponse:
     properties:
       created_at:
@@ -225,11 +265,11 @@ definitions:
       updated_at:
         type: string
     type: object
-  CategoryTreeDTO:
+  CategoryTreeResponse:
     properties:
       children:
         items:
-          $ref: '#/definitions/CategoryTreeDTO'
+          $ref: '#/definitions/CategoryTreeResponse'
         type: array
       id:
         type: string
@@ -318,7 +358,7 @@ definitions:
         type: string
       products:
         items:
-          $ref: '#/definitions/ShortProductResponse'
+          $ref: '#/definitions/VariantCardResponse'
         type: array
       slug:
         type: string
@@ -659,6 +699,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-CategoryFiltersResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/CategoryFiltersResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-CategoryResponse:
     properties:
       code:
@@ -767,6 +816,33 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-ResponseWithFullPagination-CategoryResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-CategoryResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-ProductResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-ProductResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-ProductReviewResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-ProductReviewResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-ResponseWithFullPagination-ProductVariantListItem:
     properties:
       code:
@@ -803,15 +879,6 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category'
-      message:
-        type: string
-    type: object
   JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection:
     properties:
       code:
@@ -836,6 +903,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/UserInfoResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-VariantListResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/VariantListResponse'
       message:
         type: string
     type: object
@@ -889,24 +965,35 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-array_BreadcrumbDTO:
+  JSONResponse-array_BreadcrumbResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/BreadcrumbDTO'
+          $ref: '#/definitions/BreadcrumbResponse'
         type: array
       message:
         type: string
     type: object
-  JSONResponse-array_CategoryTreeDTO:
+  JSONResponse-array_CategoryTreeResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/CategoryTreeDTO'
+          $ref: '#/definitions/CategoryTreeResponse'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_CityResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/CityResponse'
         type: array
       message:
         type: string
@@ -922,13 +1009,13 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-array_ShortProduct:
+  JSONResponse-array_VariantCardResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/ShortProduct'
+          $ref: '#/definitions/VariantCardResponse'
         type: array
       message:
         type: string
@@ -955,52 +1042,12 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-array_github_com_stickpro_go-store_internal_models_City:
+  JSONResponse-map_string_array_VariantCardResponse:
     properties:
       code:
         type: integer
       data:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.City'
-        type: array
-      message:
-        type: string
-    type: object
-  JSONResponse-array_github_com_stickpro_go-store_internal_models_Product:
-    properties:
-      code:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Product'
-        type: array
-      message:
-        type: string
-    type: object
-  JSONResponse-github_com_stickpro_go-store_internal_dto_CategoryFiltersDTO:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFiltersDTO'
-      message:
-        type: string
-    type: object
-  JSONResponse-github_com_stickpro_go-store_internal_dto_CategoryProductsResultDTO:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryProductsResultDTO'
-      message:
-        type: string
-    type: object
-  JSONResponse-map_string_array_ShortProduct:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/map_string_array_ShortProduct'
+        $ref: '#/definitions/map_string_array_VariantCardResponse'
       message:
         type: string
     type: object
@@ -1229,6 +1276,33 @@ definitions:
       token:
         type: string
     type: object
+  ResponseWithFullPagination-CategoryResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/CategoryResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
+  ResponseWithFullPagination-ProductResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/ProductResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
+  ResponseWithFullPagination-ProductReviewResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/ProductReviewResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
   ResponseWithFullPagination-ProductVariantListItem:
     properties:
       items:
@@ -1265,15 +1339,6 @@ definitions:
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Category'
-        type: array
-      pagination:
-        $ref: '#/definitions/FullPagingData'
-    type: object
   ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection:
     properties:
       items:
@@ -1291,44 +1356,6 @@ definitions:
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
-    type: object
-  ShortProduct:
-    properties:
-      id:
-        type: string
-      image:
-        $ref: '#/definitions/ImageDTO'
-      is_enable:
-        type: boolean
-      model:
-        type: string
-      name:
-        type: string
-      price:
-        type: number
-      product_id:
-        type: string
-      slug:
-        type: string
-    type: object
-  ShortProductResponse:
-    properties:
-      id:
-        type: string
-      image:
-        $ref: '#/definitions/ImageDTO'
-      is_enable:
-        type: boolean
-      model:
-        type: string
-      name:
-        type: string
-      price:
-        type: number
-      product_id:
-        type: string
-      slug:
-        type: string
     type: object
   StockStatus:
     enum:
@@ -1590,6 +1617,37 @@ definitions:
     - email
     - location
     type: object
+  VariantCardResponse:
+    properties:
+      category_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      description:
+        type: string
+      id:
+        type: string
+      image:
+        $ref: '#/definitions/ImageDTO'
+      is_enable:
+        type: boolean
+      manufacturer_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      model:
+        type: string
+      name:
+        type: string
+      price_business:
+        type: number
+      price_retail:
+        type: number
+      price_wholesale:
+        type: number
+      product_id:
+        type: string
+      slug:
+        type: string
+      stock_status:
+        type: string
+    type: object
   VariantCategoryResponse:
     properties:
       category_id:
@@ -1600,6 +1658,26 @@ definitions:
         type: string
       category_slug:
         type: string
+    type: object
+  VariantListResponse:
+    properties:
+      facet_stats:
+        additionalProperties:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFacetStat'
+        type: object
+      facets:
+        additionalProperties:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        type: object
+      items:
+        items:
+          $ref: '#/definitions/VariantCardResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
     type: object
   ViewedItemResponse:
     properties:
@@ -1665,91 +1743,12 @@ definitions:
       value_numeric:
         $ref: '#/definitions/decimal.NullDecimal'
     type: object
-  github_com_stickpro_go-store_internal_dto.CategoryAttributeFilterDTO:
-    properties:
-      group_name:
-        type: string
-      group_slug:
-        type: string
-      max:
-        description: number attributes only
-        type: number
-      min:
-        description: number attributes only
-        type: number
-      name:
-        type: string
-      options:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFilterOptionDTO'
-        type: array
-      slug:
-        type: string
-      type:
-        description: select | number | boolean | text
-        type: string
-      unit:
-        type: string
-    type: object
   github_com_stickpro_go-store_internal_dto.CategoryFacetStat:
     properties:
       max:
         type: number
       min:
         type: number
-    type: object
-  github_com_stickpro_go-store_internal_dto.CategoryFilterOptionDTO:
-    properties:
-      count:
-        type: integer
-      label:
-        type: string
-      value:
-        type: string
-    type: object
-  github_com_stickpro_go-store_internal_dto.CategoryFiltersDTO:
-    properties:
-      attributes:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryAttributeFilterDTO'
-        type: array
-      manufacturers:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFilterOptionDTO'
-        type: array
-      price:
-        $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryPriceRangeDTO'
-      stock_statuses:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFilterOptionDTO'
-        type: array
-    type: object
-  github_com_stickpro_go-store_internal_dto.CategoryPriceRangeDTO:
-    properties:
-      max:
-        type: number
-      min:
-        type: number
-    type: object
-  github_com_stickpro_go-store_internal_dto.CategoryProductsResultDTO:
-    properties:
-      facet_stats:
-        additionalProperties:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.CategoryFacetStat'
-        type: object
-      facets:
-        additionalProperties:
-          additionalProperties:
-            format: int64
-            type: integer
-          type: object
-        type: object
-      items:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_dto.EnrichedVariantDTO'
-        type: array
-      pagination:
-        $ref: '#/definitions/FullPagingData'
     type: object
   github_com_stickpro_go-store_internal_dto.EnrichedVariantDTO:
     properties:
@@ -1868,88 +1867,6 @@ definitions:
       updated_at:
         $ref: '#/definitions/pgtype.Timestamp'
     type: object
-  github_com_stickpro_go-store_internal_models.Category:
-    properties:
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      description:
-        $ref: '#/definitions/pgtype.Text'
-      id:
-        type: string
-      image_path:
-        $ref: '#/definitions/pgtype.Text'
-      is_enable:
-        type: boolean
-      meta_description:
-        $ref: '#/definitions/pgtype.Text'
-      meta_h1:
-        $ref: '#/definitions/pgtype.Text'
-      meta_keyword:
-        $ref: '#/definitions/pgtype.Text'
-      meta_title:
-        $ref: '#/definitions/pgtype.Text'
-      name:
-        type: string
-      parent_id:
-        $ref: '#/definitions/uuid.NullUUID'
-      slug:
-        type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-    type: object
-  github_com_stickpro_go-store_internal_models.City:
-    properties:
-      address:
-        type: string
-      area:
-        $ref: '#/definitions/pgtype.Text'
-      area_type:
-        $ref: '#/definitions/pgtype.Text'
-      capital_marker:
-        type: integer
-      city:
-        type: string
-      city_type:
-        type: string
-      country:
-        type: string
-      federal_district:
-        type: string
-      fias_id:
-        type: string
-      fias_level:
-        type: integer
-      foundation_year:
-        type: integer
-      geo_lat:
-        type: number
-      geo_lon:
-        type: number
-      id:
-        type: string
-      kladr_id:
-        type: string
-      okato:
-        type: string
-      oktmo:
-        type: string
-      population:
-        type: integer
-      postal_code:
-        type: string
-      region:
-        type: string
-      region_type:
-        type: string
-      settlement:
-        $ref: '#/definitions/pgtype.Text'
-      settlement_type:
-        $ref: '#/definitions/pgtype.Text'
-      tax_office:
-        type: string
-      timezone:
-        type: string
-    type: object
   github_com_stickpro_go-store_internal_models.Collection:
     properties:
       created_at:
@@ -1964,61 +1881,6 @@ definitions:
         type: string
       updated_at:
         $ref: '#/definitions/pgtype.Timestamptz'
-    type: object
-  github_com_stickpro_go-store_internal_models.Product:
-    properties:
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      ean:
-        $ref: '#/definitions/pgtype.Text'
-      external_id:
-        $ref: '#/definitions/pgtype.Text'
-      height:
-        type: number
-      id:
-        type: string
-      image:
-        $ref: '#/definitions/pgtype.Text'
-      is_enable:
-        type: boolean
-      isbn:
-        $ref: '#/definitions/pgtype.Text'
-      jan:
-        $ref: '#/definitions/pgtype.Text'
-      length:
-        type: number
-      location:
-        $ref: '#/definitions/pgtype.Text'
-      manufacturer_id:
-        $ref: '#/definitions/uuid.NullUUID'
-      minimum:
-        type: integer
-      mpn:
-        $ref: '#/definitions/pgtype.Text'
-      price_business:
-        type: number
-      price_retail:
-        type: number
-      price_wholesale:
-        type: number
-      quantity:
-        type: integer
-      sku:
-        $ref: '#/definitions/pgtype.Text'
-      sort_order:
-        type: integer
-      stock_status:
-        $ref: '#/definitions/StockStatus'
-      subtract:
-        type: boolean
-      upc:
-        $ref: '#/definitions/pgtype.Text'
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      weight:
-        type: number
-      width:
-        type: number
     type: object
   github_com_stickpro_go-store_internal_storage_repository_repository_products.FindRow:
     properties:
@@ -2075,10 +1937,10 @@ definitions:
       width:
         type: number
     type: object
-  map_string_array_ShortProduct:
+  map_string_array_VariantCardResponse:
     additionalProperties:
       items:
-        $ref: '#/definitions/ShortProduct'
+        $ref: '#/definitions/VariantCardResponse'
       type: array
     type: object
   pgtype.Bool:
@@ -2347,7 +2209,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-ProductReviewResponse'
         "400":
           description: Bad Request
           schema:
@@ -2971,7 +2833,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Category'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-CategoryResponse'
         "401":
           description: Unauthorized
           schema:
@@ -3132,7 +2994,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_BreadcrumbDTO'
+            $ref: '#/definitions/JSONResponse-array_BreadcrumbResponse'
         "404":
           description: Not Found
           schema:
@@ -3161,7 +3023,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_dto_CategoryFiltersDTO'
+            $ref: '#/definitions/JSONResponse-CategoryFiltersResponse'
         "404":
           description: Not Found
           schema:
@@ -3218,7 +3080,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-github_com_stickpro_go-store_internal_dto_CategoryProductsResultDTO'
+            $ref: '#/definitions/JSONResponse-VariantListResponse'
         "400":
           description: Bad Request
           schema:
@@ -3272,7 +3134,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_CategoryTreeDTO'
+            $ref: '#/definitions/JSONResponse-array_CategoryTreeResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -3510,7 +3372,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_City'
+            $ref: '#/definitions/JSONResponse-array_CityResponse'
         "400":
           description: Bad Request
           schema:
@@ -3749,7 +3611,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-ProductResponse'
         "401":
           description: Unauthorized
           schema:
@@ -4043,7 +3905,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_ShortProduct'
+            $ref: '#/definitions/JSONResponse-array_VariantCardResponse'
         "400":
           description: Bad Request
           schema:
@@ -4175,7 +4037,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_BreadcrumbDTO'
+            $ref: '#/definitions/JSONResponse-array_BreadcrumbResponse'
         "400":
           description: Bad Request
           schema:
@@ -4216,7 +4078,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-ProductReviewResponse'
         "400":
           description: Bad Request
           schema:
@@ -4232,35 +4094,6 @@ paths:
       summary: Get Product Reviews By Product ID
       tags:
       - Product Review
-  /v1/product/find:
-    get:
-      consumes:
-      - application/json
-      description: Find product by name
-      parameters:
-      - description: Product name
-        in: query
-        name: product
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-array_github_com_stickpro_go-store_internal_models_Product'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Find product
-      tags:
-      - Product
   /v1/product/id/{id}/:
     get:
       consumes:
@@ -4463,7 +4296,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-array_ShortProduct'
+            $ref: '#/definitions/JSONResponse-array_VariantCardResponse'
         "400":
           description: Bad Request
           schema:
@@ -4497,7 +4330,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-map_string_array_ShortProduct'
+            $ref: '#/definitions/JSONResponse-map_string_array_VariantCardResponse'
         "400":
           description: Bad Request
           schema:
@@ -4541,6 +4374,69 @@ paths:
       summary: Get Variants With Pagination
       tags:
       - Product
+  /v1/search:
+    get:
+      consumes:
+      - application/json
+      description: Full-text product-variant search with category, price and attribute
+        filters
+      parameters:
+      - description: comma-separated category slugs
+        in: query
+        name: category
+        type: string
+      - in: query
+        name: facets
+        type: boolean
+      - description: comma-separated UUIDs
+        in: query
+        name: manufacturer_id
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: price_max
+        type: string
+      - in: query
+        name: price_min
+        type: string
+      - in: query
+        name: q
+        type: string
+      - description: price_asc | price_desc | new | popular | name
+        in: query
+        name: sort
+        type: string
+      - description: comma-separated statuses
+        in: query
+        name: stock_status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-VariantListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Search products
+      tags:
+      - Search
   /v1/user/info:
     get:
       consumes:

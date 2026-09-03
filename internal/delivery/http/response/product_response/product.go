@@ -5,6 +5,8 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/storage/base"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_products"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
 
@@ -160,11 +162,25 @@ func NewFromProductOnly(product *models.Product) ProductResponse {
 }
 
 type ProductAttributeResponse struct {
-	Groups []*dto.AttributeGroupWithValuesDTO `json:"groups"`
+	Groups []AttributeGroupResponse `json:"groups"`
 } //	@name	AttributeGroupsResponse
 
 func NewFromAttributeWithAttributeGroups(attributes []*dto.AttributeGroupWithValuesDTO) ProductAttributeResponse {
 	return ProductAttributeResponse{
-		Groups: attributes,
+		Groups: NewAttributeGroups(attributes),
+	}
+}
+
+// NewPaginatedProducts maps a DB-backed page of products to the response contract.
+func NewPaginatedProducts(
+	data *base.FindResponseWithFullPagination[*repository_products.FindRow],
+) *base.FindResponseWithFullPagination[ProductResponse] {
+	items := make([]ProductResponse, 0, len(data.Items))
+	for _, row := range data.Items {
+		items = append(items, NewFromProductOnly(&row.Product))
+	}
+	return &base.FindResponseWithFullPagination[ProductResponse]{
+		Items:      items,
+		Pagination: data.Pagination,
 	}
 }

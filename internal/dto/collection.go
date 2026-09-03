@@ -28,13 +28,13 @@ type UpdateCollectionDTO struct {
 }
 
 type WithProductsCollectionDTO struct {
-	ID          uuid.UUID          `json:"id"`
-	Name        string             `json:"name"`
-	Description *string            `json:"description,omitempty"`
-	Slug        string             `json:"slug"`
-	CreatedAt   time.Time          `json:"created_at"`
-	UpdatedAt   *time.Time         `json:"updated_at"`
-	Products    []*ShortProductDTO `json:"products,omitempty"`
+	ID          uuid.UUID         `json:"id"`
+	Name        string            `json:"name"`
+	Description *string           `json:"description,omitempty"`
+	Slug        string            `json:"slug"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   *time.Time        `json:"updated_at"`
+	Products    []*VariantCardDTO `json:"products,omitempty"`
 }
 
 func RequestToCreateCollectionDTO(req *collection_request.CreateCollectionRequest) CreateCollectionDTO {

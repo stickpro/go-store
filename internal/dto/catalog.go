@@ -41,9 +41,27 @@ type CategoryProductsFilterDTO struct {
 	WithFacets      bool
 }
 
-// CategoryProductsResultDTO is the listing payload: page of variants plus facet data.
-type CategoryProductsResultDTO struct {
-	Items      []*EnrichedVariantDTO        `json:"items"`
+// VariantSearchDTO is a full-text storefront search request: a text query plus the same
+// optional category / price / manufacturer / stock / attribute filters as the category listing.
+// An empty CategoryIDs means "search the whole catalog".
+type VariantSearchDTO struct {
+	Query           string
+	CategoryIDs     []uuid.UUID
+	Page            *uint64
+	PageSize        *uint64
+	Sort            CategoryProductsSort
+	PriceMin        *decimal.Decimal
+	PriceMax        *decimal.Decimal
+	ManufacturerIDs []uuid.UUID
+	StockStatuses   []string
+	Attributes      []AttributeFilterDTO
+	WithFacets      bool
+}
+
+// VariantListDTO is the listing payload shared by search and the category listing:
+// a page of variant cards plus optional facet data.
+type VariantListDTO struct {
+	Items      []*VariantCardDTO            `json:"items"`
 	Pagination base.FullPagingData          `json:"pagination"`
 	Facets     map[string]map[string]int64  `json:"facets,omitempty"`
 	FacetStats map[string]CategoryFacetStat `json:"facet_stats,omitempty"` //nolint:tagliatelle

@@ -12,36 +12,39 @@ import (
 )
 
 type IRelatedProduct interface {
-	GetRelatedProducts(ctx context.Context, variantID uuid.UUID) ([]*models.ShortProduct, error)
-	GetRelatedProductsBatch(ctx context.Context, variantIDs []uuid.UUID) (map[uuid.UUID][]*models.ShortProduct, error)
-	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*models.ShortProduct, error)
+	GetRelatedProducts(ctx context.Context, variantID uuid.UUID) ([]*dto.VariantCardDTO, error)
+	GetRelatedProductsBatch(ctx context.Context, variantIDs []uuid.UUID) (map[uuid.UUID][]*dto.VariantCardDTO, error)
+	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*dto.VariantCardDTO, error)
 	SyncRelatedProducts(ctx context.Context, variantID uuid.UUID, relatedVariantIDs []uuid.UUID) error
 }
 
-func (s *Service) GetRelatedProducts(ctx context.Context, variantID uuid.UUID) ([]*models.ShortProduct, error) {
+func (s *Service) GetRelatedProducts(ctx context.Context, variantID uuid.UUID) ([]*dto.VariantCardDTO, error) {
 	products, err := s.storage.Products().GetRelatedProductsByVariantID(ctx, variantID)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.logger.Error("failed to get related products", err)
 		return nil, parsedErr
 	}
-	resp := make([]*models.ShortProduct, 0, len(products))
+	resp := make([]*dto.VariantCardDTO, 0, len(products))
 	for _, p := range products {
-		resp = append(resp, &models.ShortProduct{
-			ID:        p.ID,
-			ProductID: p.ProductID,
-			Name:      p.Name,
-			Slug:      p.Slug,
-			Model:     p.Model,
-			Price:     p.PriceRetail,
-			IsEnable:  p.IsEnable,
-			Image:     s.shortImage(p.ImageID, p.ImagePath, p.ImageWidth, p.ImageHeight, p.Name),
+		resp = append(resp, &dto.VariantCardDTO{
+			ID:             p.ID,
+			ProductID:      p.ProductID,
+			Name:           p.Name,
+			Slug:           p.Slug,
+			Model:          p.Model,
+			PriceRetail:    p.PriceRetail,
+			PriceBusiness:  p.PriceBusiness,
+			PriceWholesale: p.PriceWholesale,
+			StockStatus:    p.StockStatus,
+			IsEnable:       p.IsEnable,
+			Image:          s.shortImage(p.ImageID, p.ImagePath, p.ImageWidth, p.ImageHeight, p.Name),
 		})
 	}
 	return resp, nil
 }
 
-func (s *Service) GetRelatedProductsBatch(ctx context.Context, variantIDs []uuid.UUID) (map[uuid.UUID][]*models.ShortProduct, error) {
+func (s *Service) GetRelatedProductsBatch(ctx context.Context, variantIDs []uuid.UUID) (map[uuid.UUID][]*dto.VariantCardDTO, error) {
 	rows, err := s.storage.Products().GetRelatedProductsByVariantIDs(ctx, variantIDs)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
@@ -49,40 +52,46 @@ func (s *Service) GetRelatedProductsBatch(ctx context.Context, variantIDs []uuid
 		return nil, parsedErr
 	}
 
-	result := make(map[uuid.UUID][]*models.ShortProduct, len(variantIDs))
+	result := make(map[uuid.UUID][]*dto.VariantCardDTO, len(variantIDs))
 	for _, row := range rows {
-		result[row.VariantID] = append(result[row.VariantID], &models.ShortProduct{
-			ID:        row.ID,
-			ProductID: row.ProductID,
-			Name:      row.Name,
-			Slug:      row.Slug,
-			Model:     row.Model,
-			Price:     row.PriceRetail,
-			IsEnable:  row.IsEnable,
-			Image:     s.shortImage(row.ImageID, row.ImagePath, row.ImageWidth, row.ImageHeight, row.Name),
+		result[row.VariantID] = append(result[row.VariantID], &dto.VariantCardDTO{
+			ID:             row.ID,
+			ProductID:      row.ProductID,
+			Name:           row.Name,
+			Slug:           row.Slug,
+			Model:          row.Model,
+			PriceRetail:    row.PriceRetail,
+			PriceBusiness:  row.PriceBusiness,
+			PriceWholesale: row.PriceWholesale,
+			StockStatus:    row.StockStatus,
+			IsEnable:       row.IsEnable,
+			Image:          s.shortImage(row.ImageID, row.ImagePath, row.ImageWidth, row.ImageHeight, row.Name),
 		})
 	}
 	return result, nil
 }
 
-func (s *Service) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*models.ShortProduct, error) {
+func (s *Service) GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*dto.VariantCardDTO, error) {
 	products, err := s.storage.Products().GetRelatedProductsBySlug(ctx, slug)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.logger.Error("failed to get related products by slug", err)
 		return nil, parsedErr
 	}
-	resp := make([]*models.ShortProduct, 0, len(products))
+	resp := make([]*dto.VariantCardDTO, 0, len(products))
 	for _, p := range products {
-		resp = append(resp, &models.ShortProduct{
-			ID:        p.ID,
-			ProductID: p.ProductID,
-			Name:      p.Name,
-			Slug:      p.Slug,
-			Model:     p.Model,
-			Price:     p.PriceRetail,
-			IsEnable:  p.IsEnable,
-			Image:     s.shortImage(p.ImageID, p.ImagePath, p.ImageWidth, p.ImageHeight, p.Name),
+		resp = append(resp, &dto.VariantCardDTO{
+			ID:             p.ID,
+			ProductID:      p.ProductID,
+			Name:           p.Name,
+			Slug:           p.Slug,
+			Model:          p.Model,
+			PriceRetail:    p.PriceRetail,
+			PriceBusiness:  p.PriceBusiness,
+			PriceWholesale: p.PriceWholesale,
+			StockStatus:    p.StockStatus,
+			IsEnable:       p.IsEnable,
+			Image:          s.shortImage(p.ImageID, p.ImagePath, p.ImageWidth, p.ImageHeight, p.Name),
 		})
 	}
 	return resp, nil

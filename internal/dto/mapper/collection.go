@@ -26,7 +26,7 @@ func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProducts
 		if !row.ProductID.Valid {
 			continue
 		}
-		d.Products = append(d.Products, &dto.ShortProductDTO{
+		d.Products = append(d.Products, &dto.VariantCardDTO{
 			ID:             row.VariantID.UUID,
 			ProductID:      row.ProductID.UUID,
 			Name:           row.ProductName,
@@ -34,7 +34,7 @@ func MapCollectionToDTO(rows []*repository_collections.GetCollectionWithProducts
 			Model:          row.ProductModel.String,
 			PriceRetail:    row.ProductPriceRetail.Decimal,
 			PriceBusiness:  row.ProductPriceBusiness.Decimal,
-			PriceWholeSale: row.ProductPriceWholesale.Decimal,
+			PriceWholesale: row.ProductPriceWholesale.Decimal,
 			IsEnable:       row.ProductIsEnable.Bool,
 			Image:          shortImage(row.ImageID, row.ImagePath, row.ImageWidth, row.ImageHeight, row.ProductName, presets),
 		})
@@ -62,7 +62,7 @@ func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithPr
 		if !row.ProductID.Valid {
 			continue
 		}
-		d.Products = append(d.Products, &dto.ShortProductDTO{
+		d.Products = append(d.Products, &dto.VariantCardDTO{
 			ID:             row.VariantID.UUID,
 			ProductID:      row.ProductID.UUID,
 			Name:           row.ProductName,
@@ -70,7 +70,7 @@ func MapCollectionBySlugToDTO(rows []*repository_collections.GetCollectionWithPr
 			Model:          row.ProductModel.String,
 			PriceRetail:    row.ProductPriceRetail.Decimal,
 			PriceBusiness:  row.ProductPriceBusiness.Decimal,
-			PriceWholeSale: row.ProductPriceWholesale.Decimal,
+			PriceWholesale: row.ProductPriceWholesale.Decimal,
 			IsEnable:       row.ProductIsEnable.Bool,
 			Image:          shortImage(row.ImageID, row.ImagePath, row.ImageWidth, row.ImageHeight, row.ProductName, presets),
 		})

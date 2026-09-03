@@ -12,6 +12,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/category_response"
+	"github.com/stickpro/go-store/internal/delivery/http/response/product_response"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
@@ -76,7 +77,7 @@ func (h *Handler) getCategoryByID(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			string	query		category_request.GetCategoryWithPagination	true	"GetCategoriesWithPagination"
-//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[models.Category]]
+//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[category_response.CategoryResponse]]
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Router			/v1/category/ [get]
@@ -90,7 +91,7 @@ func (h *Handler) getCategories(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "category")
 	}
-	return c.JSON(response.OkByData(cats))
+	return c.JSON(response.OkByData(category_response.NewPaginated(cats)))
 }
 
 // getCategoryTree returns full category hierarchy as a tree
@@ -100,7 +101,7 @@ func (h *Handler) getCategories(c fiber.Ctx) error {
 //	@Tags			Category
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	response.Result[[]dto.CategoryTreeDTO]
+//	@Success		200	{object}	response.Result[[]category_response.CategoryTreeResponse]
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/category/tree [get]
 func (h *Handler) getCategoryTree(c fiber.Ctx) error {
@@ -108,7 +109,7 @@ func (h *Handler) getCategoryTree(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "category")
 	}
-	return c.JSON(response.OkByData(tree))
+	return c.JSON(response.OkByData(category_response.NewTree(tree)))
 }
 
 // getCategoryProducts returns a paginated, filtered and faceted list of product variants that
@@ -123,7 +124,7 @@ func (h *Handler) getCategoryTree(c fiber.Ctx) error {
 //	@Produce		json
 //	@Param			slug	path		string										true	"Category Slug"
 //	@Param			string	query		product_request.GetCategoryProductsRequest	true	"Filters, sorting and pagination"
-//	@Success		200		{object}	response.Result[dto.CategoryProductsResultDTO]
+//	@Success		200		{object}	response.Result[product_response.VariantListResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
@@ -171,7 +172,7 @@ func (h *Handler) getCategoryProducts(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "category products")
 	}
-	return c.JSON(response.OkByData(products))
+	return c.JSON(response.OkByData(product_response.NewVariantList(products)))
 }
 
 // csvValues splits a comma-separated query value, trimming blanks.
@@ -243,7 +244,7 @@ func parseAttributeQueryFilters(queries map[string]string) []dto.AttributeFilter
 //	@Accept			json
 //	@Produce		json
 //	@Param			slug	path		string	true	"Category Slug"
-//	@Success		200		{object}	response.Result[dto.CategoryFiltersDTO]
+//	@Success		200		{object}	response.Result[category_response.CategoryFiltersResponse]
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/category/{slug}/filters [get]
@@ -252,7 +253,7 @@ func (h *Handler) getCategoryFilters(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "category filters")
 	}
-	return c.JSON(response.OkByData(filters))
+	return c.JSON(response.OkByData(category_response.NewFilters(filters)))
 }
 
 // getCategoryBreadcrumbs returns the breadcrumb trail (root -> ... -> category) for a category by its slug.
@@ -263,7 +264,7 @@ func (h *Handler) getCategoryFilters(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			slug	path		string	true	"Category Slug"
-//	@Success		200		{object}	response.Result[[]dto.BreadcrumbDTO]
+//	@Success		200		{object}	response.Result[[]category_response.BreadcrumbResponse]
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/category/{slug}/breadcrumbs [get]
@@ -272,7 +273,7 @@ func (h *Handler) getCategoryBreadcrumbs(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "category breadcrumbs")
 	}
-	return c.JSON(response.OkByData(breadcrumbs))
+	return c.JSON(response.OkByData(category_response.NewBreadcrumbs(breadcrumbs)))
 }
 
 func (h *Handler) initCategoryRoutes(v1 fiber.Router) {

@@ -111,7 +111,8 @@ type ProductWithMediaDTO struct {
 	Medium  []*models.Medium       `json:"media"` //nolint:tagliatelle
 }
 
-// EnrichedVariantDTO combines variant data with product-level fields for indexing and enriched responses
+// EnrichedVariantDTO combines variant data with product-level fields. It is the currency of the
+// search-index build path and the admin DB-backed listings; storefront responses use VariantCardDTO.
 type EnrichedVariantDTO struct {
 	*models.ProductVariant
 	PriceRetail    decimal.Decimal      `json:"price_retail"`
@@ -210,15 +211,23 @@ func RequestToUpdateProductDTO(req *product_request.UpdateProductRequest, id uui
 	}
 }
 
-type ShortProductDTO struct {
-	ID             uuid.UUID
-	ProductID      uuid.UUID
-	Name           string
-	Model          string
-	Slug           string
-	Image          *models.ImageDTO
-	PriceRetail    decimal.Decimal
-	PriceBusiness  decimal.Decimal
-	PriceWholeSale decimal.Decimal
-	IsEnable       bool
+// VariantCardDTO is the single, service-level "product variant in a listing" contract shared
+// by search, category listing, related products and collections. Contexts that don't carry a
+// given field (e.g. collections have no stock status) leave it at its zero value. The json tags
+// let it be unmarshalled straight from a search-index hit.
+type VariantCardDTO struct {
+	ID             uuid.UUID            `json:"id"`
+	ProductID      uuid.UUID            `json:"product_id"`
+	CategoryID     uuid.NullUUID        `json:"category_id"`
+	Name           string               `json:"name"`
+	Slug           string               `json:"slug"`
+	Model          string               `json:"model"`
+	Description    *string              `json:"description"`
+	PriceRetail    decimal.Decimal      `json:"price_retail"`
+	PriceBusiness  decimal.Decimal      `json:"price_business"`
+	PriceWholesale decimal.Decimal      `json:"price_wholesale"`
+	StockStatus    constant.StockStatus `json:"stock_status"`
+	ManufacturerID uuid.NullUUID        `json:"manufacturer_id"`
+	Image          *models.ImageDTO     `json:"image"`
+	IsEnable       bool                 `json:"is_enable"`
 }

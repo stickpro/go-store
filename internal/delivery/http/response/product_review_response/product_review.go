@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
 
@@ -29,5 +30,19 @@ func NewFromModel(productReview *models.ProductReview) *ProductReviewResponse {
 		Status:    productReview.Status,
 		CreatedAt: productReview.CreatedAt.Time,
 		UpdatedAt: productReview.UpdatedAt.Time,
+	}
+}
+
+// NewPaginated maps a DB-backed page of reviews to the response contract.
+func NewPaginated(
+	data *base.FindResponseWithFullPagination[*models.ProductReview],
+) *base.FindResponseWithFullPagination[*ProductReviewResponse] {
+	items := make([]*ProductReviewResponse, 0, len(data.Items))
+	for _, r := range data.Items {
+		items = append(items, NewFromModel(r))
+	}
+	return &base.FindResponseWithFullPagination[*ProductReviewResponse]{
+		Items:      items,
+		Pagination: data.Pagination,
 	}
 }

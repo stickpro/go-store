@@ -10,6 +10,7 @@ schemas:
         package_path: github.com/stickpro/go-store/internal/models
         emit_json_tags: true
         emit_db_tags: true
+        include_struct_comments: true
       sqlc:
         defaults:
             sql_package: pgx/v5

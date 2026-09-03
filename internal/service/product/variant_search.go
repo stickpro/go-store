@@ -22,17 +22,39 @@ const (
 
 // SearchVariantsByCategory returns a paginated, filtered and faceted list of enabled product
 // variants that belong to the category (found by slug) or any of its descendants, served from
-// the search index. Index documents are pre-enriched with product-level fields, so this avoids
-// the per-product database round-trips of the DB-backed path.
+// the search index. It is a thin wrapper over SearchVariants scoped to a single category.
 func (s *Service) SearchVariantsByCategory(
 	ctx context.Context,
 	d dto.CategoryProductsFilterDTO,
-) (*dto.CategoryProductsResultDTO, error) {
+) (*dto.VariantListDTO, error) {
 	category, err := s.storage.Categories().GetBySlug(ctx, d.CategorySlug)
 	if err != nil {
 		return nil, pgerror.ParseError(err)
 	}
 
+	return s.SearchVariants(ctx, dto.VariantSearchDTO{
+		CategoryIDs:     []uuid.UUID{category.ID},
+		Page:            d.Page,
+		PageSize:        d.PageSize,
+		Sort:            d.Sort,
+		PriceMin:        d.PriceMin,
+		PriceMax:        d.PriceMax,
+		ManufacturerIDs: d.ManufacturerIDs,
+		StockStatuses:   d.StockStatuses,
+		Attributes:      d.Attributes,
+		WithFacets:      d.WithFacets,
+	})
+}
+
+// SearchVariants runs a full-text storefront search over the product-variant index, with
+// optional filtering by category subtree(s), price range, manufacturer, stock status and
+// filterable attributes. Index documents are pre-enriched with product-level fields, so this
+// avoids the per-product database round-trips of the DB-backed path. When a text query is
+// given and no explicit sort is requested, results keep Meili's relevance ranking.
+func (s *Service) SearchVariants(
+	ctx context.Context,
+	d dto.VariantSearchDTO,
+) (*dto.VariantListDTO, error) {
 	attrTypes, err := s.filterableAttributeTypes(ctx)
 	if err != nil {
 		return nil, err
@@ -51,8 +73,9 @@ func (s *Service) SearchVariantsByCategory(
 	}
 
 	params := searchtypes.SearchParams{
-		Filter: buildCategoryFilter(category.ID, d, attrTypes),
-		Sort:   categorySortExpression(d.Sort),
+		Query:  d.Query,
+		Filter: buildVariantFilter(d, attrTypes),
+		Sort:   variantSortExpression(d.Sort, d.Query),
 		Limit:  int64(pageSize),              //nolint:gosec
 		Offset: int64((page - 1) * pageSize), //nolint:gosec
 	}
@@ -65,7 +88,7 @@ func (s *Service) SearchVariantsByCategory(
 		return nil, err
 	}
 
-	items, err := search.UnmarshalHits[*dto.EnrichedVariantDTO](res.Hits)
+	items, err := search.UnmarshalHits[*dto.VariantCardDTO](res.Hits)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +99,7 @@ func (s *Service) SearchVariantsByCategory(
 		lastPage = (total + pageSize - 1) / pageSize
 	}
 
-	result := &dto.CategoryProductsResultDTO{
+	result := &dto.VariantListDTO{
 		Items: items,
 		Pagination: base.FullPagingData{
 			Total:    total,
@@ -122,6 +145,15 @@ func categoryFacetFields(attrTypes map[string]string) []string {
 	return fields
 }
 
+// variantSortExpression keeps Meili's relevance ranking for a text query with no explicit
+// sort; otherwise it falls back to the catalog sort expression.
+func variantSortExpression(sort dto.CategoryProductsSort, query string) []string {
+	if sort == dto.CategoryProductsSortDefault && strings.TrimSpace(query) != "" {
+		return nil
+	}
+	return categorySortExpression(sort)
+}
+
 func categorySortExpression(sort dto.CategoryProductsSort) []string {
 	switch sort {
 	case dto.CategoryProductsSortPriceAsc:
@@ -139,14 +171,18 @@ func categorySortExpression(sort dto.CategoryProductsSort) []string {
 	}
 }
 
-func buildCategoryFilter(
-	categoryID uuid.UUID,
-	d dto.CategoryProductsFilterDTO,
+func buildVariantFilter(
+	d dto.VariantSearchDTO,
 	attrTypes map[string]string,
 ) string {
-	clauses := []string{
-		"category_ids = " + meiliQuote(categoryID.String()),
-		"is_enable = true",
+	clauses := []string{"is_enable = true"}
+
+	if len(d.CategoryIDs) > 0 {
+		ids := make([]string, len(d.CategoryIDs))
+		for i, id := range d.CategoryIDs {
+			ids[i] = id.String()
+		}
+		clauses = append(clauses, "category_ids "+meiliInList(ids))
 	}
 
 	if d.PriceMin != nil {

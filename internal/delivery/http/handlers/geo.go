@@ -7,10 +7,9 @@ import (
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/geo_response"
+	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/service/search"
 	"github.com/stickpro/go-store/internal/tools/apierror"
-
-	// swag gen import
-	_ "github.com/stickpro/go-store/internal/models"
 )
 
 // getGeoLocation is a function get city by IP address
@@ -43,7 +42,7 @@ func (h *Handler) getGeoLocation(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			city	query		string	true	"City name"
-//	@Success		200		{object}	response.Result[[]models.City]
+//	@Success		200		{object}	response.Result[[]geo_response.CityResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Router			/v1/geo/city/find [get]
@@ -56,7 +55,11 @@ func (h *Handler) findCity(c fiber.Ctx) error {
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
-	return c.JSON(response.OkByData(location.Hits))
+	cities, err := search.UnmarshalHits[*models.City](location.Hits)
+	if err != nil {
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusInternalServerError)
+	}
+	return c.JSON(response.OkByData(geo_response.NewFromModels(cities)))
 }
 
 // getPopularCity is a function return most popular city

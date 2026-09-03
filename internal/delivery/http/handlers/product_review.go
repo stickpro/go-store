@@ -10,6 +10,7 @@ import (
 	"github.com/stickpro/go-store/internal/tools"
 
 	// swag-gen import
+	_ "github.com/stickpro/go-store/internal/storage/base"
 	_ "github.com/stickpro/go-store/internal/tools/apierror"
 )
 
@@ -56,7 +57,7 @@ func (h *Handler) createProductReview(c fiber.Ctx) error {
 //	@Produce		json
 //	@Param			id		path		uuid.UUID												true	"Product ID"
 //	@Param			request	query		product_review_request.GetProductReviewsWithPagination	true	"GetProductReviewsWithPagination"
-//	@Success		200		{object}	response.Result[product_review_response.ProductReviewResponse]
+//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[product_review_response.ProductReviewResponse]]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
@@ -76,7 +77,7 @@ func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "product reviews")
 	}
-	return c.JSON(response.OkByData(productReviews))
+	return c.JSON(response.OkByData(product_review_response.NewPaginated(productReviews)))
 }
 
 // getProductReviewsBySlug
@@ -88,7 +89,7 @@ func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 //	@Produce		json
 //	@Param			id		path		uuid.UUID												true	"Product ID"
 //	@Param			request	query		product_review_request.GetProductReviewsWithPagination	true	"GetProductReviewsWithPagination"
-//	@Success		200		{object}	response.Result[product_review_response.ProductReviewResponse]
+//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[product_review_response.ProductReviewResponse]]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
@@ -105,7 +106,7 @@ func (h *Handler) getProductReviewsBySlug(c fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(err, "product reviews")
 	}
-	return c.JSON(response.OkByData(productReviews))
+	return c.JSON(response.OkByData(product_review_response.NewPaginated(productReviews)))
 }
 
 func (h *Handler) initProductReviewRoutes(v1 fiber.Router) {
