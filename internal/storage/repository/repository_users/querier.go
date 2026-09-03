@@ -17,6 +17,8 @@ type Querier interface {
 	GetAll(ctx context.Context, arg GetAllParams) ([]*models.User, error)
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
+	MarkEmailVerified(ctx context.Context, id uuid.UUID) error
+	SetPassword(ctx context.Context, arg SetPasswordParams) error
 	Update(ctx context.Context, arg UpdateParams) (*models.User, error)
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/logger"
+	"github.com/stickpro/go-store/pkg/queue"
 )
 
 // ReindexTarget selects which search indexes a Reindex run rebuilds.
@@ -39,7 +40,9 @@ func Reindex(ctx context.Context, conf *config.Config, l logger.Logger, target R
 		}
 	}()
 
-	services, err := service.InitService(conf, l, st)
+	// Reindex runs no mail worker; give the service layer a throwaway in-memory
+	// queue so enqueued mail (none is expected here) has somewhere to go.
+	services, err := service.InitService(conf, l, st, queue.NewInMemoryQueue())
 	if err != nil {
 		return fmt.Errorf("init services: %w", err)
 	}

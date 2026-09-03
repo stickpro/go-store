@@ -707,7 +707,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup"
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-AttributeGroup"
                         }
                     },
                     "400": {
@@ -1154,7 +1154,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute"
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-Attribute"
                         }
                     },
                     "400": {
@@ -1172,9 +1172,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/auth/login": {
+        "/v1/auth/code": {
             "post": {
-                "description": "Auth a user",
+                "description": "Emails a 6-digit one-time code. Works for both new and existing accounts. Admin accounts are ignored (they log in with a password); the response is the same either way.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1184,15 +1184,107 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Auth user",
+                "summary": "Request login code",
                 "parameters": [
                     {
-                        "description": "Register account",
-                        "name": "register",
+                        "description": "Email to send the code to",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SendCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-SendCodeResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/login": {
+            "post": {
+                "description": "Email + password login. Admin accounts only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Admin login",
+                "parameters": [
+                    {
+                        "description": "Email + password",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/AuthRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AuthResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/verify": {
+            "post": {
+                "description": "Validates the emailed code and returns a bearer token. Creates the account if it does not exist yet.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify login code",
+                "parameters": [
+                    {
+                        "description": "Email + code",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/VerifyCodeRequest"
                         }
                     }
                 ],
@@ -1211,58 +1303,6 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/auth/register": {
-            "post": {
-                "description": "Register a new user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Register user",
-                "parameters": [
-                    {
-                        "description": "Register account",
-                        "name": "register",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/RegisterRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/JSONResponse-RegisterUserResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -1806,7 +1846,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection"
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-Collection"
                         }
                     },
                     "400": {
@@ -3871,6 +3911,70 @@ const docTemplate = `{
                 }
             }
         },
+        "Attribute": {
+            "type": "object",
+            "properties": {
+                "attribute_group_id": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_filterable": {
+                    "$ref": "#/definitions/pgtype.Bool"
+                },
+                "is_required": {
+                    "$ref": "#/definitions/pgtype.Bool"
+                },
+                "is_visible": {
+                    "$ref": "#/definitions/pgtype.Bool"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "unit": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                }
+            }
+        },
+        "AttributeGroup": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                }
+            }
+        },
         "AttributeGroupResponse": {
             "type": "object",
             "properties": {
@@ -4327,6 +4431,29 @@ const docTemplate = `{
                 },
                 "timezone": {
                     "type": "string"
+                }
+            }
+        },
+        "Collection": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "description": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
                 }
             }
         },
@@ -5037,14 +5164,28 @@ const docTemplate = `{
                 }
             }
         },
-        "JSONResponse-RegisterUserResponse": {
+        "JSONResponse-ResponseWithFullPagination-Attribute": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/RegisterUserResponse"
+                    "$ref": "#/definitions/ResponseWithFullPagination-Attribute"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-ResponseWithFullPagination-AttributeGroup": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ResponseWithFullPagination-AttributeGroup"
                 },
                 "message": {
                     "type": "string"
@@ -5059,6 +5200,20 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/ResponseWithFullPagination-CategoryResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-ResponseWithFullPagination-Collection": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ResponseWithFullPagination-Collection"
                 },
                 "message": {
                     "type": "string"
@@ -5121,48 +5276,6 @@ const docTemplate = `{
                 }
             }
         },
-        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
         "JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow": {
             "type": "object",
             "properties": {
@@ -5171,6 +5284,20 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-SendCodeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/SendCodeResponse"
                 },
                 "message": {
                     "type": "string"
@@ -5719,38 +5846,31 @@ const docTemplate = `{
                 }
             }
         },
-        "RegisterRequest": {
+        "ResponseWithFullPagination-Attribute": {
             "type": "object",
-            "required": [
-                "email",
-                "language",
-                "location",
-                "password"
-            ],
             "properties": {
-                "email": {
-                    "type": "string"
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Attribute"
+                    }
                 },
-                "language": {
-                    "type": "string",
-                    "maxLength": 2,
-                    "minLength": 2
-                },
-                "location": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 32,
-                    "minLength": 8
+                "pagination": {
+                    "$ref": "#/definitions/FullPagingData"
                 }
             }
         },
-        "RegisterUserResponse": {
+        "ResponseWithFullPagination-AttributeGroup": {
             "type": "object",
             "properties": {
-                "token": {
-                    "type": "string"
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AttributeGroup"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/FullPagingData"
                 }
             }
         },
@@ -5761,6 +5881,20 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/CategoryResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/FullPagingData"
+                }
+            }
+        },
+        "ResponseWithFullPagination-Collection": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Collection"
                     }
                 },
                 "pagination": {
@@ -5824,48 +5958,6 @@ const docTemplate = `{
                 }
             }
         },
-        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Attribute"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/FullPagingData"
-                }
-            }
-        },
-        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.AttributeGroup"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/FullPagingData"
-                }
-            }
-        },
-        "ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_stickpro_go-store_internal_models.Collection"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/FullPagingData"
-                }
-            }
-        },
         "ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow": {
             "type": "object",
             "properties": {
@@ -5877,6 +5969,25 @@ const docTemplate = `{
                 },
                 "pagination": {
                     "$ref": "#/definitions/FullPagingData"
+                }
+            }
+        },
+        "SendCodeRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendCodeResponse": {
+            "type": "object",
+            "properties": {
+                "sent": {
+                    "type": "boolean"
                 }
             }
         },
@@ -6350,6 +6461,21 @@ const docTemplate = `{
                 }
             }
         },
+        "VerifyCodeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "email"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "ViewedItemResponse": {
             "type": "object",
             "properties": {
@@ -6566,93 +6692,6 @@ const docTemplate = `{
                 },
                 "width": {
                     "type": "integer"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_models.Attribute": {
-            "type": "object",
-            "properties": {
-                "attribute_group_id": {
-                    "$ref": "#/definitions/uuid.NullUUID"
-                },
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_filterable": {
-                    "$ref": "#/definitions/pgtype.Bool"
-                },
-                "is_required": {
-                    "$ref": "#/definitions/pgtype.Bool"
-                },
-                "is_visible": {
-                    "$ref": "#/definitions/pgtype.Bool"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "$ref": "#/definitions/pgtype.Int4"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "unit": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_models.AttributeGroup": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                }
-            }
-        },
-        "github_com_stickpro_go-store_internal_models.Collection": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "description": {
-                    "$ref": "#/definitions/pgtype.Text"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
                 }
             }
         },

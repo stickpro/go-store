@@ -53,8 +53,23 @@ kafka:
     group_id: go-store
 workers:
   image_sync: 3
+  mail_send: 2
 images:
   jpeg_quality: 82
   webp_quality: 80
   max_source_pixels: 40000000
   presets: []
+email:
+  enabled: false
+  host: localhost
+  port: 1025
+  username: ""
+  password: ""
+  from: no-reply@go-store.local
+  from_name: go-store
+  base_url: http://localhost:8888
+auth:
+  otp_code_ttl: 10m0s
+  otp_max_attempts: 5
+  otp_resend_window: 1m0s
+  otp_hourly_limit: 5

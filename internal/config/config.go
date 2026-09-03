@@ -19,6 +19,31 @@ type (
 		Kafka        KafkaConfig   `yaml:"kafka"`
 		Workers      WorkersConfig `yaml:"workers"`
 		Images       ImagesConfig  `yaml:"images"`
+		Email        EmailConfig   `yaml:"email"`
+		Auth         AuthConfig    `yaml:"auth"`
+	}
+
+	// AuthConfig tunes the passwordless email one-time-code flow used by regular
+	// users. Admin accounts log in with a password and ignore these.
+	AuthConfig struct {
+		OTPCodeTTL      time.Duration `yaml:"otp_code_ttl" default:"10m" usage:"how long an emailed login code stays valid"`
+		OTPMaxAttempts  int           `yaml:"otp_max_attempts" default:"5" usage:"wrong-code guesses before the code is burned"`
+		OTPResendWindow time.Duration `yaml:"otp_resend_window" default:"1m" usage:"minimum gap between code requests for one email"`
+		OTPHourlyLimit  int           `yaml:"otp_hourly_limit" default:"5" usage:"max code requests per email per hour"`
+	}
+
+	// EmailConfig configures outgoing transactional email. When Enabled is false
+	// every message is silently dropped (handy for local runs without an SMTP
+	// server). Credentials live here, not in the database.
+	EmailConfig struct {
+		Enabled  bool   `yaml:"enabled" default:"false" usage:"enable outgoing email; when false messages are dropped"`
+		Host     string `yaml:"host" default:"localhost" usage:"SMTP server host"`
+		Port     int    `yaml:"port" default:"1025" usage:"SMTP server port"`
+		Username string `yaml:"username" usage:"SMTP auth username (leave empty to skip AUTH)"`
+		Password string `yaml:"password" secret:"true" usage:"SMTP auth password"`
+		From     string `yaml:"from" default:"no-reply@go-store.local" usage:"From header address"`
+		FromName string `yaml:"from_name" default:"go-store" usage:"From header display name"`
+		BaseURL  string `yaml:"base_url" default:"http://localhost:8888" usage:"public base URL used for links in emails"`
 	}
 
 	AppConfig struct {
@@ -53,6 +78,7 @@ type (
 
 	WorkersConfig struct {
 		ImageSync int `yaml:"image_sync" default:"3"`
+		MailSend  int `yaml:"mail_send" default:"2"`
 	}
 
 	// ImagesConfig controls on-the-fly image resizing. Variants are generated on the

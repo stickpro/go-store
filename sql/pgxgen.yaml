@@ -40,12 +40,10 @@ schemas:
             columns:
                 - column: users.email
                   go_struct_tag: validate:"required,email"
-                - column: users.password
-                  go_struct_tag: validate:"required,min=8,max=32"
                 - column: users.location
                   go_type:
                     type: string
-                  go_struct_tag: validate:"required,timezone"
+                  go_struct_tag: validate:"omitempty,timezone"
                 - column: personal_access_tokens.expires_at
                   go_type:
                     type: '*time.Time'

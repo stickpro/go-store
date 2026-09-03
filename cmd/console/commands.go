@@ -65,6 +65,12 @@ func InitCommands(currentAppVersion, appName, _ string) []*cli.Command {
 			Flags:       []cli.Flag{cfgPathsFlag()},
 			Commands:    prepareMediaCommands(appName, currentAppVersion),
 		},
+		{
+			Name:        "user",
+			Description: "user account commands",
+			Flags:       []cli.Flag{cfgPathsFlag()},
+			Commands:    prepareUserCommands(appName, currentAppVersion),
+		},
 	}
 }
 

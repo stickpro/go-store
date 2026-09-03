@@ -64,6 +64,29 @@ func (o *redisStorage) Set(ctx context.Context, key string, value interface{}, e
 	return err
 }
 
+func (o *redisStorage) Incr(ctx context.Context, key string) (int64, error) {
+	n, err := o.client.Incr(ctx, key).Result()
+	if err != nil {
+		return 0, fmt.Errorf("incr key in redis: %w", err)
+	}
+	return n, nil
+}
+
+func (o *redisStorage) SetNX(ctx context.Context, key, value string, expiration time.Duration) (bool, error) {
+	ok, err := o.client.SetNX(ctx, key, value, expiration).Result()
+	if err != nil {
+		return false, fmt.Errorf("setnx key in redis: %w", err)
+	}
+	return ok, nil
+}
+
+func (o *redisStorage) Expire(ctx context.Context, key string, expiration time.Duration) error {
+	if err := o.client.Expire(ctx, key, expiration).Err(); err != nil {
+		return fmt.Errorf("expire key in redis: %w", err)
+	}
+	return nil
+}
+
 func (o *redisStorage) Delete(ctx context.Context, key string) error {
 	return o.client.Del(ctx, key).Err()
 }

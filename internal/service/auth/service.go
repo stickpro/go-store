@@ -9,15 +9,20 @@ import (
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/service/mail"
 	"github.com/stickpro/go-store/internal/service/user"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_personal_access_tokens"
-	"github.com/stickpro/go-store/internal/storage/repository/repository_users"
 	"github.com/stickpro/go-store/internal/tools"
 	"github.com/stickpro/go-store/internal/tools/hash"
 	"github.com/stickpro/go-store/internal/tools/str"
+	"github.com/stickpro/go-store/pkg/key_value"
 	"github.com/stickpro/go-store/pkg/logger"
 )
+
+// ErrUserNotFound is re-exported from the user package so callers of this
+// package don't need to import both.
+var ErrUserNotFound = user.ErrNotFound
 
 type Token struct {
 	TokenEntropy string
@@ -26,7 +31,12 @@ type Token struct {
 }
 
 type IAuthService interface {
-	RegisterUser(ctx context.Context, d dto.RegisterDTO) (*models.User, error)
+	// RequestCode emails a one-time login code (passwordless users only).
+	RequestCode(ctx context.Context, email string) error
+	// VerifyCode validates a one-time code and returns an auth token, creating
+	// the account on first login.
+	VerifyCode(ctx context.Context, email, code string) (*Token, error)
+	// Auth logs in an admin account with email + password.
 	Auth(ctx context.Context, d dto.AuthDTO) (*Token, error)
 	AuthByUser(ctx context.Context, user *models.User) (*Token, error)
 	GetUserByToken(ctx context.Context, hashedToken string) (*models.User, error)
@@ -36,66 +46,55 @@ type Service struct {
 	cfg         *config.Config
 	logger      logger.Logger
 	userService user.IUserService
+	mailService mail.IMailService
 	storage     storage.IStorage
+	otp         *codeStore
 }
 
-func New(cfg *config.Config, logger logger.Logger, storage storage.IStorage, userService user.IUserService) *Service {
+func New(
+	cfg *config.Config,
+	logger logger.Logger,
+	storage storage.IStorage,
+	userService user.IUserService,
+	mailService mail.IMailService,
+	kv key_value.IKeyValue,
+) *Service {
 	return &Service{
 		cfg:         cfg,
 		logger:      logger,
 		userService: userService,
+		mailService: mailService,
 		storage:     storage,
+		otp:         newCodeStore(kv, cfg.Auth),
 	}
 }
 
-func (s Service) RegisterUser(ctx context.Context, d dto.RegisterDTO) (*models.User, error) {
-	params := &repository_users.CreateParams{
-		Email:    d.Email,
-		Password: d.Password,
-		Location: d.Location,
-		Language: d.Language,
-	}
-	registeredUser, err := s.userService.StoreUser(ctx, *params)
-	if err != nil {
-		return nil, err
-	}
-
-	return registeredUser, nil
-}
-
+// Auth authenticates an admin by password. Every failure returns
+// ErrInvalidCredentials so the caller can't tell unknown-email from
+// wrong-password from not-an-admin.
 func (s Service) Auth(ctx context.Context, d dto.AuthDTO) (*Token, error) {
-	userForAuth, err := s.userService.GetUserByEmail(ctx, d.Email)
+	u, err := s.userService.GetUserByEmail(ctx, normalizeEmail(d.Email))
 	if err != nil {
+		if errors.Is(err, user.ErrNotFound) {
+			return nil, ErrInvalidCredentials
+		}
 		return nil, err
 	}
 
-	if userForAuth.Banned.Bool {
-		return nil, err
+	if !u.IsAdmin.Bool || !u.Password.Valid {
+		return nil, ErrInvalidCredentials
+	}
+	if u.Banned.Bool {
+		return nil, ErrUserBanned
+	}
+	if !tools.CheckPasswordHash(d.Password, u.Password.String) {
+		return nil, ErrInvalidCredentials
 	}
 
-	if !tools.CheckPasswordHash(d.Password, userForAuth.Password) {
-		return nil, err
-	}
-
-	token, err := generateTokenString()
-	if err != nil {
-		return nil, err
-	}
-	params := repository_personal_access_tokens.CreateParams{
-		TokenableType: "user",
-		TokenableID:   userForAuth.ID,
-		Name:          "AuthToken",
-		Token:         hash.SHA256(token.FullToken),
-		ExpiresAt:     nil,
-	}
-	_, err = s.storage.PersonalAccessToken().Create(ctx, params)
-	if err != nil {
-		return nil, err
-	}
-	return token, nil
+	return s.AuthByUser(ctx, u)
 }
 
-func (s Service) AuthByUser(ctx context.Context, user *models.User) (*Token, error) {
+func (s Service) AuthByUser(ctx context.Context, u *models.User) (*Token, error) {
 	token, err := generateTokenString()
 	if err != nil {
 		return nil, err
@@ -103,14 +102,13 @@ func (s Service) AuthByUser(ctx context.Context, user *models.User) (*Token, err
 
 	params := repository_personal_access_tokens.CreateParams{
 		TokenableType: "user",
-		TokenableID:   user.ID,
+		TokenableID:   u.ID,
 		Name:          "AuthToken",
 		Token:         hash.SHA256(token.FullToken),
 		ExpiresAt:     nil,
 	}
 
-	_, err = s.storage.PersonalAccessToken().Create(ctx, params)
-	if err != nil {
+	if _, err := s.storage.PersonalAccessToken().Create(ctx, params); err != nil {
 		return nil, err
 	}
 	return token, nil

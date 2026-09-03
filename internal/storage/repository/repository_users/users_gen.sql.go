@@ -22,9 +22,9 @@ INSERT INTO users (email, email_verified_at, password, remember_token, location,
 type CreateParams struct {
 	Email           string           `db:"email" json:"email" validate:"required,email"`
 	EmailVerifiedAt pgtype.Timestamp `db:"email_verified_at" json:"email_verified_at"`
-	Password        string           `db:"password" json:"password" validate:"required,min=8,max=32"`
+	Password        pgtype.Text      `db:"password" json:"password"`
 	RememberToken   pgtype.Text      `db:"remember_token" json:"remember_token"`
-	Location        string           `db:"location" json:"location" validate:"required,timezone"`
+	Location        string           `db:"location" json:"location" validate:"omitempty,timezone"`
 	Language        string           `db:"language" json:"language"`
 	DeletedAt       pgtype.Timestamp `db:"deleted_at" json:"deleted_at"`
 	IsAdmin         pgtype.Bool      `db:"is_admin" json:"is_admin"`
@@ -120,7 +120,7 @@ WHERE id=$6
 `
 
 type UpdateParams struct {
-	Location  string           `db:"location" json:"location" validate:"required,timezone"`
+	Location  string           `db:"location" json:"location" validate:"omitempty,timezone"`
 	Language  string           `db:"language" json:"language"`
 	UpdatedAt pgtype.Timestamp `db:"updated_at" json:"updated_at"`
 	IsAdmin   pgtype.Bool      `db:"is_admin" json:"is_admin"`

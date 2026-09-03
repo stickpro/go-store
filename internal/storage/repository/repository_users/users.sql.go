@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -64,4 +65,33 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.User, erro
 		&i.Banned,
 	)
 	return &i, err
+}
+
+const markEmailVerified = `-- name: MarkEmailVerified :exec
+UPDATE users
+SET email_verified_at = now(),
+    updated_at        = now()
+WHERE id = $1
+`
+
+func (q *Queries) MarkEmailVerified(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, markEmailVerified, id)
+	return err
+}
+
+const setPassword = `-- name: SetPassword :exec
+UPDATE users
+SET password   = $2,
+    updated_at = now()
+WHERE email = $1
+`
+
+type SetPasswordParams struct {
+	Email    string      `db:"email" json:"email" validate:"required,email"`
+	Password pgtype.Text `db:"password" json:"password"`
+}
+
+func (q *Queries) SetPassword(ctx context.Context, arg SetPasswordParams) error {
+	_, err := q.db.Exec(ctx, setPassword, arg.Email, arg.Password)
+	return err
 }

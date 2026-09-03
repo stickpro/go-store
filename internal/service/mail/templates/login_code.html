@@ -1,0 +1,16 @@
+{{define "login_code/subject"}}Код для входа в {{.BrandName}}: {{.Data.Code}}{{end}}
+
+{{define "login_code/content"}}
+<h1 style="margin:0 0 16px;font-size:20px;">Код для входа</h1>
+<p style="margin:0 0 16px;">Используйте этот код, чтобы войти или завершить регистрацию:</p>
+<p style="margin:0 0 20px;font-size:34px;letter-spacing:10px;font-weight:700;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;">
+  {{.Data.Code}}
+</p>
+<p style="margin:0 0 16px;color:#71717a;">
+  Код действует {{.Data.TTLMinutes}} минут и одноразовый.
+</p>
+<p style="margin:0;color:#71717a;">
+  Если вы не запрашивали вход в {{.BrandName}}, просто проигнорируйте это письмо —
+  без кода никто не получит доступ к аккаунту.
+</p>
+{{end}}

@@ -45,7 +45,7 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 		}
 	}()
 
-	services, err := service.InitService(conf, l, st)
+	services, err := service.InitService(conf, l, st, q)
 	if err != nil {
 		l.Fatal("error start DI service", err)
 	}
@@ -78,6 +78,9 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 
 	imageWorker := worker.NewImageWorker(q, services.MediaService, conf.Workers.ImageSync, l)
 	go imageWorker.Run(ctx)
+
+	mailWorker := worker.NewMailWorker(q, services.MailService, conf.Workers.MailSend, l)
+	go mailWorker.Run(ctx)
 
 	serverErrCh := make(chan error, 1)
 	go func() {

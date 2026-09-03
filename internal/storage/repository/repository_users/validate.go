@@ -14,13 +14,5 @@ func (s CreateParams) Validate() error {
 		return errors.New("email must be a valid email address")
 	}
 
-	if s.Password == "" {
-		return errors.New("password is required and cannot be empty")
-	}
-
-	if s.Location == "" {
-		return errors.New("location is required and cannot be empty")
-	}
-
 	return nil
 }

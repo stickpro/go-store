@@ -30,6 +30,48 @@ definitions:
     - quantity
     - variant_id
     type: object
+  Attribute:
+    properties:
+      attribute_group_id:
+        $ref: '#/definitions/uuid.NullUUID'
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      id:
+        type: string
+      is_filterable:
+        $ref: '#/definitions/pgtype.Bool'
+      is_required:
+        $ref: '#/definitions/pgtype.Bool'
+      is_visible:
+        $ref: '#/definitions/pgtype.Bool'
+      name:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        $ref: '#/definitions/pgtype.Int4'
+      type:
+        type: string
+      unit:
+        $ref: '#/definitions/pgtype.Text'
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+    type: object
+  AttributeGroup:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+    type: object
   AttributeGroupResponse:
     properties:
       attributes:
@@ -330,6 +372,21 @@ definitions:
         type: string
       timezone:
         type: string
+    type: object
+  Collection:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      description:
+        $ref: '#/definitions/pgtype.Text'
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
     type: object
   CollectionResponse:
     properties:
@@ -807,12 +864,21 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-RegisterUserResponse:
+  JSONResponse-ResponseWithFullPagination-Attribute:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/RegisterUserResponse'
+        $ref: '#/definitions/ResponseWithFullPagination-Attribute'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-AttributeGroup:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-AttributeGroup'
       message:
         type: string
     type: object
@@ -822,6 +888,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/ResponseWithFullPagination-CategoryResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-Collection:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-Collection'
       message:
         type: string
     type: object
@@ -861,39 +936,21 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute'
-      message:
-        type: string
-    type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup'
-      message:
-        type: string
-    type: object
-  JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection'
-      message:
-        type: string
-    type: object
   JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow:
     properties:
       code:
         type: integer
       data:
         $ref: '#/definitions/ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow'
+      message:
+        type: string
+    type: object
+  JSONResponse-SendCodeResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/SendCodeResponse'
       message:
         type: string
     type: object
@@ -1251,36 +1308,38 @@ definitions:
       product:
         $ref: '#/definitions/ProductResponse'
     type: object
-  RegisterRequest:
+  ResponseWithFullPagination-Attribute:
     properties:
-      email:
-        type: string
-      language:
-        maxLength: 2
-        minLength: 2
-        type: string
-      location:
-        type: string
-      password:
-        maxLength: 32
-        minLength: 8
-        type: string
-    required:
-    - email
-    - language
-    - location
-    - password
+      items:
+        items:
+          $ref: '#/definitions/Attribute'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
     type: object
-  RegisterUserResponse:
+  ResponseWithFullPagination-AttributeGroup:
     properties:
-      token:
-        type: string
+      items:
+        items:
+          $ref: '#/definitions/AttributeGroup'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
     type: object
   ResponseWithFullPagination-CategoryResponse:
     properties:
       items:
         items:
           $ref: '#/definitions/CategoryResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
+  ResponseWithFullPagination-Collection:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/Collection'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
@@ -1321,33 +1380,6 @@ definitions:
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Attribute'
-        type: array
-      pagination:
-        $ref: '#/definitions/FullPagingData'
-    type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.AttributeGroup'
-        type: array
-      pagination:
-        $ref: '#/definitions/FullPagingData'
-    type: object
-  ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_models.Collection'
-        type: array
-      pagination:
-        $ref: '#/definitions/FullPagingData'
-    type: object
   ResponseWithFullPagination-github_com_stickpro_go-store_internal_storage_repository_repository_products_FindRow:
     properties:
       items:
@@ -1356,6 +1388,18 @@ definitions:
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
+    type: object
+  SendCodeRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  SendCodeResponse:
+    properties:
+      sent:
+        type: boolean
     type: object
   StockStatus:
     enum:
@@ -1679,6 +1723,16 @@ definitions:
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
+  VerifyCodeRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+    required:
+    - code
+    - email
+    type: object
   ViewedItemResponse:
     properties:
       image:
@@ -1824,63 +1878,6 @@ definitions:
         type: object
       width:
         type: integer
-    type: object
-  github_com_stickpro_go-store_internal_models.Attribute:
-    properties:
-      attribute_group_id:
-        $ref: '#/definitions/uuid.NullUUID'
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      id:
-        type: string
-      is_filterable:
-        $ref: '#/definitions/pgtype.Bool'
-      is_required:
-        $ref: '#/definitions/pgtype.Bool'
-      is_visible:
-        $ref: '#/definitions/pgtype.Bool'
-      name:
-        type: string
-      slug:
-        type: string
-      sort_order:
-        $ref: '#/definitions/pgtype.Int4'
-      type:
-        type: string
-      unit:
-        $ref: '#/definitions/pgtype.Text'
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-    type: object
-  github_com_stickpro_go-store_internal_models.AttributeGroup:
-    properties:
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      description:
-        $ref: '#/definitions/pgtype.Text'
-      id:
-        type: string
-      name:
-        type: string
-      slug:
-        type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-    type: object
-  github_com_stickpro_go-store_internal_models.Collection:
-    properties:
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-      description:
-        $ref: '#/definitions/pgtype.Text'
-      id:
-        type: string
-      name:
-        type: string
-      slug:
-        type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
     type: object
   github_com_stickpro_go-store_internal_storage_repository_repository_products.FindRow:
     properties:
@@ -2457,7 +2454,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_AttributeGroup'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-AttributeGroup'
         "400":
           description: Bad Request
           schema:
@@ -2739,7 +2736,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Attribute'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-Attribute'
         "400":
           description: Bad Request
           schema:
@@ -2751,18 +2748,81 @@ paths:
       summary: Find attribute
       tags:
       - Attribute
+  /v1/auth/code:
+    post:
+      consumes:
+      - application/json
+      description: Emails a 6-digit one-time code. Works for both new and existing
+        accounts. Admin accounts are ignored (they log in with a password); the response
+        is the same either way.
+      parameters:
+      - description: Email to send the code to
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/SendCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-SendCodeResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Request login code
+      tags:
+      - Auth
   /v1/auth/login:
     post:
       consumes:
       - application/json
-      description: Auth a user
+      description: Email + password login. Admin accounts only.
       parameters:
-      - description: Register account
+      - description: Email + password
         in: body
-        name: register
+        name: request
         required: true
         schema:
           $ref: '#/definitions/AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AuthResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Admin login
+      tags:
+      - Auth
+  /v1/auth/verify:
+    post:
+      consumes:
+      - application/json
+      description: Validates the emailed code and returns a bearer token. Creates
+        the account if it does not exist yet.
+      parameters:
+      - description: Email + code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/VerifyCodeRequest'
       produces:
       - application/json
       responses:
@@ -2778,41 +2838,7 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/APIErrors'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Auth user
-      tags:
-      - Auth
-  /v1/auth/register:
-    post:
-      consumes:
-      - application/json
-      description: Register a new user
-      parameters:
-      - description: Register account
-        in: body
-        name: register
-        required: true
-        schema:
-          $ref: '#/definitions/RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-RegisterUserResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Register user
+      summary: Verify login code
       tags:
       - Auth
   /v1/category/:
@@ -3160,7 +3186,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-github_com_stickpro_go-store_internal_models_Collection'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-Collection'
         "400":
           description: Bad Request
           schema:
