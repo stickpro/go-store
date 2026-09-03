@@ -14,6 +14,29 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const decrementProductStock = `-- name: DecrementProductStock :execrows
+UPDATE products
+SET quantity = quantity - $2,
+    updated_at = now()
+WHERE id = $1
+  AND quantity >= $2
+`
+
+type DecrementProductStockParams struct {
+	ID       uuid.UUID `db:"id" json:"id"`
+	Quantity int64     `db:"quantity" json:"quantity"`
+}
+
+// Guarded decrement: affects 0 rows if stock is insufficient, so the caller
+// treats rows-affected != 1 as an out-of-stock race and rolls back.
+func (q *Queries) DecrementProductStock(ctx context.Context, arg DecrementProductStockParams) (int64, error) {
+	result, err := q.db.Exec(ctx, decrementProductStock, arg.ID, arg.Quantity)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getByExternalID = `-- name: GetByExternalID :one
 SELECT id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at FROM products WHERE external_id = $1 LIMIT 1
 `
@@ -205,4 +228,104 @@ func (q *Queries) GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.
 		return nil, err
 	}
 	return items, nil
+}
+
+const getOrderLinesByVariantIDs = `-- name: GetOrderLinesByVariantIDs :many
+SELECT p.id          AS product_id,
+       p.sku,
+       p.price_retail,
+       p.price_business,
+       p.price_wholesale,
+       p.quantity    AS stock_quantity,
+       p.subtract,
+       p.minimum,
+       p.is_enable   AS product_enabled,
+       pv.id         AS variant_id,
+       pv.name,
+       pv.slug,
+       pv.is_enable  AS variant_enabled,
+       img.path      AS image_path
+FROM products p
+         JOIN product_variants pv ON pv.product_id = p.id
+         LEFT JOIN LATERAL (
+             SELECT pm.media_id FROM product_media pm
+             WHERE pm.product_id = p.id ORDER BY pm.sort_order LIMIT 1
+         ) mm ON true
+         LEFT JOIN media img ON img.id = mm.media_id
+WHERE pv.id = ANY ($1::uuid[])
+ORDER BY p.id
+FOR UPDATE OF p
+`
+
+type GetOrderLinesByVariantIDsRow struct {
+	ProductID      uuid.UUID       `db:"product_id" json:"product_id"`
+	Sku            pgtype.Text     `db:"sku" json:"sku"`
+	PriceRetail    decimal.Decimal `db:"price_retail" json:"price_retail"`
+	PriceBusiness  decimal.Decimal `db:"price_business" json:"price_business"`
+	PriceWholesale decimal.Decimal `db:"price_wholesale" json:"price_wholesale"`
+	StockQuantity  int64           `db:"stock_quantity" json:"stock_quantity"`
+	Subtract       bool            `db:"subtract" json:"subtract"`
+	Minimum        int64           `db:"minimum" json:"minimum"`
+	ProductEnabled bool            `db:"product_enabled" json:"product_enabled"`
+	VariantID      uuid.UUID       `db:"variant_id" json:"variant_id"`
+	Name           string          `db:"name" json:"name"`
+	Slug           string          `db:"slug" json:"slug"`
+	VariantEnabled bool            `db:"variant_enabled" json:"variant_enabled"`
+	ImagePath      pgtype.Text     `db:"image_path" json:"image_path"`
+}
+
+// Enriches cart variants with everything checkout needs AND locks the underlying
+// product rows (FOR UPDATE OF p) so concurrent orders can't oversell stock.
+// Must be called inside a transaction. Two variants of one product yield two
+// rows sharing a single lock — the caller sums requested quantity per product.
+func (q *Queries) GetOrderLinesByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetOrderLinesByVariantIDsRow, error) {
+	rows, err := q.db.Query(ctx, getOrderLinesByVariantIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetOrderLinesByVariantIDsRow{}
+	for rows.Next() {
+		var i GetOrderLinesByVariantIDsRow
+		if err := rows.Scan(
+			&i.ProductID,
+			&i.Sku,
+			&i.PriceRetail,
+			&i.PriceBusiness,
+			&i.PriceWholesale,
+			&i.StockQuantity,
+			&i.Subtract,
+			&i.Minimum,
+			&i.ProductEnabled,
+			&i.VariantID,
+			&i.Name,
+			&i.Slug,
+			&i.VariantEnabled,
+			&i.ImagePath,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const restockProduct = `-- name: RestockProduct :exec
+UPDATE products
+SET quantity = quantity + $2,
+    updated_at = now()
+WHERE id = $1
+`
+
+type RestockProductParams struct {
+	ID       uuid.UUID `db:"id" json:"id"`
+	Quantity int64     `db:"quantity" json:"quantity"`
+}
+
+func (q *Queries) RestockProduct(ctx context.Context, arg RestockProductParams) error {
+	_, err := q.db.Exec(ctx, restockProduct, arg.ID, arg.Quantity)
+	return err
 }

@@ -15,6 +15,9 @@ import (
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.Product, error)
 	CreateProductMedia(ctx context.Context, arg CreateProductMediaParams) error
+	// Guarded decrement: affects 0 rows if stock is insufficient, so the caller
+	// treats rows-affected != 1 as an out-of-stock race and rolls back.
+	DecrementProductStock(ctx context.Context, arg DecrementProductStockParams) (int64, error)
 	DeleteProductMedia(ctx context.Context, productID uuid.UUID) error
 	DeleteProductMediaByMediaIDs(ctx context.Context, arg DeleteProductMediaByMediaIDsParams) error
 	DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteSpecificRelatedProductsParams) error
@@ -24,9 +27,15 @@ type Querier interface {
 	GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetCartItemsByVariantIDsRow, error)
 	GetMainMediaByProductIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetMainMediaByProductIDsRow, error)
 	GetMediaByProductID(ctx context.Context, productID uuid.UUID) ([]*models.Medium, error)
+	// Enriches cart variants with everything checkout needs AND locks the underlying
+	// product rows (FOR UPDATE OF p) so concurrent orders can't oversell stock.
+	// Must be called inside a transaction. Two variants of one product yield two
+	// rows sharing a single lock — the caller sums requested quantity per product.
+	GetOrderLinesByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetOrderLinesByVariantIDsRow, error)
 	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error)
 	GetRelatedProductsByVariantID(ctx context.Context, variantID uuid.UUID) ([]*GetRelatedProductsByVariantIDRow, error)
 	GetRelatedProductsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetRelatedProductsByVariantIDsRow, error)
+	RestockProduct(ctx context.Context, arg RestockProductParams) error
 	SyncRelatedProducts(ctx context.Context, arg SyncRelatedProductsParams) error
 	Update(ctx context.Context, arg UpdateParams) (*models.Product, error)
 }

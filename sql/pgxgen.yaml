@@ -188,6 +188,41 @@ schemas:
                         column_values:
                             created_at: now()
                     delete: {}
+        orders:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - order_number
+                            - created_at
+                            - updated_at
+                            - paid_at
+                            - cancelled_at
+                        column_values:
+                            created_at: now()
+                    get: {}
+        order_items:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+        order_status_history:
+            primary_column: id
+            crud:
+                methods:
+                    create:
+                        returning: '*'
+                        skip_columns:
+                            - id
+                            - created_at
+                        column_values:
+                            created_at: now()
         personal_access_tokens:
             primary_column: id
             crud:

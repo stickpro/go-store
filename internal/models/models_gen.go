@@ -2,12 +2,11 @@
 package models
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/constant"
+	"time"
 )
 
 type Attribute struct {
@@ -23,7 +22,7 @@ type Attribute struct {
 	SortOrder        pgtype.Int4      `db:"sort_order" json:"sort_order"`
 	CreatedAt        pgtype.Timestamp `db:"created_at" json:"created_at"`
 	UpdatedAt        pgtype.Timestamp `db:"updated_at" json:"updated_at"`
-} //	@name	Attribute
+} // @name Attribute
 
 type AttributeGroup struct {
 	ID          uuid.UUID        `db:"id" json:"id"`
@@ -32,7 +31,7 @@ type AttributeGroup struct {
 	Description pgtype.Text      `db:"description" json:"description"`
 	CreatedAt   pgtype.Timestamp `db:"created_at" json:"created_at"`
 	UpdatedAt   pgtype.Timestamp `db:"updated_at" json:"updated_at"`
-} //	@name	AttributeGroup
+} // @name AttributeGroup
 
 type AttributeValue struct {
 	ID              uuid.UUID           `db:"id" json:"id"`
@@ -44,7 +43,7 @@ type AttributeValue struct {
 	IsActive        pgtype.Bool         `db:"is_active" json:"is_active"`
 	CreatedAt       pgtype.Timestamp    `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamp    `db:"updated_at" json:"updated_at"`
-} //	@name	AttributeValue
+} // @name AttributeValue
 
 type Category struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
@@ -60,13 +59,13 @@ type Category struct {
 	IsEnable        bool             `db:"is_enable" json:"is_enable"`
 	CreatedAt       pgtype.Timestamp `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
-} //	@name	Category
+} // @name Category
 
 type CategoryPath struct {
 	AncestorID   uuid.UUID `db:"ancestor_id" json:"ancestor_id"`
 	DescendantID uuid.UUID `db:"descendant_id" json:"descendant_id"`
 	Depth        int32     `db:"depth" json:"depth"`
-} //	@name	CategoryPath
+} // @name CategoryPath
 
 type City struct {
 	ID              uuid.UUID       `db:"id" json:"id"`
@@ -94,7 +93,7 @@ type City struct {
 	GeoLon          decimal.Decimal `db:"geo_lon" json:"geo_lon"`
 	Population      int64           `db:"population" json:"population"`
 	FoundationYear  int16           `db:"foundation_year" json:"foundation_year"`
-} //	@name	City
+} // @name City
 
 type Collection struct {
 	ID          uuid.UUID          `db:"id" json:"id"`
@@ -103,12 +102,12 @@ type Collection struct {
 	Slug        string             `db:"slug" json:"slug"`
 	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-} //	@name	Collection
+} // @name Collection
 
 type CollectionVariant struct {
 	CollectionID uuid.UUID `db:"collection_id" json:"collection_id"`
 	VariantID    uuid.UUID `db:"variant_id" json:"variant_id"`
-} //	@name	CollectionVariant
+} // @name CollectionVariant
 
 type Manufacturer struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
@@ -123,7 +122,7 @@ type Manufacturer struct {
 	IsEnable        bool             `db:"is_enable" json:"is_enable"`
 	CreatedAt       pgtype.Timestamp `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
-} //	@name	Manufacturer
+} // @name Manufacturer
 
 type Medium struct {
 	ID        uuid.UUID        `db:"id" json:"id"`
@@ -137,7 +136,60 @@ type Medium struct {
 	SourceUrl pgtype.Text      `db:"source_url" json:"source_url"`
 	Width     int32            `db:"width" json:"width"`
 	Height    int32            `db:"height" json:"height"`
-} //	@name	Medium
+} // @name Medium
+
+type Order struct {
+	ID             uuid.UUID        `db:"id" json:"id"`
+	OrderNumber    int64            `db:"order_number" json:"order_number"`
+	UserID         uuid.NullUUID    `db:"user_id" json:"user_id"`
+	Status         string           `db:"status" json:"status"`
+	PaymentStatus  string           `db:"payment_status" json:"payment_status"`
+	PaymentMethod  pgtype.Text      `db:"payment_method" json:"payment_method"`
+	Currency       string           `db:"currency" json:"currency"`
+	Email          string           `db:"email" json:"email"`
+	Phone          pgtype.Text      `db:"phone" json:"phone"`
+	ShipCityID     uuid.NullUUID    `db:"ship_city_id" json:"ship_city_id"`
+	ShipCityName   string           `db:"ship_city_name" json:"ship_city_name"`
+	ShipAddress    string           `db:"ship_address" json:"ship_address"`
+	ShipPostcode   pgtype.Text      `db:"ship_postcode" json:"ship_postcode"`
+	ShipRecipient  string           `db:"ship_recipient" json:"ship_recipient"`
+	ShippingMethod pgtype.Text      `db:"shipping_method" json:"shipping_method"`
+	Subtotal       decimal.Decimal  `db:"subtotal" json:"subtotal"`
+	DiscountTotal  decimal.Decimal  `db:"discount_total" json:"discount_total"`
+	ShippingTotal  decimal.Decimal  `db:"shipping_total" json:"shipping_total"`
+	TaxTotal       decimal.Decimal  `db:"tax_total" json:"tax_total"`
+	GrandTotal     decimal.Decimal  `db:"grand_total" json:"grand_total"`
+	Comment        pgtype.Text      `db:"comment" json:"comment"`
+	IdempotencyKey pgtype.Text      `db:"idempotency_key" json:"idempotency_key"`
+	CreatedAt      pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt      pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+	PaidAt         pgtype.Timestamp `db:"paid_at" json:"paid_at"`
+	CancelledAt    pgtype.Timestamp `db:"cancelled_at" json:"cancelled_at"`
+} // @name Order
+
+type OrderItem struct {
+	ID        uuid.UUID       `db:"id" json:"id"`
+	OrderID   uuid.UUID       `db:"order_id" json:"order_id"`
+	ProductID uuid.NullUUID   `db:"product_id" json:"product_id"`
+	VariantID uuid.NullUUID   `db:"variant_id" json:"variant_id"`
+	Sku       pgtype.Text     `db:"sku" json:"sku"`
+	Name      string          `db:"name" json:"name"`
+	Slug      pgtype.Text     `db:"slug" json:"slug"`
+	ImagePath pgtype.Text     `db:"image_path" json:"image_path"`
+	UnitPrice decimal.Decimal `db:"unit_price" json:"unit_price"`
+	Quantity  int64           `db:"quantity" json:"quantity"`
+	LineTotal decimal.Decimal `db:"line_total" json:"line_total"`
+} // @name OrderItem
+
+type OrderStatusHistory struct {
+	ID         uuid.UUID        `db:"id" json:"id"`
+	OrderID    uuid.UUID        `db:"order_id" json:"order_id"`
+	FromStatus pgtype.Text      `db:"from_status" json:"from_status"`
+	ToStatus   string           `db:"to_status" json:"to_status"`
+	Actor      string           `db:"actor" json:"actor"`
+	Comment    pgtype.Text      `db:"comment" json:"comment"`
+	CreatedAt  pgtype.Timestamp `db:"created_at" json:"created_at"`
+} // @name OrderStatusHistory
 
 type PersonalAccessToken struct {
 	ID            uuid.UUID        `db:"id" json:"id"`
@@ -149,7 +201,7 @@ type PersonalAccessToken struct {
 	ExpiresAt     *time.Time       `db:"expires_at" json:"expires_at"`
 	CreatedAt     pgtype.Timestamp `db:"created_at" json:"created_at"`
 	UpdatedAt     pgtype.Timestamp `db:"updated_at" json:"updated_at"`
-} //	@name	PersonalAccessToken
+} // @name PersonalAccessToken
 
 type Product struct {
 	ID             uuid.UUID            `db:"id" json:"id"`
@@ -178,19 +230,19 @@ type Product struct {
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
 	CreatedAt      pgtype.Timestamp     `db:"created_at" json:"created_at"`
 	UpdatedAt      pgtype.Timestamp     `db:"updated_at" json:"updated_at"`
-} //	@name	Product
+} // @name Product
 
 type ProductAttributeValue struct {
 	ProductID        uuid.UUID        `db:"product_id" json:"product_id"`
 	AttributeValueID uuid.UUID        `db:"attribute_value_id" json:"attribute_value_id"`
 	CreatedAt        pgtype.Timestamp `db:"created_at" json:"created_at"`
-} //	@name	ProductAttributeValue
+} // @name ProductAttributeValue
 
 type ProductMedium struct {
 	ProductID uuid.UUID `db:"product_id" json:"product_id"`
 	MediaID   uuid.UUID `db:"media_id" json:"media_id"`
 	SortOrder int32     `db:"sort_order" json:"sort_order"`
-} //	@name	ProductMedium
+} // @name ProductMedium
 
 type ProductReview struct {
 	ID        uuid.UUID        `db:"id" json:"id"`
@@ -204,7 +256,7 @@ type ProductReview struct {
 	CreatedAt pgtype.Timestamp `db:"created_at" json:"created_at"`
 	UpdatedAt pgtype.Timestamp `db:"updated_at" json:"updated_at"`
 	DeletedAt pgtype.Timestamp `db:"deleted_at" json:"deleted_at"`
-} //	@name	ProductReview
+} // @name ProductReview
 
 type ProductVariant struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
@@ -223,18 +275,18 @@ type ProductVariant struct {
 	Viewed          int64            `db:"viewed" json:"viewed"`
 	CreatedAt       pgtype.Timestamp `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamp `db:"updated_at" json:"updated_at"`
-} //	@name	ProductVariant
+} // @name ProductVariant
 
 type ProductVariantCategory struct {
 	ProductVariantID uuid.UUID        `db:"product_variant_id" json:"product_variant_id"`
 	CategoryID       uuid.UUID        `db:"category_id" json:"category_id"`
 	CreatedAt        pgtype.Timestamp `db:"created_at" json:"created_at"`
-} //	@name	ProductVariantCategory
+} // @name ProductVariantCategory
 
 type RelatedProduct struct {
 	VariantID        uuid.UUID `db:"variant_id" json:"variant_id"`
 	RelatedVariantID uuid.UUID `db:"related_variant_id" json:"related_variant_id"`
-} //	@name	RelatedProduct
+} // @name RelatedProduct
 
 type User struct {
 	ID              uuid.UUID        `db:"id" json:"id"`
@@ -249,4 +301,4 @@ type User struct {
 	DeletedAt       pgtype.Timestamp `db:"deleted_at" json:"deleted_at"`
 	IsAdmin         pgtype.Bool      `db:"is_admin" json:"is_admin"`
 	Banned          pgtype.Bool      `db:"banned" json:"banned"`
-} //	@name	User
+} // @name User

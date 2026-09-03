@@ -10,6 +10,9 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_order_items"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_order_status_history"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_orders"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_personal_access_tokens"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_attribute_values"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_reviews"
@@ -38,6 +41,9 @@ type IRepository interface {
 	ProductVariantCategories(opts ...Option) repository_product_variant_categories.Querier
 	Cities(opts ...Option) repository_cities.Querier
 	Collections(opts ...Option) repository_collections.ICustomQueries
+	Orders(opts ...Option) repository_orders.Querier
+	OrderItems(opts ...Option) repository_order_items.Querier
+	OrderStatusHistory(opts ...Option) repository_order_status_history.Querier
 }
 
 type repository struct {
@@ -57,6 +63,9 @@ type repository struct {
 	productVariantCategories *repository_product_variant_categories.Queries
 	cities                   *repository_cities.Queries
 	collections              *repository_collections.CustomQueries
+	orders                   *repository_orders.Queries
+	orderItems               *repository_order_items.Queries
+	orderStatusHistory       *repository_order_status_history.Queries
 }
 
 func InitRepository(psql *database.PostgresClient, _ key_value.IKeyValue) IRepository {
@@ -77,7 +86,34 @@ func InitRepository(psql *database.PostgresClient, _ key_value.IKeyValue) IRepos
 		productVariantCategories: repository_product_variant_categories.New(psql.DB),
 		cities:                   repository_cities.New(psql.DB),
 		collections:              repository_collections.NewCustom(psql.DB),
+		orders:                   repository_orders.New(psql.DB),
+		orderItems:               repository_order_items.New(psql.DB),
+		orderStatusHistory:       repository_order_status_history.New(psql.DB),
 	}
+}
+
+func (r *repository) Orders(opts ...Option) repository_orders.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.orders.WithTx(options.Tx)
+	}
+	return r.orders
+}
+
+func (r *repository) OrderItems(opts ...Option) repository_order_items.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.orderItems.WithTx(options.Tx)
+	}
+	return r.orderItems
+}
+
+func (r *repository) OrderStatusHistory(opts ...Option) repository_order_status_history.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.orderStatusHistory.WithTx(options.Tx)
+	}
+	return r.orderStatusHistory
 }
 
 func (r *repository) Users(opts ...Option) repository_users.Querier {
