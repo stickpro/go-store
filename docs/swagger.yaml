@@ -580,6 +580,48 @@ definitions:
     - name
     - slug
     type: object
+  CreateOrderRequest:
+    properties:
+      comment:
+        maxLength: 2000
+        type: string
+      email:
+        type: string
+      expected_total:
+        description: |-
+          ExpectedTotal, when set, must equal the server-computed grand total or the
+          order is rejected (price/availability changed since the cart was shown).
+          Decimal string, e.g. "1990.00".
+        type: string
+      payment_method:
+        maxLength: 32
+        type: string
+      phone:
+        maxLength: 32
+        type: string
+      ship_address:
+        maxLength: 512
+        type: string
+      ship_city_id:
+        type: string
+      ship_city_name:
+        maxLength: 255
+        type: string
+      ship_postcode:
+        maxLength: 16
+        type: string
+      ship_recipient:
+        maxLength: 255
+        type: string
+      shipping_method:
+        maxLength: 64
+        type: string
+    required:
+    - payment_method
+    - ship_address
+    - ship_city_name
+    - ship_recipient
+    type: object
   CreateProductRequest:
     properties:
       ean:
@@ -828,6 +870,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-OrderResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/OrderResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-ProductResponse:
     properties:
       code:
@@ -897,6 +948,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/ResponseWithFullPagination-Collection'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-OrderResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-OrderResponse'
       message:
         type: string
     type: object
@@ -1167,6 +1227,85 @@ definitions:
       width:
         type: integer
     type: object
+  OrderItemResponse:
+    properties:
+      image_path:
+        type: string
+      line_total:
+        type: number
+      name:
+        type: string
+      product_id:
+        type: string
+      quantity:
+        type: integer
+      sku:
+        type: string
+      slug:
+        type: string
+      unit_price:
+        type: number
+      variant_id:
+        type: string
+    type: object
+  OrderResponse:
+    properties:
+      cancelled_at:
+        type: string
+      comment:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      discount_total:
+        type: number
+      email:
+        type: string
+      grand_total:
+        type: number
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/OrderItemResponse'
+        type: array
+      number:
+        type: integer
+      paid_at:
+        type: string
+      payment_method:
+        type: string
+      payment_status:
+        type: string
+      phone:
+        type: string
+      shipping:
+        $ref: '#/definitions/OrderShippingResponse'
+      shipping_total:
+        type: number
+      status:
+        type: string
+      subtotal:
+        type: number
+      tax_total:
+        type: number
+    type: object
+  OrderShippingResponse:
+    properties:
+      address:
+        type: string
+      city_id:
+        type: string
+      city_name:
+        type: string
+      method:
+        type: string
+      postcode:
+        type: string
+      recipient:
+        type: string
+    type: object
   ProductResponse:
     properties:
       ean:
@@ -1340,6 +1479,15 @@ definitions:
       items:
         items:
           $ref: '#/definitions/Collection'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
+  ResponseWithFullPagination-OrderResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/OrderResponse'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
@@ -3619,6 +3767,116 @@ paths:
       summary: Upload file
       tags:
       - Files
+  /v1/orders:
+    get:
+      consumes:
+      - application/json
+      description: Order history for the authenticated account
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: List orders
+      tags:
+      - Order
+    post:
+      consumes:
+      - application/json
+      description: 'Checkout: converts the cart (session or account) into an order,
+        decrements stock and clears the cart. Send an `Idempotency-Key` header (UUID)
+        to make retries safe.'
+      parameters:
+      - description: Idempotency key (UUID)
+        in: header
+        name: Idempotency-Key
+        type: string
+      - description: Checkout data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Create order
+      tags:
+      - Order
+  /v1/orders/{number}:
+    get:
+      consumes:
+      - application/json
+      description: One order by its number, scoped to the authenticated account
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get order
+      tags:
+      - Order
   /v1/product/:
     get:
       consumes:

@@ -1,0 +1,19 @@
+{{define "order_confirmation/subject"}}Заказ №{{.Data.OrderNumber}} принят — {{.BrandName}}{{end}}
+
+{{define "order_confirmation/content"}}
+<h1 style="margin:0 0 16px;font-size:20px;">Спасибо за заказ!</h1>
+<p style="margin:0 0 16px;">
+  Заказ <strong>№{{.Data.OrderNumber}}</strong> принят и ожидает оплаты.
+</p>
+<p style="margin:0 0 24px;font-size:18px;">
+  К оплате: <strong>{{.Data.GrandTotal}} {{.Data.Currency}}</strong>
+</p>
+<p style="margin:0 0 24px;">
+  <a href="{{.SiteURL}}" style="display:inline-block;background:#18181b;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
+    Перейти в магазин
+  </a>
+</p>
+<p style="margin:0;color:#71717a;">
+  Детали и статус заказа доступны в истории покупок в вашем аккаунте.
+</p>
+{{end}}

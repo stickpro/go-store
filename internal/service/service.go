@@ -11,6 +11,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/mail"
 	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/service/media"
+	"github.com/stickpro/go-store/internal/service/order"
 	"github.com/stickpro/go-store/internal/service/product"
 	"github.com/stickpro/go-store/internal/service/review"
 	"github.com/stickpro/go-store/internal/service/search"
@@ -37,6 +38,7 @@ type Services struct {
 	CartService          cart.ICartService
 	ViewedService        viewed.IViewedService
 	MailService          mail.IMailService
+	OrderService         order.IOrderService
 }
 
 func InitService(
@@ -69,6 +71,12 @@ func InitService(
 
 	cartService := cart.New(conf, logger, storage, storage.KeyValue())
 	viewedService := viewed.New(conf, logger, storage, storage.KeyValue())
+
+	orderService, err := order.New(conf, logger, storage, cartService, userService, mailService, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Services{
 		UserService:          userService,
 		AuthService:          authService,
@@ -84,6 +92,7 @@ func InitService(
 		CartService:          cartService,
 		ViewedService:        viewedService,
 		MailService:          mailService,
+		OrderService:         orderService,
 	}, nil
 }
 

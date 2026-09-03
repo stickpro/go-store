@@ -21,6 +21,16 @@ type (
 		Images       ImagesConfig  `yaml:"images"`
 		Email        EmailConfig   `yaml:"email"`
 		Auth         AuthConfig    `yaml:"auth"`
+		Order        OrderConfig   `yaml:"order"`
+	}
+
+	// OrderConfig tunes checkout. Money amounts are decimal strings ("0" disables
+	// the free-shipping waiver) parsed once at service init.
+	OrderConfig struct {
+		Currency         string        `yaml:"currency" default:"RUB" usage:"ISO-4217 currency code stamped on new orders"`
+		FlatShipping     string        `yaml:"flat_shipping" default:"0" usage:"flat shipping fee added to every order"`
+		FreeShippingFrom string        `yaml:"free_shipping_from" default:"0" usage:"subtotal at/above which shipping is waived; 0 disables"`
+		PendingTTL       time.Duration `yaml:"pending_ttl" default:"30m" usage:"how long an unpaid order lives before the expiry worker cancels it"`
 	}
 
 	// AuthConfig tunes the passwordless email one-time-code flow used by regular

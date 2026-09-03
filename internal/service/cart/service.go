@@ -31,6 +31,9 @@ type ICartService interface {
 	RemoveItem(ctx context.Context, owner dto.Owner, variantID uuid.UUID) (*dto.CartDTO, error)
 	ClearCart(ctx context.Context, owner dto.Owner) error
 	MergeCarts(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID) (*dto.CartDTO, error)
+	// RawCart returns the stored cart (variant IDs + quantities only, no prices
+	// or availability). The order service re-prices these inside its transaction.
+	RawCart(ctx context.Context, owner dto.Owner) (*models.Cart, error)
 }
 
 type Service struct {
@@ -131,6 +134,10 @@ func (s *Service) RemoveItem(ctx context.Context, owner dto.Owner, variantID uui
 
 func (s *Service) ClearCart(ctx context.Context, owner dto.Owner) error {
 	return s.kv.Delete(ctx, cartKey(owner))
+}
+
+func (s *Service) RawCart(ctx context.Context, owner dto.Owner) (*models.Cart, error) {
+	return s.loadCart(ctx, owner)
 }
 
 // MergeCarts merges a guest cart into a user cart after login.

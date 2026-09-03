@@ -77,3 +77,19 @@ UPDATE products
 SET quantity = quantity + $2,
     updated_at = now()
 WHERE id = $1;
+
+-- name: RestockOrderItems :exec
+-- Returns every line of an order to stock in one statement. Only products that
+-- currently track stock (subtract = true) are touched, matching what checkout
+-- would have decremented.
+UPDATE products p
+SET quantity   = p.quantity + oi.qty,
+    updated_at = now()
+FROM (
+    SELECT product_id, SUM(quantity) AS qty
+    FROM order_items
+    WHERE order_id = $1 AND product_id IS NOT NULL
+    GROUP BY product_id
+) oi
+WHERE p.id = oi.product_id
+  AND p.subtract = true;

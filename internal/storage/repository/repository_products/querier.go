@@ -35,6 +35,10 @@ type Querier interface {
 	GetRelatedProductsBySlug(ctx context.Context, slug string) ([]*GetRelatedProductsBySlugRow, error)
 	GetRelatedProductsByVariantID(ctx context.Context, variantID uuid.UUID) ([]*GetRelatedProductsByVariantIDRow, error)
 	GetRelatedProductsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetRelatedProductsByVariantIDsRow, error)
+	// Returns every line of an order to stock in one statement. Only products that
+	// currently track stock (subtract = true) are touched, matching what checkout
+	// would have decremented.
+	RestockOrderItems(ctx context.Context, orderID uuid.UUID) error
 	RestockProduct(ctx context.Context, arg RestockProductParams) error
 	SyncRelatedProducts(ctx context.Context, arg SyncRelatedProductsParams) error
 	Update(ctx context.Context, arg UpdateParams) (*models.Product, error)

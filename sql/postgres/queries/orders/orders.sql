@@ -1,6 +1,10 @@
 -- name: GetByNumber :one
 SELECT * FROM orders WHERE order_number = $1 LIMIT 1;
 
+-- name: GetByNumberForUpdate :one
+-- Row-locks the order for a status transition. Transaction only.
+SELECT * FROM orders WHERE order_number = $1 LIMIT 1 FOR UPDATE;
+
 -- name: GetByIdempotencyKey :one
 SELECT * FROM orders WHERE idempotency_key = $1 LIMIT 1;
 

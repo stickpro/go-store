@@ -1,4 +1,4 @@
-2-- Human-facing sequential order number, independent of the uuid primary key.
+-- Human-facing sequential order number, independent of the uuid primary key.
 -- Non-transactional: a rolled-back order burns its number, so gaps are expected.
 create sequence orders_number_seq start 100000;
 

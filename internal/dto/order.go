@@ -1,0 +1,200 @@
+package dto
+
+import (
+	"errors"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
+
+	"github.com/stickpro/go-store/internal/delivery/http/request/order_request"
+	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
+)
+
+// CreateOrderDTO is the checkout input. The cart itself is not passed here —
+// the order service re-reads it (raw) and re-prices every line inside the
+// creating transaction.
+type CreateOrderDTO struct {
+	Owner Owner
+	// User is the authenticated account, or nil for a guest checkout.
+	User *models.User
+
+	Email string
+	Phone *string
+
+	ShipCityID     *uuid.UUID
+	ShipCityName   string
+	ShipAddress    string
+	ShipPostcode   *string
+	ShipRecipient  string
+	ShippingMethod *string
+
+	PaymentMethod string
+	Comment       *string
+
+	// IdempotencyKey, when set, makes repeated checkout calls return the first
+	// created order instead of creating duplicates.
+	IdempotencyKey *string
+	// ExpectedTotal, when set, must equal the server-computed grand total or the
+	// order is rejected with ErrPriceChanged.
+	ExpectedTotal *decimal.Decimal
+}
+
+// ErrEmailRequired is returned by RequestToCreateOrderDTO when a guest checkout
+// omits the contact email.
+var ErrEmailRequired = errors.New("email is required for guest checkout")
+
+// RequestToCreateOrderDTO builds the checkout input from the HTTP request plus
+// the resolved caller. user is nil for guest checkout.
+func RequestToCreateOrderDTO(req *order_request.CreateOrderRequest, owner Owner, user *models.User) (CreateOrderDTO, error) {
+	email := req.Email
+	if user != nil {
+		email = user.Email
+	}
+	if email == "" {
+		return CreateOrderDTO{}, ErrEmailRequired
+	}
+
+	var expected *decimal.Decimal
+	if req.ExpectedTotal != nil && *req.ExpectedTotal != "" {
+		v, err := decimal.NewFromString(*req.ExpectedTotal)
+		if err != nil {
+			return CreateOrderDTO{}, errors.New("expected_total must be a decimal number")
+		}
+		expected = &v
+	}
+
+	return CreateOrderDTO{
+		Owner:          owner,
+		User:           user,
+		Email:          email,
+		Phone:          req.Phone,
+		ShipCityID:     req.ShipCityID,
+		ShipCityName:   req.ShipCityName,
+		ShipAddress:    req.ShipAddress,
+		ShipPostcode:   req.ShipPostcode,
+		ShipRecipient:  req.ShipRecipient,
+		ShippingMethod: req.ShippingMethod,
+		PaymentMethod:  req.PaymentMethod,
+		Comment:        req.Comment,
+		ExpectedTotal:  expected,
+	}, nil
+}
+
+// RequestToListOrdersDTO maps the paging query into the shared GetDTO.
+func RequestToListOrdersDTO(req *order_request.ListOrdersRequest) GetDTO {
+	return GetDTO{Page: req.Page, PageSize: req.PageSize}
+}
+
+type OrderShippingDTO struct {
+	CityID    *uuid.UUID
+	CityName  string
+	Address   string
+	Postcode  *string
+	Recipient string
+	Method    *string
+}
+
+type OrderItemDTO struct {
+	ProductID *uuid.UUID
+	VariantID *uuid.UUID
+	Sku       *string
+	Name      string
+	Slug      *string
+	ImagePath *string
+	UnitPrice decimal.Decimal
+	Quantity  int64
+	LineTotal decimal.Decimal
+}
+
+type OrderDTO struct {
+	ID            uuid.UUID
+	Number        int64
+	UserID        *uuid.UUID
+	Status        string
+	PaymentStatus string
+	PaymentMethod *string
+	Currency      string
+
+	Email    string
+	Phone    *string
+	Shipping OrderShippingDTO
+
+	Items         []OrderItemDTO
+	Subtotal      decimal.Decimal
+	DiscountTotal decimal.Decimal
+	ShippingTotal decimal.Decimal
+	TaxTotal      decimal.Decimal
+	GrandTotal    decimal.Decimal
+
+	Comment     *string
+	CreatedAt   time.Time
+	PaidAt      *time.Time
+	CancelledAt *time.Time
+}
+
+// OrderDTOFromModel maps a persisted order plus its line rows into the domain DTO.
+func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
+	out := &OrderDTO{
+		ID:            o.ID,
+		Number:        o.OrderNumber,
+		UserID:        nullUUIDPtr(o.UserID),
+		Status:        o.Status,
+		PaymentStatus: o.PaymentStatus,
+		PaymentMethod: pgtypeutils.DecodeText(o.PaymentMethod),
+		Currency:      o.Currency,
+		Email:         o.Email,
+		Phone:         pgtypeutils.DecodeText(o.Phone),
+		Shipping: OrderShippingDTO{
+			CityID:    nullUUIDPtr(o.ShipCityID),
+			CityName:  o.ShipCityName,
+			Address:   o.ShipAddress,
+			Postcode:  pgtypeutils.DecodeText(o.ShipPostcode),
+			Recipient: o.ShipRecipient,
+			Method:    pgtypeutils.DecodeText(o.ShippingMethod),
+		},
+		Subtotal:      o.Subtotal,
+		DiscountTotal: o.DiscountTotal,
+		ShippingTotal: o.ShippingTotal,
+		TaxTotal:      o.TaxTotal,
+		GrandTotal:    o.GrandTotal,
+		Comment:       pgtypeutils.DecodeText(o.Comment),
+		CreatedAt:     o.CreatedAt.Time,
+		PaidAt:        timestampPtr(o.PaidAt),
+		CancelledAt:   timestampPtr(o.CancelledAt),
+	}
+
+	out.Items = make([]OrderItemDTO, 0, len(items))
+	for _, it := range items {
+		out.Items = append(out.Items, OrderItemDTO{
+			ProductID: nullUUIDPtr(it.ProductID),
+			VariantID: nullUUIDPtr(it.VariantID),
+			Sku:       pgtypeutils.DecodeText(it.Sku),
+			Name:      it.Name,
+			Slug:      pgtypeutils.DecodeText(it.Slug),
+			ImagePath: pgtypeutils.DecodeText(it.ImagePath),
+			UnitPrice: it.UnitPrice,
+			Quantity:  it.Quantity,
+			LineTotal: it.LineTotal,
+		})
+	}
+	return out
+}
+
+func nullUUIDPtr(v uuid.NullUUID) *uuid.UUID {
+	if !v.Valid {
+		return nil
+	}
+	id := v.UUID
+	return &id
+}
+
+func timestampPtr(v pgtype.Timestamp) *time.Time {
+	if !v.Valid {
+		return nil
+	}
+	t := v.Time
+	return &t
+}

@@ -73,3 +73,8 @@ auth:
   otp_max_attempts: 5
   otp_resend_window: 1m0s
   otp_hourly_limit: 5
+order:
+  currency: RUB
+  flat_shipping: "0"
+  free_shipping_from: "0"
+  pending_ttl: 30m0s

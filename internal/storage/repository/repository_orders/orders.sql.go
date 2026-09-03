@@ -100,6 +100,45 @@ func (q *Queries) GetByNumber(ctx context.Context, orderNumber int64) (*models.O
 	return &i, err
 }
 
+const getByNumberForUpdate = `-- name: GetByNumberForUpdate :one
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at FROM orders WHERE order_number = $1 LIMIT 1 FOR UPDATE
+`
+
+// Row-locks the order for a status transition. Transaction only.
+func (q *Queries) GetByNumberForUpdate(ctx context.Context, orderNumber int64) (*models.Order, error) {
+	row := q.db.QueryRow(ctx, getByNumberForUpdate, orderNumber)
+	var i models.Order
+	err := row.Scan(
+		&i.ID,
+		&i.OrderNumber,
+		&i.UserID,
+		&i.Status,
+		&i.PaymentStatus,
+		&i.PaymentMethod,
+		&i.Currency,
+		&i.Email,
+		&i.Phone,
+		&i.ShipCityID,
+		&i.ShipCityName,
+		&i.ShipAddress,
+		&i.ShipPostcode,
+		&i.ShipRecipient,
+		&i.ShippingMethod,
+		&i.Subtotal,
+		&i.DiscountTotal,
+		&i.ShippingTotal,
+		&i.TaxTotal,
+		&i.GrandTotal,
+		&i.Comment,
+		&i.IdempotencyKey,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PaidAt,
+		&i.CancelledAt,
+	)
+	return &i, err
+}
+
 const listByUser = `-- name: ListByUser :many
 SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at FROM orders
 WHERE user_id = $1

@@ -16,15 +16,17 @@ type Message interface {
 }
 
 const (
-	KindWelcome   = "welcome"
-	KindLoginCode = "login_code"
+	KindWelcome           = "welcome"
+	KindLoginCode         = "login_code"
+	KindOrderConfirmation = "order_confirmation"
 )
 
 // registry maps a kind to a constructor for its empty payload so the worker can
 // decode a queued Task back into a typed Message.
 var registry = map[string]func() Message{
-	KindWelcome:   func() Message { return &Welcome{} },
-	KindLoginCode: func() Message { return &LoginCode{} },
+	KindWelcome:           func() Message { return &Welcome{} },
+	KindLoginCode:         func() Message { return &LoginCode{} },
+	KindOrderConfirmation: func() Message { return &OrderConfirmation{} },
 }
 
 // Kinds returns every registered kind (used for startup template validation).
@@ -51,3 +53,14 @@ type LoginCode struct {
 }
 
 func (LoginCode) Kind() string { return KindLoginCode }
+
+// OrderConfirmation is sent once, right after a successful checkout. Line-level
+// detail lives in the customer's order history; this is just the receipt header.
+type OrderConfirmation struct {
+	OrderNumber int64  `json:"order_number"`
+	Currency    string `json:"currency"`
+	// GrandTotal is pre-formatted (two decimals) so the template stays dumb.
+	GrandTotal string `json:"grand_total"`
+}
+
+func (OrderConfirmation) Kind() string { return KindOrderConfirmation }

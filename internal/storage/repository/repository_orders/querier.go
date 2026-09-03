@@ -18,6 +18,8 @@ type Querier interface {
 	Get(ctx context.Context, id uuid.UUID) (*models.Order, error)
 	GetByIdempotencyKey(ctx context.Context, idempotencyKey pgtype.Text) (*models.Order, error)
 	GetByNumber(ctx context.Context, orderNumber int64) (*models.Order, error)
+	// Row-locks the order for a status transition. Transaction only.
+	GetByNumberForUpdate(ctx context.Context, orderNumber int64) (*models.Order, error)
 	ListByUser(ctx context.Context, arg ListByUserParams) ([]*models.Order, error)
 	// Callers must run this inside a transaction; the row locks are held until commit.
 	ListExpiredPending(ctx context.Context, arg ListExpiredPendingParams) ([]uuid.UUID, error)
