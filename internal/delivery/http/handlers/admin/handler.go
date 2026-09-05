@@ -34,6 +34,7 @@ func (h *Handler) InitAdminHandler(api *fiber.App) {
 	h.initMediaRoutes(secured)
 	h.initAttributeRoutes(secured)
 	h.initManufacturerRoutes(secured)
+	h.initOrderRoutes(secured)
 }
 
 func (h *Handler) handleError(err error, modelName string) error {

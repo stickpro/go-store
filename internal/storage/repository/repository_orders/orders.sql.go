@@ -13,6 +13,36 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const countAdmin = `-- name: CountAdmin :one
+SELECT count(*) FROM orders
+WHERE ($1::varchar IS NULL OR status = $1)
+  AND ($2::varchar IS NULL OR payment_status = $2)
+  AND ($3::uuid IS NULL OR user_id = $3)
+  AND ($4::timestamp IS NULL OR created_at >= $4)
+  AND ($5::timestamp IS NULL OR created_at <= $5)
+`
+
+type CountAdminParams struct {
+	Status        pgtype.Text      `db:"status" json:"status"`
+	PaymentStatus pgtype.Text      `db:"payment_status" json:"payment_status"`
+	UserID        uuid.NullUUID    `db:"user_id" json:"user_id"`
+	CreatedFrom   pgtype.Timestamp `db:"created_from" json:"created_from"`
+	CreatedTo     pgtype.Timestamp `db:"created_to" json:"created_to"`
+}
+
+func (q *Queries) CountAdmin(ctx context.Context, arg CountAdminParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countAdmin,
+		arg.Status,
+		arg.PaymentStatus,
+		arg.UserID,
+		arg.CreatedFrom,
+		arg.CreatedTo,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countByUser = `-- name: CountByUser :one
 SELECT count(*) FROM orders WHERE user_id = $1
 `
@@ -137,6 +167,83 @@ func (q *Queries) GetByNumberForUpdate(ctx context.Context, orderNumber int64) (
 		&i.CancelledAt,
 	)
 	return &i, err
+}
+
+const listAdmin = `-- name: ListAdmin :many
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at FROM orders
+WHERE ($1::varchar IS NULL OR status = $1)
+  AND ($2::varchar IS NULL OR payment_status = $2)
+  AND ($3::uuid IS NULL OR user_id = $3)
+  AND ($4::timestamp IS NULL OR created_at >= $4)
+  AND ($5::timestamp IS NULL OR created_at <= $5)
+ORDER BY created_at DESC
+LIMIT $7 OFFSET $6
+`
+
+type ListAdminParams struct {
+	Status        pgtype.Text      `db:"status" json:"status"`
+	PaymentStatus pgtype.Text      `db:"payment_status" json:"payment_status"`
+	UserID        uuid.NullUUID    `db:"user_id" json:"user_id"`
+	CreatedFrom   pgtype.Timestamp `db:"created_from" json:"created_from"`
+	CreatedTo     pgtype.Timestamp `db:"created_to" json:"created_to"`
+	Offset        int32            `db:"offset" json:"offset"`
+	Limit         int32            `db:"limit" json:"limit"`
+}
+
+// Every filter is optional (NULL = don't filter on it); used by the admin order list.
+func (q *Queries) ListAdmin(ctx context.Context, arg ListAdminParams) ([]*models.Order, error) {
+	rows, err := q.db.Query(ctx, listAdmin,
+		arg.Status,
+		arg.PaymentStatus,
+		arg.UserID,
+		arg.CreatedFrom,
+		arg.CreatedTo,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*models.Order{}
+	for rows.Next() {
+		var i models.Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrderNumber,
+			&i.UserID,
+			&i.Status,
+			&i.PaymentStatus,
+			&i.PaymentMethod,
+			&i.Currency,
+			&i.Email,
+			&i.Phone,
+			&i.ShipCityID,
+			&i.ShipCityName,
+			&i.ShipAddress,
+			&i.ShipPostcode,
+			&i.ShipRecipient,
+			&i.ShippingMethod,
+			&i.Subtotal,
+			&i.DiscountTotal,
+			&i.ShippingTotal,
+			&i.TaxTotal,
+			&i.GrandTotal,
+			&i.Comment,
+			&i.IdempotencyKey,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PaidAt,
+			&i.CancelledAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listByUser = `-- name: ListByUser :many
@@ -297,6 +404,51 @@ type MarkPaidParams struct {
 
 func (q *Queries) MarkPaid(ctx context.Context, arg MarkPaidParams) (*models.Order, error) {
 	row := q.db.QueryRow(ctx, markPaid, arg.ID, arg.Status, arg.PaymentMethod)
+	var i models.Order
+	err := row.Scan(
+		&i.ID,
+		&i.OrderNumber,
+		&i.UserID,
+		&i.Status,
+		&i.PaymentStatus,
+		&i.PaymentMethod,
+		&i.Currency,
+		&i.Email,
+		&i.Phone,
+		&i.ShipCityID,
+		&i.ShipCityName,
+		&i.ShipAddress,
+		&i.ShipPostcode,
+		&i.ShipRecipient,
+		&i.ShippingMethod,
+		&i.Subtotal,
+		&i.DiscountTotal,
+		&i.ShippingTotal,
+		&i.TaxTotal,
+		&i.GrandTotal,
+		&i.Comment,
+		&i.IdempotencyKey,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PaidAt,
+		&i.CancelledAt,
+	)
+	return &i, err
+}
+
+const markRefunded = `-- name: MarkRefunded :one
+UPDATE orders
+SET status = 'refunded',
+    payment_status = 'refunded',
+    updated_at = now()
+WHERE id = $1
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at
+`
+
+// Refund also clears the payment status back to 'refunded' (unlike a plain
+// status transition, which never touches payment_status).
+func (q *Queries) MarkRefunded(ctx context.Context, id uuid.UUID) (*models.Order, error) {
+	row := q.db.QueryRow(ctx, markRefunded, id)
 	var i models.Order
 	err := row.Scan(
 		&i.ID,

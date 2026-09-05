@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/mail"
 )
 
@@ -35,21 +36,21 @@ func (s Service) RequestCode(ctx context.Context, email string) error {
 
 // VerifyCode is step 2: it validates the code, creates the account on first
 // login, marks the email verified, and issues an auth token.
-func (s Service) VerifyCode(ctx context.Context, email, code string) (*Token, error) {
+func (s Service) VerifyCode(ctx context.Context, email, code string) (*Token, *models.User, error) {
 	email = normalizeEmail(email)
 
 	if err := s.otp.redeem(ctx, email, code); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	u, err := s.userService.GetUserByEmail(ctx, email)
 	switch {
 	case err == nil && u != nil:
 		if u.IsAdmin.Bool {
-			return nil, ErrUsePasswordLogin
+			return nil, nil, ErrUsePasswordLogin
 		}
 		if u.Banned.Bool {
-			return nil, ErrUserBanned
+			return nil, nil, ErrUserBanned
 		}
 		if !u.EmailVerifiedAt.Valid {
 			if mErr := s.userService.MarkEmailVerified(ctx, u.ID); mErr != nil {
@@ -59,16 +60,20 @@ func (s Service) VerifyCode(ctx context.Context, email, code string) (*Token, er
 	case errors.Is(err, ErrUserNotFound):
 		u, err = s.userService.CreatePasswordless(ctx, email)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if mErr := s.mailService.Enqueue(ctx, u.Email, mail.Welcome{Email: u.Email}); mErr != nil {
 			s.logger.Errorw("failed to enqueue welcome email", "error", mErr, "email", u.Email)
 		}
 	default:
-		return nil, err
+		return nil, nil, err
 	}
 
-	return s.AuthByUser(ctx, u)
+	token, err := s.AuthByUser(ctx, u)
+	if err != nil {
+		return nil, nil, err
+	}
+	return token, u, nil
 }
 
 func normalizeEmail(email string) string {

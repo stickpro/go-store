@@ -33,9 +33,9 @@ type Token struct {
 type IAuthService interface {
 	// RequestCode emails a one-time login code (passwordless users only).
 	RequestCode(ctx context.Context, email string) error
-	// VerifyCode validates a one-time code and returns an auth token, creating
-	// the account on first login.
-	VerifyCode(ctx context.Context, email, code string) (*Token, error)
+	// VerifyCode validates a one-time code and returns an auth token plus the
+	// authenticated user, creating the account on first login.
+	VerifyCode(ctx context.Context, email, code string) (*Token, *models.User, error)
 	// Auth logs in an admin account with email + password.
 	Auth(ctx context.Context, d dto.AuthDTO) (*Token, error)
 	AuthByUser(ctx context.Context, user *models.User) (*Token, error)

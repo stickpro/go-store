@@ -30,6 +30,51 @@ definitions:
     - quantity
     - variant_id
     type: object
+  AdminOrderResponse:
+    properties:
+      cancelled_at:
+        type: string
+      comment:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      discount_total:
+        type: number
+      email:
+        type: string
+      grand_total:
+        type: number
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/OrderItemResponse'
+        type: array
+      number:
+        type: integer
+      paid_at:
+        type: string
+      payment_method:
+        type: string
+      payment_status:
+        type: string
+      phone:
+        type: string
+      shipping:
+        $ref: '#/definitions/OrderShippingResponse'
+      shipping_total:
+        type: number
+      status:
+        type: string
+      subtotal:
+        type: number
+      tax_total:
+        type: number
+      user_id:
+        type: string
+    type: object
   Attribute:
     properties:
       attribute_group_id:
@@ -190,6 +235,63 @@ definitions:
       name:
         type: string
       slug:
+        type: string
+    type: object
+  CDEKDeliveryPointResponse:
+    properties:
+      address:
+        type: string
+      address_full:
+        type: string
+      allowed_cod:
+        type: boolean
+      city:
+        type: string
+      city_code:
+        type: integer
+      code:
+        type: string
+      country_code:
+        type: string
+      email:
+        type: string
+      have_cash:
+        type: boolean
+      have_cashless:
+        type: boolean
+      is_dressing_room:
+        type: boolean
+      is_handout:
+        type: boolean
+      is_reception:
+        type: boolean
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      note:
+        type: string
+      phones:
+        items:
+          type: string
+        type: array
+      postal_code:
+        type: string
+      region:
+        type: string
+      region_code:
+        type: integer
+      take_only:
+        type: boolean
+      type:
+        type: string
+      weight_max:
+        type: number
+      weight_min:
+        type: number
+      work_time:
         type: string
     type: object
   CartItemResponse:
@@ -715,11 +817,6 @@ definitions:
       total:
         type: integer
     type: object
-  GeoResponse:
-    properties:
-      city:
-        type: string
-    type: object
   GetRelatedProductsBatchRequest:
     properties:
       variant_ids:
@@ -743,6 +840,15 @@ definitions:
         type: object
       width:
         type: integer
+    type: object
+  JSONResponse-AdminOrderResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/AdminOrderResponse'
+      message:
+        type: string
     type: object
   JSONResponse-AttributeGroupResponse:
     properties:
@@ -843,15 +949,6 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-GeoResponse:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/GeoResponse'
-      message:
-        type: string
-    type: object
   JSONResponse-ManufacturerResponse:
     properties:
       code:
@@ -912,6 +1009,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/ProductWithMediumResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-AdminOrderResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-AdminOrderResponse'
       message:
         type: string
     type: object
@@ -1089,6 +1195,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/BreadcrumbResponse'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_CDEKDeliveryPointResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/CDEKDeliveryPointResponse'
         type: array
       message:
         type: string
@@ -1447,6 +1564,15 @@ definitions:
       product:
         $ref: '#/definitions/ProductResponse'
     type: object
+  ResponseWithFullPagination-AdminOrderResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/AdminOrderResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
   ResponseWithFullPagination-Attribute:
     properties:
       items:
@@ -1698,6 +1824,27 @@ definitions:
         maxLength: 255
         minLength: 1
         type: string
+    type: object
+  UpdateOrderStatusRequest:
+    properties:
+      comment:
+        maxLength: 1000
+        type: string
+      payment_method:
+        description: PaymentMethod is only used when Status is "paid"; ignored otherwise.
+        maxLength: 32
+        type: string
+      status:
+        enum:
+        - paid
+        - processing
+        - shipped
+        - delivered
+        - cancelled
+        - refunded
+        type: string
+    required:
+    - status
     type: object
   UpdateProductRequest:
     properties:
@@ -2418,6 +2565,142 @@ paths:
       summary: Track viewed product
       tags:
       - Viewed
+  /v1/admin/orders:
+    get:
+      consumes:
+      - application/json
+      description: Admin order list. Every filter is optional.
+      parameters:
+      - description: |-
+          CreatedFrom, CreatedTo bound created_at, inclusive. RFC3339, e.g.
+          "2025-01-01T00:00:00Z".
+        in: query
+        name: created_from
+        type: string
+      - in: query
+        name: created_to
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - enum:
+        - unpaid
+        - paid
+        - refunded
+        - failed
+        in: query
+        name: payment_status
+        type: string
+      - enum:
+        - pending
+        - paid
+        - processing
+        - shipped
+        - delivered
+        - cancelled
+        - refunded
+        in: query
+        name: status
+        type: string
+      - in: query
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-AdminOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: List orders
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}:
+    get:
+      consumes:
+      - application/json
+      description: One order by its number, no ownership check
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get order
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Transitions an order to a new status. Invalid transitions from
+        the order's current status return 409.
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      - description: New status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Update order status
+      tags:
+      - Admin Order
   /v1/attribute-group:
     get:
       consumes:
@@ -3316,6 +3599,64 @@ paths:
       summary: Get category tree
       tags:
       - Category
+  /v1/cdek/delivery-points:
+    get:
+      consumes:
+      - application/json
+      description: List cached CDEK delivery points (offices and postomats). The list
+        is refreshed in the background once a day; use the query params to narrow
+        it down. min_lat/max_lat/min_lon/max_lon narrow the result to a map viewport
+        and must be supplied together.
+      parameters:
+      - description: CDEK city code
+        in: query
+        name: city_code
+        type: integer
+      - description: Postal code
+        in: query
+        name: postal_code
+        type: string
+      - description: Delivery point type
+        enum:
+        - PVZ
+        - POSTAMAT
+        in: query
+        name: type
+        type: string
+      - description: Map viewport min latitude (requires max_lat, min_lon, max_lon)
+        in: query
+        name: min_lat
+        type: number
+      - description: Map viewport max latitude (requires min_lat, min_lon, max_lon)
+        in: query
+        name: max_lat
+        type: number
+      - description: Map viewport min longitude (requires min_lat, max_lat, max_lon)
+        in: query
+        name: min_lon
+        type: number
+      - description: Map viewport max longitude (requires min_lat, max_lat, min_lon)
+        in: query
+        name: max_lon
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_CDEKDeliveryPointResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: List CDEK delivery points
+      tags:
+      - CDEK
   /v1/collection/:
     get:
       consumes:
@@ -3517,7 +3858,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-GeoResponse'
+            $ref: '#/definitions/JSONResponse-CityResponse'
         "400":
           description: Bad Request
           schema:

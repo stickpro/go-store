@@ -7,10 +7,6 @@ import (
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
 )
 
-type GeoResponse struct {
-	City string `json:"city"`
-} //	@name	GeoResponse
-
 type CityResponse struct {
 	ID              uuid.UUID       `db:"id" json:"id"`
 	Address         string          `db:"address" json:"address"`

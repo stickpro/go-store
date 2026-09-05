@@ -33,6 +33,15 @@ type IOrderService interface {
 	// Cancel moves an order to cancelled and restocks it if stock had been
 	// decremented. actor is recorded in the status history.
 	Cancel(ctx context.Context, number int64, actor, reason string) (*dto.OrderDTO, error)
+	// ListAdmin returns every order matching the filter, across all accounts
+	// and guests, newest first. Admin only.
+	ListAdmin(ctx context.Context, f dto.AdminOrderFilter) (*base.FindResponseWithFullPagination[*dto.OrderDTO], error)
+	// GetByNumberAdmin returns an order by number without GetByNumber's
+	// ownership check. Admin only.
+	GetByNumberAdmin(ctx context.Context, number int64) (*dto.OrderDTO, error)
+	// UpdateStatus drives an admin-initiated status transition. Cancelling is
+	// delegated to Cancel.
+	UpdateStatus(ctx context.Context, number int64, d dto.OrderStatusUpdateDTO) (*dto.OrderDTO, error)
 }
 
 type Service struct {

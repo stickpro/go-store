@@ -6,6 +6,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/auth"
 	"github.com/stickpro/go-store/internal/service/cart"
 	"github.com/stickpro/go-store/internal/service/category"
+	"github.com/stickpro/go-store/internal/service/cdek"
 	"github.com/stickpro/go-store/internal/service/collections"
 	"github.com/stickpro/go-store/internal/service/geo"
 	"github.com/stickpro/go-store/internal/service/mail"
@@ -39,6 +40,7 @@ type Services struct {
 	ViewedService        viewed.IViewedService
 	MailService          mail.IMailService
 	OrderService         order.IOrderService
+	CDEKService          cdek.ICDEKService
 }
 
 func InitService(
@@ -77,6 +79,8 @@ func InitService(
 		return nil, err
 	}
 
+	cdekService := cdek.New(conf, logger, storage.KeyValue())
+
 	return &Services{
 		UserService:          userService,
 		AuthService:          authService,
@@ -93,6 +97,7 @@ func InitService(
 		ViewedService:        viewedService,
 		MailService:          mailService,
 		OrderService:         orderService,
+		CDEKService:          cdekService,
 	}, nil
 }
 

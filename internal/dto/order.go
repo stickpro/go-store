@@ -2,6 +2,7 @@ package dto
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -86,6 +87,63 @@ func RequestToCreateOrderDTO(req *order_request.CreateOrderRequest, owner Owner,
 // RequestToListOrdersDTO maps the paging query into the shared GetDTO.
 func RequestToListOrdersDTO(req *order_request.ListOrdersRequest) GetDTO {
 	return GetDTO{Page: req.Page, PageSize: req.PageSize}
+}
+
+// AdminOrderFilter is the optional filter set for the admin order list.
+// A nil field means "don't filter on it".
+type AdminOrderFilter struct {
+	Page          *uint64
+	PageSize      *uint64
+	Status        *string
+	PaymentStatus *string
+	UserID        *uuid.UUID
+	CreatedFrom   *time.Time
+	CreatedTo     *time.Time
+}
+
+// RequestToAdminOrderFilter maps the admin list query into AdminOrderFilter.
+// Fails if created_from/created_to aren't valid RFC3339 timestamps.
+func RequestToAdminOrderFilter(req *order_request.AdminListOrdersRequest) (AdminOrderFilter, error) {
+	from, err := parseRFC3339Ptr(req.CreatedFrom)
+	if err != nil {
+		return AdminOrderFilter{}, fmt.Errorf("created_from: %w", err)
+	}
+	to, err := parseRFC3339Ptr(req.CreatedTo)
+	if err != nil {
+		return AdminOrderFilter{}, fmt.Errorf("created_to: %w", err)
+	}
+
+	return AdminOrderFilter{
+		Page:          req.Page,
+		PageSize:      req.PageSize,
+		Status:        req.Status,
+		PaymentStatus: req.PaymentStatus,
+		UserID:        req.UserID,
+		CreatedFrom:   from,
+		CreatedTo:     to,
+	}, nil
+}
+
+func parseRFC3339Ptr(v *string) (*time.Time, error) {
+	if v == nil || *v == "" {
+		return nil, nil
+	}
+	t, err := time.Parse(time.RFC3339, *v)
+	if err != nil {
+		return nil, errors.New("must be an RFC3339 timestamp")
+	}
+	return &t, nil
+}
+
+// OrderStatusUpdateDTO drives an admin-initiated order status transition.
+// Cancelling (Status == constant.OrderCancelled) is handled by the Cancel
+// method instead, so cancelled_at/restock/notification stay in one place.
+type OrderStatusUpdateDTO struct {
+	Status  string
+	Actor   string
+	Comment *string
+	// PaymentMethod is only applied when Status is "paid".
+	PaymentMethod *string
 }
 
 type OrderShippingDTO struct {

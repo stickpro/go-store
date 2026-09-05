@@ -15,7 +15,7 @@ func AdminMiddleware() fiber.Handler {
 			return apierror.New().AddError(errors.New("undefined user")).SetHttpCode(fiber.StatusUnauthorized)
 		}
 
-		if !user.IsAdmin.Valid {
+		if !user.IsAdmin.Valid || !user.IsAdmin.Bool {
 			return apierror.New().AddError(errors.New("unauthorized")).SetHttpCode(fiber.StatusUnauthorized)
 		}
 		return c.Next()

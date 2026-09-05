@@ -78,3 +78,12 @@ order:
   flat_shipping: "0"
   free_shipping_from: "0"
   pending_ttl: 30m0s
+cdek:
+  enabled: false
+  base_url: https://api.cdek.ru/v2
+  account: ""
+  secure_password: ""
+  request_timeout: 15s
+  delivery_points_cache_ttl: 48h0m0s
+  delivery_points_refresh_every: 24h0m0s
+  delivery_points_country_code: RU

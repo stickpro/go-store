@@ -12,6 +12,10 @@ import (
 	"github.com/stickpro/go-store/internal/tools/apierror"
 )
 
+// defaultGeoCity is returned when the requester's IP can't be resolved to a
+// known city (e.g. a local/private address or an unrecognized location).
+const defaultGeoCity = "Москва"
+
 // getGeoLocation is a function get city by IP address
 //
 //	@Summary		Geo city
@@ -19,19 +23,20 @@ import (
 //	@Tags			Geo
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	response.Result[geo_response.GeoResponse]
+//	@Success		200	{object}	response.Result[geo_response.CityResponse]
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
 //	@Router			/v1/geo/city/ [get]
 func (h *Handler) getGeoLocation(c fiber.Ctx) error {
-	ip := c.IP()
-
-	location, err := h.services.GeoService.GetCityByIP(ip)
+	city, err := h.services.GeoService.GetCityByIP(c.Context(), c.IP())
 	if err != nil {
-		return c.JSON(response.OkByData(geo_response.GeoResponse{City: "Москва"}))
+		city, err = h.services.GeoService.GetCityByName(c.Context(), defaultGeoCity)
+		if err != nil {
+			return h.handleError(err, "geo city")
+		}
 	}
 
-	return c.JSON(response.OkByData(geo_response.GeoResponse{City: location}))
+	return c.JSON(response.OkByData(geo_response.NewFromModel(city)))
 }
 
 // findCity is a function find city by name

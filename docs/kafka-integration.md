@@ -43,7 +43,7 @@ Logic: if a product with the given `external_id` already exists — it is update
     "https://example.com/images/iphone15pro-front.jpg",
     "https://example.com/images/iphone15pro-back.jpg"
   ],
-  "attributes": [
+ ` "attributes": [
     {
       "name": "Цвет",
       "slug": "color",
@@ -64,7 +64,7 @@ Logic: if a product with the given `external_id` already exists — it is update
       "unit": "inch",
       "value": "6.1"
     }
-  ]
+  ]`
 }
 ```
 

@@ -42,6 +42,35 @@ SET status = 'cancelled',
 WHERE id = $1
 RETURNING *;
 
+-- name: MarkRefunded :one
+-- Refund also clears the payment status back to 'refunded' (unlike a plain
+-- status transition, which never touches payment_status).
+UPDATE orders
+SET status = 'refunded',
+    payment_status = 'refunded',
+    updated_at = now()
+WHERE id = $1
+RETURNING *;
+
+-- name: ListAdmin :many
+-- Every filter is optional (NULL = don't filter on it); used by the admin order list.
+SELECT * FROM orders
+WHERE (sqlc.narg('status')::varchar IS NULL OR status = sqlc.narg('status'))
+  AND (sqlc.narg('payment_status')::varchar IS NULL OR payment_status = sqlc.narg('payment_status'))
+  AND (sqlc.narg('user_id')::uuid IS NULL OR user_id = sqlc.narg('user_id'))
+  AND (sqlc.narg('created_from')::timestamp IS NULL OR created_at >= sqlc.narg('created_from'))
+  AND (sqlc.narg('created_to')::timestamp IS NULL OR created_at <= sqlc.narg('created_to'))
+ORDER BY created_at DESC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: CountAdmin :one
+SELECT count(*) FROM orders
+WHERE (sqlc.narg('status')::varchar IS NULL OR status = sqlc.narg('status'))
+  AND (sqlc.narg('payment_status')::varchar IS NULL OR payment_status = sqlc.narg('payment_status'))
+  AND (sqlc.narg('user_id')::uuid IS NULL OR user_id = sqlc.narg('user_id'))
+  AND (sqlc.narg('created_from')::timestamp IS NULL OR created_at >= sqlc.narg('created_from'))
+  AND (sqlc.narg('created_to')::timestamp IS NULL OR created_at <= sqlc.narg('created_to'));
+
 -- name: ListExpiredPending :many
 -- Callers must run this inside a transaction; the row locks are held until commit.
 SELECT id

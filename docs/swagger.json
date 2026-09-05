@@ -408,6 +408,212 @@
                 }
             }
         },
+        "/v1/admin/orders": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Admin order list. Every filter is optional.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Order"
+                ],
+                "summary": "List orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CreatedFrom, CreatedTo bound created_at, inclusive. RFC3339, e.g.\n\"2025-01-01T00:00:00Z\".",
+                        "name": "created_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "created_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "unpaid",
+                            "paid",
+                            "refunded",
+                            "failed"
+                        ],
+                        "type": "string",
+                        "name": "payment_status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "pending",
+                            "paid",
+                            "processing",
+                            "shipped",
+                            "delivered",
+                            "cancelled",
+                            "refunded"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "user_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-AdminOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/orders/{number}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "One order by its number, no ownership check",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Order"
+                ],
+                "summary": "Get order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order number",
+                        "name": "number",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AdminOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/orders/{number}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Transitions an order to a new status. Invalid transitions from the order's current status return 409.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Order"
+                ],
+                "summary": "Update order status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order number",
+                        "name": "number",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateOrderStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AdminOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/attribute-group": {
             "get": {
                 "security": [
@@ -1805,6 +2011,89 @@
                 }
             }
         },
+        "/v1/cdek/delivery-points": {
+            "get": {
+                "description": "List cached CDEK delivery points (offices and postomats). The list is refreshed in the background once a day; use the query params to narrow it down. min_lat/max_lat/min_lon/max_lon narrow the result to a map viewport and must be supplied together.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CDEK"
+                ],
+                "summary": "List CDEK delivery points",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "CDEK city code",
+                        "name": "city_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Postal code",
+                        "name": "postal_code",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "PVZ",
+                            "POSTAMAT"
+                        ],
+                        "type": "string",
+                        "description": "Delivery point type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Map viewport min latitude (requires max_lat, min_lon, max_lon)",
+                        "name": "min_lat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Map viewport max latitude (requires min_lat, min_lon, max_lon)",
+                        "name": "max_lat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Map viewport min longitude (requires min_lat, max_lat, max_lon)",
+                        "name": "min_lon",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Map viewport max longitude (requires min_lat, max_lat, min_lon)",
+                        "name": "max_lon",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_CDEKDeliveryPointResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/collection/": {
             "get": {
                 "security": [
@@ -2118,7 +2407,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JSONResponse-GeoResponse"
+                            "$ref": "#/definitions/JSONResponse-CityResponse"
                         }
                     },
                     "400": {
@@ -4073,6 +4362,74 @@
                 }
             }
         },
+        "AdminOrderResponse": {
+            "type": "object",
+            "properties": {
+                "cancelled_at": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "discount_total": {
+                    "type": "number"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "grand_total": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OrderItemResponse"
+                    }
+                },
+                "number": {
+                    "type": "integer"
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "shipping": {
+                    "$ref": "#/definitions/OrderShippingResponse"
+                },
+                "shipping_total": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subtotal": {
+                    "type": "number"
+                },
+                "tax_total": {
+                    "type": "number"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "Attribute": {
             "type": "object",
             "properties": {
@@ -4316,6 +4673,92 @@
                     "type": "string"
                 },
                 "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "CDEKDeliveryPointResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "address_full": {
+                    "type": "string"
+                },
+                "allowed_cod": {
+                    "type": "boolean"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "city_code": {
+                    "type": "integer"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "country_code": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "have_cash": {
+                    "type": "boolean"
+                },
+                "have_cashless": {
+                    "type": "boolean"
+                },
+                "is_dressing_room": {
+                    "type": "boolean"
+                },
+                "is_handout": {
+                    "type": "boolean"
+                },
+                "is_reception": {
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "phones": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "region_code": {
+                    "type": "integer"
+                },
+                "take_only": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "weight_max": {
+                    "type": "number"
+                },
+                "weight_min": {
+                    "type": "number"
+                },
+                "work_time": {
                     "type": "string"
                 }
             }
@@ -5082,14 +5525,6 @@
                 }
             }
         },
-        "GeoResponse": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string"
-                }
-            }
-        },
         "GetRelatedProductsBatchRequest": {
             "type": "object",
             "properties": {
@@ -5124,6 +5559,20 @@
                 },
                 "width": {
                     "type": "integer"
+                }
+            }
+        },
+        "JSONResponse-AdminOrderResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/AdminOrderResponse"
+                },
+                "message": {
+                    "type": "string"
                 }
             }
         },
@@ -5281,20 +5730,6 @@
                 }
             }
         },
-        "JSONResponse-GeoResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "$ref": "#/definitions/GeoResponse"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
         "JSONResponse-ManufacturerResponse": {
             "type": "object",
             "properties": {
@@ -5387,6 +5822,20 @@
                 },
                 "data": {
                     "$ref": "#/definitions/ProductWithMediumResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-ResponseWithFullPagination-AdminOrderResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ResponseWithFullPagination-AdminOrderResponse"
                 },
                 "message": {
                     "type": "string"
@@ -5662,6 +6111,23 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/BreadcrumbResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-array_CDEKDeliveryPointResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CDEKDeliveryPointResponse"
                     }
                 },
                 "message": {
@@ -6209,6 +6675,20 @@
                 }
             }
         },
+        "ResponseWithFullPagination-AdminOrderResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AdminOrderResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/FullPagingData"
+                }
+            }
+        },
         "ResponseWithFullPagination-Attribute": {
             "type": "object",
             "properties": {
@@ -6578,6 +7058,34 @@
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
+                }
+            }
+        },
+        "UpdateOrderStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "comment": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "payment_method": {
+                    "description": "PaymentMethod is only used when Status is \"paid\"; ignored otherwise.",
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "paid",
+                        "processing",
+                        "shipped",
+                        "delivered",
+                        "cancelled",
+                        "refunded"
+                    ]
                 }
             }
         },

@@ -13,6 +13,7 @@ import (
 )
 
 type Querier interface {
+	CountAdmin(ctx context.Context, arg CountAdminParams) (int64, error)
 	CountByUser(ctx context.Context, userID uuid.NullUUID) (int64, error)
 	Create(ctx context.Context, arg CreateParams) (*models.Order, error)
 	Get(ctx context.Context, id uuid.UUID) (*models.Order, error)
@@ -20,11 +21,16 @@ type Querier interface {
 	GetByNumber(ctx context.Context, orderNumber int64) (*models.Order, error)
 	// Row-locks the order for a status transition. Transaction only.
 	GetByNumberForUpdate(ctx context.Context, orderNumber int64) (*models.Order, error)
+	// Every filter is optional (NULL = don't filter on it); used by the admin order list.
+	ListAdmin(ctx context.Context, arg ListAdminParams) ([]*models.Order, error)
 	ListByUser(ctx context.Context, arg ListByUserParams) ([]*models.Order, error)
 	// Callers must run this inside a transaction; the row locks are held until commit.
 	ListExpiredPending(ctx context.Context, arg ListExpiredPendingParams) ([]uuid.UUID, error)
 	MarkCancelled(ctx context.Context, id uuid.UUID) (*models.Order, error)
 	MarkPaid(ctx context.Context, arg MarkPaidParams) (*models.Order, error)
+	// Refund also clears the payment status back to 'refunded' (unlike a plain
+	// status transition, which never touches payment_status).
+	MarkRefunded(ctx context.Context, id uuid.UUID) (*models.Order, error)
 	UpdateStatus(ctx context.Context, arg UpdateStatusParams) (*models.Order, error)
 }
 

@@ -22,6 +22,7 @@ type (
 		Email        EmailConfig   `yaml:"email"`
 		Auth         AuthConfig    `yaml:"auth"`
 		Order        OrderConfig   `yaml:"order"`
+		CDEK         CDEKConfig    `yaml:"cdek"`
 	}
 
 	// OrderConfig tunes checkout. Money amounts are decimal strings ("0" disables

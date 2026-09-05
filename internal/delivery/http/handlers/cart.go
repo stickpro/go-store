@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/request/cart_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/cart_response"
+	"github.com/stickpro/go-store/internal/delivery/middleware"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 )
@@ -156,7 +157,7 @@ func (h *Handler) clearCart(c fiber.Ctx) error {
 }
 
 func (h *Handler) initCartRoutes(v1 fiber.Router) {
-	c := v1.Group("/cart")
+	c := v1.Group("/cart", middleware.OptionalAuthMiddleware(h.services.AuthService))
 	c.Get("/", h.getCart)
 	c.Post("/items", h.addCartItem)
 	c.Patch("/items/:variantId", h.updateCartItemQuantity)
@@ -166,29 +167,35 @@ func (h *Handler) initCartRoutes(v1 fiber.Router) {
 
 // cartOwner builds a CartOwner from the request context.
 // Prefers the authenticated user; falls back to session cookie,
-// then X-Session-ID header. Returns an error if neither is present.
+// then X-Session-ID header. Guest-cart merging happens once, at login
+// (see verifyCode), not here.
 func (h *Handler) cartOwner(c fiber.Ctx) (dto.Owner, error) {
 	if user, err := loadAuthUser(c); err == nil {
 		return dto.Owner{UserID: &user.ID}, nil
 	}
 
-	sessionStr := c.Cookies("session_id")
-	if sessionStr == "" {
-		sessionStr = c.Get("X-Session-ID")
-	}
+	sessionID := parseCartSessionID(c)
 
-	if sessionStr == "" {
+	if sessionID == nil {
 		return dto.Owner{}, apierror.New().
 			AddError(errors.New("session_id cookie or X-Session-ID header is required")).
 			SetHttpCode(fiber.StatusBadRequest)
 	}
 
+	return dto.Owner{SessionID: sessionID}, nil
+}
+
+func parseCartSessionID(c fiber.Ctx) *uuid.UUID {
+	sessionStr := c.Cookies("session_id")
+	if sessionStr == "" {
+		sessionStr = c.Get("X-Session-ID")
+	}
+	if sessionStr == "" {
+		return nil
+	}
 	sessionID, err := uuid.Parse(sessionStr)
 	if err != nil {
-		return dto.Owner{}, apierror.New().
-			AddError(errors.New("session_id must be a valid UUID")).
-			SetHttpCode(fiber.StatusBadRequest)
+		return nil
 	}
-
-	return dto.Owner{SessionID: &sessionID}, nil
+	return &sessionID
 }

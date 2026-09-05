@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/messaging/handler"
 	"github.com/stickpro/go-store/internal/messaging/kafka"
-	"github.com/stickpro/go-store/internal/messaging/worker"
 	"github.com/stickpro/go-store/internal/server"
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/storage"
@@ -17,6 +18,10 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 	"github.com/stickpro/go-store/pkg/queue"
 )
+
+// workerShutdownTimeout bounds how long Run waits for background workers to
+// stop after a shutdown signal, before returning anyway.
+const workerShutdownTimeout = 25 * time.Second
 
 func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 	imageprocessor.Startup()
@@ -69,18 +74,9 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 
 	productHandler := handler.NewProductHandler(services.ProductService, services.AttributeService, q, l)
 
-	go func() {
-		l.Info("Start kafka consumer")
-		if err := consumer.Run(ctx, productHandler.HandleProduct); err != nil {
-			l.Error("kafka consumer stopped with error", err)
-		}
-	}()
-
-	imageWorker := worker.NewImageWorker(q, services.MediaService, conf.Workers.ImageSync, l)
-	go imageWorker.Run(ctx)
-
-	mailWorker := worker.NewMailWorker(q, services.MailService, conf.Workers.MailSend, l)
-	go mailWorker.Run(ctx)
+	workerCtx, stopWorkers := context.WithCancel(ctx)
+	defer stopWorkers()
+	workersWG := superviseWorkers(workerCtx, l, buildWorkers(services, conf, q, consumer, productHandler, l)...)
 
 	serverErrCh := make(chan error, 1)
 	go func() {
@@ -101,6 +97,25 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 		}
 	case err := <-serverErrCh:
 		l.Error("Server crashed, shutting down", err)
+	}
+
+	stopWorkers()
+	waitWorkers(workersWG, workerShutdownTimeout, l)
+}
+
+// waitWorkers blocks until wg is done or timeout elapses, whichever comes first.
+func waitWorkers(wg *sync.WaitGroup, timeout time.Duration, l logger.Logger) {
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		l.Info("background workers stopped")
+	case <-time.After(timeout):
+		l.Warnw("background workers did not stop before shutdown timeout", "timeout", timeout.String())
 	}
 }
 

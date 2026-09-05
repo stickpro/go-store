@@ -16,7 +16,8 @@ import (
 )
 
 type IGeoService interface {
-	GetCityByIP(ip string) (string, error)
+	GetCityByIP(ctx context.Context, ip string) (*models.City, error)
+	GetCityByName(ctx context.Context, name string) (*models.City, error)
 	Close() error
 	GetAllCity(ctx context.Context) ([]*models.City, error)
 	GetPopularCity(ctx context.Context) ([]*models.City, error)
@@ -47,7 +48,40 @@ func New(cfg *config.Config, logger logger.Logger, st storage.IStorage, ss searc
 	}
 }
 
-func (s *Service) GetCityByIP(ip string) (string, error) {
+// GetCityByIP resolves ip to a city name via the local GeoIP2 database, then
+// returns the matching city record from storage.
+func (s *Service) GetCityByIP(ctx context.Context, ip string) (*models.City, error) {
+	cityName, err := s.cityNameByIP(ip)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.GetCityByName(ctx, cityName)
+}
+
+// GetCityByName looks up a city record by its city or region name. When
+// several rows match (same name shared across regions/settlements) it
+// returns the most populous one.
+func (s *Service) GetCityByName(ctx context.Context, name string) (*models.City, error) {
+	cities, err := s.storage.Cities().GetByCity(ctx, name)
+	if err != nil {
+		return nil, fmt.Errorf("get city %q: %w", name, err)
+	}
+	if len(cities) == 0 {
+		return nil, fmt.Errorf("city %q not found", name)
+	}
+
+	best := cities[0]
+	for _, c := range cities[1:] {
+		if c.Population > best.Population {
+			best = c
+		}
+	}
+
+	return best, nil
+}
+
+func (s *Service) cityNameByIP(ip string) (string, error) {
 	if s.db == nil {
 		s.logger.Error("GeoIP database not initialized")
 		return "", fmt.Errorf("GeoIP database not available")

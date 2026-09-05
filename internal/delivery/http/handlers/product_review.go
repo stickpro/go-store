@@ -111,5 +111,5 @@ func (h *Handler) getProductReviewsBySlug(c fiber.Ctx) error {
 
 func (h *Handler) initProductReviewRoutes(v1 fiber.Router) {
 	pr := v1.Group("/product-review")
-	pr.Post("/", h.createProductReview, middleware.AuthMiddleware(h.services.AuthService))
+	pr.Post("/", middleware.AuthMiddleware(h.services.AuthService), h.createProductReview)
 }

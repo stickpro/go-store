@@ -57,9 +57,18 @@ func (h *Handler) verifyCode(c fiber.Ctx) error {
 		return err
 	}
 
-	token, err := h.services.AuthService.VerifyCode(c.Context(), req.Email, req.Code)
+	token, user, err := h.services.AuthService.VerifyCode(c.Context(), req.Email, req.Code)
 	if err != nil {
 		return h.authError(err)
+	}
+
+	if sessionID := parseCartSessionID(c); sessionID != nil {
+		if _, mErr := h.services.CartService.MergeCarts(c.Context(), *sessionID, user.ID); mErr != nil {
+			h.logger.Errorw("auth: cart merge failed", "error", mErr, "user_id", user.ID)
+		}
+		if mErr := h.services.ViewedService.MergeViewed(c.Context(), *sessionID, user.ID); mErr != nil {
+			h.logger.Errorw("auth: viewed merge failed", "error", mErr, "user_id", user.ID)
+		}
 	}
 
 	return c.JSON(response.OkByData(auth_response.AuthResponse{Token: token.FullToken}))

@@ -153,7 +153,7 @@ func (h *Handler) orderError(err error) error {
 
 func (h *Handler) initOrderRoutes(v1 fiber.Router) {
 	o := v1.Group("/orders")
-	o.Post("/", h.createOrder, middleware.OptionalAuthMiddleware(h.services.AuthService))
-	o.Get("/", h.listOrders, middleware.AuthMiddleware(h.services.AuthService))
-	o.Get("/:number", h.getOrder, middleware.AuthMiddleware(h.services.AuthService))
+	o.Post("/", middleware.OptionalAuthMiddleware(h.services.AuthService), h.createOrder)
+	o.Get("/", middleware.AuthMiddleware(h.services.AuthService), h.listOrders)
+	o.Get("/:number", middleware.AuthMiddleware(h.services.AuthService), h.getOrder)
 }

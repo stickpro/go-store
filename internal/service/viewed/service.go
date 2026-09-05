@@ -26,6 +26,10 @@ const (
 type IViewedService interface {
 	Track(ctx context.Context, owner dto.Owner, variantID uuid.UUID) error
 	GetViewed(ctx context.Context, owner dto.Owner) (*dto.ViewedDTO, error)
+	// MergeViewed folds the guest session's viewed list into the account's,
+	// most-recently-viewed first, and deletes the session list. Call once, at
+	// login.
+	MergeViewed(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID) error
 }
 
 type Service struct {
@@ -71,6 +75,49 @@ func (s Service) GetViewed(ctx context.Context, owner dto.Owner) (*dto.ViewedDTO
 	}
 
 	return s.enrich(ctx, ids)
+}
+
+// MergeViewed merges the guest session's viewed list into the user's,
+// session items first (they're the most recently viewed), then any
+// account items not already present. The result is trimmed to
+// maxViewedItems and saved under the user key; the session key is deleted.
+func (s Service) MergeViewed(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID) error {
+	sessionOwner := dto.Owner{SessionID: &sessionID}
+	userOwner := dto.Owner{UserID: &userID}
+
+	sessionIDs, err := s.loadIDs(ctx, sessionOwner)
+	if err != nil {
+		return fmt.Errorf("load session viewed: %w", err)
+	}
+	if len(sessionIDs) == 0 {
+		return nil
+	}
+
+	userIDs, err := s.loadIDs(ctx, userOwner)
+	if err != nil {
+		return fmt.Errorf("load user viewed: %w", err)
+	}
+
+	merged := make([]uuid.UUID, 0, len(sessionIDs)+len(userIDs))
+	seen := make(map[uuid.UUID]struct{}, len(sessionIDs)+len(userIDs))
+	for _, id := range append(sessionIDs, userIDs...) {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		merged = append(merged, id)
+	}
+	if len(merged) > maxViewedItems {
+		merged = merged[:maxViewedItems]
+	}
+
+	if err := s.saveIDs(ctx, userOwner, merged); err != nil {
+		return fmt.Errorf("save merged viewed: %w", err)
+	}
+	if err := s.kv.Delete(ctx, viewedKey(sessionOwner)); err != nil {
+		return fmt.Errorf("delete session viewed: %w", err)
+	}
+	return nil
 }
 
 func (s Service) loadIDs(ctx context.Context, owner dto.Owner) ([]uuid.UUID, error) {
