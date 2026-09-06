@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -52,6 +53,96 @@ func (q *Queries) CountByUser(ctx context.Context, userID uuid.NullUUID) (int64,
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const dashboardOrderStats = `-- name: DashboardOrderStats :one
+SELECT
+    count(*)                                                                        AS total,
+    count(*) FILTER (WHERE created_at >= $1
+                       AND created_at < $2)                       AS today,
+
+    count(*) FILTER (WHERE status = 'pending')                                      AS status_pending,
+    count(*) FILTER (WHERE status = 'paid')                                         AS status_paid,
+    count(*) FILTER (WHERE status = 'processing')                                   AS status_processing,
+    count(*) FILTER (WHERE status = 'shipped')                                      AS status_shipped,
+    count(*) FILTER (WHERE status = 'delivered')                                    AS status_delivered,
+    count(*) FILTER (WHERE status = 'cancelled')                                    AS status_cancelled,
+    count(*) FILTER (WHERE status = 'refunded')                                     AS status_refunded,
+
+    count(*) FILTER (WHERE payment_status = 'unpaid')                               AS payment_unpaid,
+    count(*) FILTER (WHERE payment_status = 'paid')                                 AS payment_paid,
+    count(*) FILTER (WHERE payment_status = 'refunded')                             AS payment_refunded,
+    count(*) FILTER (WHERE payment_status = 'failed')                               AS payment_failed,
+
+    coalesce(sum(grand_total) FILTER (WHERE payment_status = 'paid'
+                                        AND created_at >= $1
+                                        AND created_at < $2), 0)::numeric  AS revenue_today,
+    coalesce(sum(grand_total) FILTER (WHERE payment_status = 'paid'
+                                        AND created_at >= $3
+                                        AND created_at < $4), 0)::numeric AS revenue_period,
+    count(*) FILTER (WHERE payment_status = 'paid'
+                       AND created_at >= $3
+                       AND created_at < $4)                      AS paid_orders_period
+FROM orders
+`
+
+type DashboardOrderStatsParams struct {
+	TodayFrom  pgtype.Timestamp `db:"today_from" json:"today_from"`
+	TodayTo    pgtype.Timestamp `db:"today_to" json:"today_to"`
+	PeriodFrom pgtype.Timestamp `db:"period_from" json:"period_from"`
+	PeriodTo   pgtype.Timestamp `db:"period_to" json:"period_to"`
+}
+
+type DashboardOrderStatsRow struct {
+	Total            int64           `db:"total" json:"total"`
+	Today            int64           `db:"today" json:"today"`
+	StatusPending    int64           `db:"status_pending" json:"status_pending"`
+	StatusPaid       int64           `db:"status_paid" json:"status_paid"`
+	StatusProcessing int64           `db:"status_processing" json:"status_processing"`
+	StatusShipped    int64           `db:"status_shipped" json:"status_shipped"`
+	StatusDelivered  int64           `db:"status_delivered" json:"status_delivered"`
+	StatusCancelled  int64           `db:"status_cancelled" json:"status_cancelled"`
+	StatusRefunded   int64           `db:"status_refunded" json:"status_refunded"`
+	PaymentUnpaid    int64           `db:"payment_unpaid" json:"payment_unpaid"`
+	PaymentPaid      int64           `db:"payment_paid" json:"payment_paid"`
+	PaymentRefunded  int64           `db:"payment_refunded" json:"payment_refunded"`
+	PaymentFailed    int64           `db:"payment_failed" json:"payment_failed"`
+	RevenueToday     decimal.Decimal `db:"revenue_today" json:"revenue_today"`
+	RevenuePeriod    decimal.Decimal `db:"revenue_period" json:"revenue_period"`
+	PaidOrdersPeriod int64           `db:"paid_orders_period" json:"paid_orders_period"`
+}
+
+// One-shot order snapshot for the admin dashboard. Status / payment buckets and
+// `total` are all-time (current distribution); `today` and `revenue_today` use
+// the day-boundary params; `revenue_period` / `paid_orders_period` use the
+// selected range. Revenue sums grand_total of payment_status = 'paid' orders only.
+func (q *Queries) DashboardOrderStats(ctx context.Context, arg DashboardOrderStatsParams) (*DashboardOrderStatsRow, error) {
+	row := q.db.QueryRow(ctx, dashboardOrderStats,
+		arg.TodayFrom,
+		arg.TodayTo,
+		arg.PeriodFrom,
+		arg.PeriodTo,
+	)
+	var i DashboardOrderStatsRow
+	err := row.Scan(
+		&i.Total,
+		&i.Today,
+		&i.StatusPending,
+		&i.StatusPaid,
+		&i.StatusProcessing,
+		&i.StatusShipped,
+		&i.StatusDelivered,
+		&i.StatusCancelled,
+		&i.StatusRefunded,
+		&i.PaymentUnpaid,
+		&i.PaymentPaid,
+		&i.PaymentRefunded,
+		&i.PaymentFailed,
+		&i.RevenueToday,
+		&i.RevenuePeriod,
+		&i.PaidOrdersPeriod,
+	)
+	return &i, err
 }
 
 const getByIdempotencyKey = `-- name: GetByIdempotencyKey :one

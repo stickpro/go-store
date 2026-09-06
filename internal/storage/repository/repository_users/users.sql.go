@@ -13,6 +13,35 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const dashboardCustomerStats = `-- name: DashboardCustomerStats :one
+SELECT
+    count(*) FILTER (WHERE created_at >= $1
+                       AND created_at < $2) AS new_today,
+    count(*)                                                  AS total
+FROM users
+WHERE deleted_at IS NULL
+  AND is_admin IS NOT TRUE
+`
+
+type DashboardCustomerStatsParams struct {
+	TodayFrom pgtype.Timestamp `db:"today_from" json:"today_from"`
+	TodayTo   pgtype.Timestamp `db:"today_to" json:"today_to"`
+}
+
+type DashboardCustomerStatsRow struct {
+	NewToday int64 `db:"new_today" json:"new_today"`
+	Total    int64 `db:"total" json:"total"`
+}
+
+// Customer counters for the admin dashboard. Admin accounts and soft-deleted
+// users are excluded; new_today uses the store-timezone day boundary params.
+func (q *Queries) DashboardCustomerStats(ctx context.Context, arg DashboardCustomerStatsParams) (*DashboardCustomerStatsRow, error) {
+	row := q.db.QueryRow(ctx, dashboardCustomerStats, arg.TodayFrom, arg.TodayTo)
+	var i DashboardCustomerStatsRow
+	err := row.Scan(&i.NewToday, &i.Total)
+	return &i, err
+}
+
 const getByEmail = `-- name: GetByEmail :one
 SELECT id, email, email_verified_at, password, remember_token, location, language, created_at, updated_at, deleted_at, is_admin, banned
 FROM users

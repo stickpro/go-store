@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/category"
 	"github.com/stickpro/go-store/internal/service/cdek"
 	"github.com/stickpro/go-store/internal/service/collections"
+	"github.com/stickpro/go-store/internal/service/dashboard"
 	"github.com/stickpro/go-store/internal/service/geo"
 	"github.com/stickpro/go-store/internal/service/mail"
 	"github.com/stickpro/go-store/internal/service/manufacturer"
@@ -41,6 +42,7 @@ type Services struct {
 	MailService          mail.IMailService
 	OrderService         order.IOrderService
 	CDEKService          cdek.ICDEKService
+	DashboardService     dashboard.IDashboardService
 }
 
 func InitService(
@@ -81,6 +83,11 @@ func InitService(
 
 	cdekService := cdek.New(conf, logger, storage.KeyValue())
 
+	dashboardService, err := dashboard.New(conf, logger, storage)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Services{
 		UserService:          userService,
 		AuthService:          authService,
@@ -98,6 +105,7 @@ func InitService(
 		MailService:          mailService,
 		OrderService:         orderService,
 		CDEKService:          cdekService,
+		DashboardService:     dashboardService,
 	}, nil
 }
 

@@ -415,6 +415,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/admin/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aggregated admin overview. Order status/payment buckets and totals are all-time; ` + "`" + `today` + "`" + ` uses the store-timezone day; ` + "`" + `from` + "`" + `/` + "`" + `to` + "`" + ` (RFC3339, default today) drive revenue.period and average_order_value. Revenue counts payment_status=paid orders only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Dashboard overview",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-DashboardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/admin/orders": {
             "get": {
                 "security": [
@@ -5515,6 +5561,151 @@ const docTemplate = `{
                 }
             }
         },
+        "DashboardCatalog": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "integer"
+                },
+                "collections": {
+                    "type": "integer"
+                },
+                "products": {
+                    "type": "integer"
+                },
+                "products_without_variants": {
+                    "type": "integer"
+                },
+                "variants": {
+                    "type": "integer"
+                },
+                "variants_out_of_stock": {
+                    "type": "integer"
+                }
+            }
+        },
+        "DashboardCustomers": {
+            "type": "object",
+            "properties": {
+                "new_today": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "DashboardOrders": {
+            "type": "object",
+            "properties": {
+                "by_payment_status": {
+                    "$ref": "#/definitions/DashboardOrdersByPaymentStatus"
+                },
+                "by_status": {
+                    "$ref": "#/definitions/DashboardOrdersByStatus"
+                },
+                "today": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "DashboardOrdersByPaymentStatus": {
+            "type": "object",
+            "properties": {
+                "failed": {
+                    "type": "integer"
+                },
+                "paid": {
+                    "type": "integer"
+                },
+                "refunded": {
+                    "type": "integer"
+                },
+                "unpaid": {
+                    "type": "integer"
+                }
+            }
+        },
+        "DashboardOrdersByStatus": {
+            "type": "object",
+            "properties": {
+                "cancelled": {
+                    "type": "integer"
+                },
+                "delivered": {
+                    "type": "integer"
+                },
+                "paid": {
+                    "type": "integer"
+                },
+                "pending": {
+                    "type": "integer"
+                },
+                "processing": {
+                    "type": "integer"
+                },
+                "refunded": {
+                    "type": "integer"
+                },
+                "shipped": {
+                    "type": "integer"
+                }
+            }
+        },
+        "DashboardPeriod": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "average_order_value": {
+                    "type": "string"
+                },
+                "catalog": {
+                    "$ref": "#/definitions/DashboardCatalog"
+                },
+                "customers": {
+                    "$ref": "#/definitions/DashboardCustomers"
+                },
+                "orders": {
+                    "$ref": "#/definitions/DashboardOrders"
+                },
+                "period": {
+                    "$ref": "#/definitions/DashboardPeriod"
+                },
+                "revenue": {
+                    "$ref": "#/definitions/DashboardRevenue"
+                }
+            }
+        },
+        "DashboardRevenue": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "paid_only": {
+                    "type": "boolean"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "today": {
+                    "type": "string"
+                }
+            }
+        },
         "FullPagingData": {
             "type": "object",
             "properties": {
@@ -5731,6 +5922,20 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/CollectionWithProductResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/DashboardResponse"
                 },
                 "message": {
                     "type": "string"

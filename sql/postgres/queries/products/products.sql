@@ -93,3 +93,18 @@ FROM (
 ) oi
 WHERE p.id = oi.product_id
   AND p.subtract = true;
+
+-- name: DashboardCatalogStats :one
+-- Catalogue counters for the admin dashboard. A variant is "out of stock" when
+-- its parent product's stock_status is OUT_OF_STOCK; disabled variants are
+-- ignored.
+SELECT
+    (SELECT count(*) FROM products)                                                        AS products,
+    (SELECT count(*) FROM products p
+        WHERE NOT EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id))      AS products_without_variants,
+    (SELECT count(*) FROM product_variants)                                                AS variants,
+    (SELECT count(*) FROM product_variants v
+        JOIN products p ON p.id = v.product_id
+        WHERE v.is_enable AND p.stock_status = 'OUT_OF_STOCK')                              AS variants_out_of_stock,
+    (SELECT count(*) FROM categories)                                                      AS categories,
+    (SELECT count(*) FROM collections)                                                     AS collections;

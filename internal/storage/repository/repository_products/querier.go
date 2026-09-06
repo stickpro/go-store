@@ -15,6 +15,10 @@ import (
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.Product, error)
 	CreateProductMedia(ctx context.Context, arg CreateProductMediaParams) error
+	// Catalogue counters for the admin dashboard. A variant is "out of stock" when
+	// its parent product's stock_status is OUT_OF_STOCK; disabled variants are
+	// ignored.
+	DashboardCatalogStats(ctx context.Context) (*DashboardCatalogStatsRow, error)
 	// Guarded decrement: affects 0 rows if stock is insufficient, so the caller
 	// treats rows-affected != 1 as an out-of-stock race and rolls back.
 	DecrementProductStock(ctx context.Context, arg DecrementProductStockParams) (int64, error)

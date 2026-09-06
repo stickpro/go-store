@@ -71,6 +71,40 @@ WHERE (sqlc.narg('status')::varchar IS NULL OR status = sqlc.narg('status'))
   AND (sqlc.narg('created_from')::timestamp IS NULL OR created_at >= sqlc.narg('created_from'))
   AND (sqlc.narg('created_to')::timestamp IS NULL OR created_at <= sqlc.narg('created_to'));
 
+-- name: DashboardOrderStats :one
+-- One-shot order snapshot for the admin dashboard. Status / payment buckets and
+-- `total` are all-time (current distribution); `today` and `revenue_today` use
+-- the day-boundary params; `revenue_period` / `paid_orders_period` use the
+-- selected range. Revenue sums grand_total of payment_status = 'paid' orders only.
+SELECT
+    count(*)                                                                        AS total,
+    count(*) FILTER (WHERE created_at >= sqlc.arg('today_from')
+                       AND created_at < sqlc.arg('today_to'))                       AS today,
+
+    count(*) FILTER (WHERE status = 'pending')                                      AS status_pending,
+    count(*) FILTER (WHERE status = 'paid')                                         AS status_paid,
+    count(*) FILTER (WHERE status = 'processing')                                   AS status_processing,
+    count(*) FILTER (WHERE status = 'shipped')                                      AS status_shipped,
+    count(*) FILTER (WHERE status = 'delivered')                                    AS status_delivered,
+    count(*) FILTER (WHERE status = 'cancelled')                                    AS status_cancelled,
+    count(*) FILTER (WHERE status = 'refunded')                                     AS status_refunded,
+
+    count(*) FILTER (WHERE payment_status = 'unpaid')                               AS payment_unpaid,
+    count(*) FILTER (WHERE payment_status = 'paid')                                 AS payment_paid,
+    count(*) FILTER (WHERE payment_status = 'refunded')                             AS payment_refunded,
+    count(*) FILTER (WHERE payment_status = 'failed')                               AS payment_failed,
+
+    coalesce(sum(grand_total) FILTER (WHERE payment_status = 'paid'
+                                        AND created_at >= sqlc.arg('today_from')
+                                        AND created_at < sqlc.arg('today_to')), 0)::numeric  AS revenue_today,
+    coalesce(sum(grand_total) FILTER (WHERE payment_status = 'paid'
+                                        AND created_at >= sqlc.arg('period_from')
+                                        AND created_at < sqlc.arg('period_to')), 0)::numeric AS revenue_period,
+    count(*) FILTER (WHERE payment_status = 'paid'
+                       AND created_at >= sqlc.arg('period_from')
+                       AND created_at < sqlc.arg('period_to'))                      AS paid_orders_period
+FROM orders;
+
 -- name: ListExpiredPending :many
 -- Callers must run this inside a transaction; the row locks are held until commit.
 SELECT id

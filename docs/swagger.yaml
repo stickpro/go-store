@@ -806,6 +806,100 @@ definitions:
     - name
     - slug
     type: object
+  DashboardCatalog:
+    properties:
+      categories:
+        type: integer
+      collections:
+        type: integer
+      products:
+        type: integer
+      products_without_variants:
+        type: integer
+      variants:
+        type: integer
+      variants_out_of_stock:
+        type: integer
+    type: object
+  DashboardCustomers:
+    properties:
+      new_today:
+        type: integer
+      total:
+        type: integer
+    type: object
+  DashboardOrders:
+    properties:
+      by_payment_status:
+        $ref: '#/definitions/DashboardOrdersByPaymentStatus'
+      by_status:
+        $ref: '#/definitions/DashboardOrdersByStatus'
+      today:
+        type: integer
+      total:
+        type: integer
+    type: object
+  DashboardOrdersByPaymentStatus:
+    properties:
+      failed:
+        type: integer
+      paid:
+        type: integer
+      refunded:
+        type: integer
+      unpaid:
+        type: integer
+    type: object
+  DashboardOrdersByStatus:
+    properties:
+      cancelled:
+        type: integer
+      delivered:
+        type: integer
+      paid:
+        type: integer
+      pending:
+        type: integer
+      processing:
+        type: integer
+      refunded:
+        type: integer
+      shipped:
+        type: integer
+    type: object
+  DashboardPeriod:
+    properties:
+      from:
+        type: string
+      to:
+        type: string
+    type: object
+  DashboardResponse:
+    properties:
+      average_order_value:
+        type: string
+      catalog:
+        $ref: '#/definitions/DashboardCatalog'
+      customers:
+        $ref: '#/definitions/DashboardCustomers'
+      orders:
+        $ref: '#/definitions/DashboardOrders'
+      period:
+        $ref: '#/definitions/DashboardPeriod'
+      revenue:
+        $ref: '#/definitions/DashboardRevenue'
+    type: object
+  DashboardRevenue:
+    properties:
+      currency:
+        type: string
+      paid_only:
+        type: boolean
+      period:
+        type: string
+      today:
+        type: string
+    type: object
   FullPagingData:
     properties:
       last_page:
@@ -946,6 +1040,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/CollectionWithProductResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-DashboardResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/DashboardResponse'
       message:
         type: string
     type: object
@@ -2565,6 +2668,37 @@ paths:
       summary: Track viewed product
       tags:
       - Viewed
+  /v1/admin/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Aggregated admin overview. Order status/payment buckets and totals
+        are all-time; `today` uses the store-timezone day; `from`/`to` (RFC3339, default
+        today) drive revenue.period and average_order_value. Revenue counts payment_status=paid
+        orders only.
+      parameters:
+      - in: query
+        name: from
+        type: string
+      - in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-DashboardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Dashboard overview
+      tags:
+      - Admin Dashboard
   /v1/admin/orders:
     get:
       consumes:

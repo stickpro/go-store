@@ -13,6 +13,9 @@ import (
 
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.User, error)
+	// Customer counters for the admin dashboard. Admin accounts and soft-deleted
+	// users are excluded; new_today uses the store-timezone day boundary params.
+	DashboardCustomerStats(ctx context.Context, arg DashboardCustomerStatsParams) (*DashboardCustomerStatsRow, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetAll(ctx context.Context, arg GetAllParams) ([]*models.User, error)
 	GetByEmail(ctx context.Context, email string) (*models.User, error)

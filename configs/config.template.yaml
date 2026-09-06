@@ -78,6 +78,7 @@ order:
   flat_shipping: "0"
   free_shipping_from: "0"
   pending_ttl: 30m0s
+  timezone: UTC
 cdek:
   enabled: false
   base_url: https://api.cdek.ru/v2

@@ -16,6 +16,11 @@ type Querier interface {
 	CountAdmin(ctx context.Context, arg CountAdminParams) (int64, error)
 	CountByUser(ctx context.Context, userID uuid.NullUUID) (int64, error)
 	Create(ctx context.Context, arg CreateParams) (*models.Order, error)
+	// One-shot order snapshot for the admin dashboard. Status / payment buckets and
+	// `total` are all-time (current distribution); `today` and `revenue_today` use
+	// the day-boundary params; `revenue_period` / `paid_orders_period` use the
+	// selected range. Revenue sums grand_total of payment_status = 'paid' orders only.
+	DashboardOrderStats(ctx context.Context, arg DashboardOrderStatsParams) (*DashboardOrderStatsRow, error)
 	Get(ctx context.Context, id uuid.UUID) (*models.Order, error)
 	GetByIdempotencyKey(ctx context.Context, idempotencyKey pgtype.Text) (*models.Order, error)
 	GetByNumber(ctx context.Context, orderNumber int64) (*models.Order, error)

@@ -14,6 +14,45 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const dashboardCatalogStats = `-- name: DashboardCatalogStats :one
+SELECT
+    (SELECT count(*) FROM products)                                                        AS products,
+    (SELECT count(*) FROM products p
+        WHERE NOT EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id))      AS products_without_variants,
+    (SELECT count(*) FROM product_variants)                                                AS variants,
+    (SELECT count(*) FROM product_variants v
+        JOIN products p ON p.id = v.product_id
+        WHERE v.is_enable AND p.stock_status = 'OUT_OF_STOCK')                              AS variants_out_of_stock,
+    (SELECT count(*) FROM categories)                                                      AS categories,
+    (SELECT count(*) FROM collections)                                                     AS collections
+`
+
+type DashboardCatalogStatsRow struct {
+	Products                int64 `db:"products" json:"products"`
+	ProductsWithoutVariants int64 `db:"products_without_variants" json:"products_without_variants"`
+	Variants                int64 `db:"variants" json:"variants"`
+	VariantsOutOfStock      int64 `db:"variants_out_of_stock" json:"variants_out_of_stock"`
+	Categories              int64 `db:"categories" json:"categories"`
+	Collections             int64 `db:"collections" json:"collections"`
+}
+
+// Catalogue counters for the admin dashboard. A variant is "out of stock" when
+// its parent product's stock_status is OUT_OF_STOCK; disabled variants are
+// ignored.
+func (q *Queries) DashboardCatalogStats(ctx context.Context) (*DashboardCatalogStatsRow, error) {
+	row := q.db.QueryRow(ctx, dashboardCatalogStats)
+	var i DashboardCatalogStatsRow
+	err := row.Scan(
+		&i.Products,
+		&i.ProductsWithoutVariants,
+		&i.Variants,
+		&i.VariantsOutOfStock,
+		&i.Categories,
+		&i.Collections,
+	)
+	return &i, err
+}
+
 const decrementProductStock = `-- name: DecrementProductStock :execrows
 UPDATE products
 SET quantity = quantity - $2,
