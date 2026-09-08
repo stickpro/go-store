@@ -12,6 +12,32 @@ import (
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const getVerifiedPurchaseOrderID = `-- name: GetVerifiedPurchaseOrderID :one
+SELECT o.id
+FROM orders o
+         JOIN order_items oi ON oi.order_id = o.id
+WHERE o.user_id = $1::uuid
+  AND oi.variant_id = $2::uuid
+  AND o.status IN ('paid', 'processing', 'shipped', 'delivered')
+ORDER BY o.created_at DESC
+LIMIT 1
+`
+
+type GetVerifiedPurchaseOrderIDParams struct {
+	UserID    uuid.UUID `db:"user_id" json:"user_id"`
+	VariantID uuid.UUID `db:"variant_id" json:"variant_id"`
+}
+
+// Most recent paid-or-later order by this user that contains the given variant.
+// Drives the "verified purchase" gate on product reviews; returns no row when
+// the user has not bought the variant.
+func (q *Queries) GetVerifiedPurchaseOrderID(ctx context.Context, arg GetVerifiedPurchaseOrderIDParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getVerifiedPurchaseOrderID, arg.UserID, arg.VariantID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const listByOrderID = `-- name: ListByOrderID :many
 SELECT id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total FROM order_items WHERE order_id = $1 ORDER BY id
 `

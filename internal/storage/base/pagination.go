@@ -16,6 +16,10 @@ type PaginationConfig[R any] struct {
 	MaxLimit          uint64
 	AllowedFieldOrder map[string]bool
 	WhereBuilder      func(sb *sqlbuilder.SelectBuilder)
+	// SoftDelete marks the table as having a nullable deleted_at column. When
+	// set, soft-deleted rows are hidden by default and only included when the
+	// caller explicitly passes WithDeleted=true.
+	SoftDelete bool
 }
 
 func Paginate[R any](
@@ -41,7 +45,7 @@ func Paginate[R any](
 		cfg.WhereBuilder(countSb)
 	}
 
-	if params.WithDeleted != nil && !*params.WithDeleted {
+	if cfg.SoftDelete && (params.WithDeleted == nil || !*params.WithDeleted) {
 		sb.Where("deleted_at IS NULL")
 		countSb.Where("deleted_at IS NULL")
 	}

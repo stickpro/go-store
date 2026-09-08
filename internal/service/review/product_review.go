@@ -2,8 +2,10 @@ package review
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
@@ -11,6 +13,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/product"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_order_items"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_reviews"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -53,9 +56,16 @@ func (s *Service) GetProductReviewsWithPaginate(ctx context.Context, d dto.GetPr
 	if d.Page != nil {
 		commonParams.Page = d.Page
 	}
+	withDeleted := d.WithDeleted
+	commonParams.WithDeleted = &withDeleted
+	if d.SortByRating != nil {
+		commonParams.OrderBy = "rating"
+		commonParams.IsAscOrdering = *d.SortByRating == "asc"
+	}
 
 	productReviews, err := s.storage.ProductReviews().GetWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
 		CommonFindParams: *commonParams,
+		Status:           d.Status,
 	})
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
@@ -137,10 +147,25 @@ func (s *Service) CreateProductReview(ctx context.Context, d dto.CreateProductRe
 		return nil, parsedErr
 	}
 
+	// A review is allowed only for a variant the user has actually bought; the
+	// order it was bought in is stored on the review as the purchase reference.
+	orderID, err := s.storage.OrderItems().GetVerifiedPurchaseOrderID(ctx, repository_order_items.GetVerifiedPurchaseOrderIDParams{
+		UserID:    d.UserID,
+		VariantID: d.VariantID,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotPurchased
+		}
+		parsedErr := pgerror.ParseError(err)
+		s.l.Debug("error checking verified purchase", parsedErr)
+		return nil, parsedErr
+	}
+
 	params := repository_product_reviews.CreateParams{
 		VariantID: d.VariantID,
 		UserID:    d.UserID,
-		OrderID:   uuid.NullUUID{},
+		OrderID:   uuid.NullUUID{UUID: orderID, Valid: true},
 		Rating:    d.Rating,
 		Title:     pgtypeutils.EncodeText(&d.Title),
 		Body:      pgtypeutils.EncodeText(&d.Body),

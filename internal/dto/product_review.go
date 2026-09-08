@@ -11,12 +11,12 @@ type GetProductReviewsDTO struct {
 	PageSize     *uint64 `json:"page_size" query:"page_size"`
 	WithDeleted  bool    `json:"with_deleted" query:"with_deleted"`
 	SortByRating *string `json:"sort_by_rating,omitempty" query:"sort_by_rating,omitempty"`
+	Status       *string `json:"status,omitempty" query:"status,omitempty"`
 }
 
 type CreateProductReviewDTO struct {
 	VariantID uuid.UUID `json:"variant_id"`
 	UserID    uuid.UUID `json:"user_id"`
-	OrderID   uuid.UUID `json:"order_id"`
 	Rating    int16     `json:"rating"`
 	Title     string    `json:"title"`
 	Body      string    `json:"body"`
@@ -38,6 +38,23 @@ func RequestToGetProductReviewDTO(req *product_review_request.GetProductReviewsW
 		PageSize:     req.PageSize,
 		WithDeleted:  false,
 		SortByRating: req.SortByRating,
+	}
+}
+
+func AdminRequestToListProductReviewsDTO(req *product_review_request.AdminListProductReviewsRequest) GetProductReviewsDTO {
+	return GetProductReviewsDTO{
+		Page:         req.Page,
+		PageSize:     req.PageSize,
+		WithDeleted:  req.WithDeleted,
+		SortByRating: req.SortByRating,
+		Status:       req.Status,
+	}
+}
+
+func AdminRequestToUpdateProductReviewStatusDTO(req *product_review_request.UpdateProductReviewStatusRequest, id uuid.UUID) UpdateProductReviewStatusDTO {
+	return UpdateProductReviewStatusDTO{
+		ID:     id,
+		Status: constant.ProductReviewStatus(req.Status),
 	}
 }
 

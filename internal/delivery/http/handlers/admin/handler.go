@@ -36,15 +36,24 @@ func (h *Handler) InitAdminHandler(api *fiber.App) {
 	h.initManufacturerRoutes(secured)
 	h.initOrderRoutes(secured)
 	h.initDashboardRoutes(secured)
+	h.initProductReviewRoutes(secured)
 }
 
 func (h *Handler) handleError(err error, modelName string) error {
-	if errors.Is(err, pgx.ErrNoRows) {
+	var (
+		notFoundErr *pgerror.NotFoundError
+		uniqueErr   *pgerror.UniqueConstraintError
+		fkErr       *pgerror.ForeignKeyViolationError
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) || errors.As(err, &notFoundErr) {
 		return apierror.New().AddError(errors.New(modelName + " not found")).SetHttpCode(fiber.StatusNotFound)
 	}
-	var uniqueErr *pgerror.UniqueConstraintError
 	if errors.As(err, &uniqueErr) {
 		return apierror.New().AddError(uniqueErr).SetHttpCode(fiber.StatusUnprocessableEntity)
+	}
+	if errors.As(err, &fkErr) {
+		return apierror.New().AddError(errors.New("referenced " + modelName + " does not exist")).SetHttpCode(fiber.StatusUnprocessableEntity)
 	}
 	return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 }
