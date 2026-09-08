@@ -1,17 +1,20 @@
 package handlers
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/stickpro/go-store/internal/delivery/http/request/product_review_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/product_review_response"
 	"github.com/stickpro/go-store/internal/delivery/middleware"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/service/review"
 	"github.com/stickpro/go-store/internal/tools"
+	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
 	_ "github.com/stickpro/go-store/internal/storage/base"
-	_ "github.com/stickpro/go-store/internal/tools/apierror"
 )
 
 // createProductReview
@@ -43,6 +46,9 @@ func (h *Handler) createProductReview(c fiber.Ctx) error {
 	d := dto.RequestToCreateProductReviewDTO(&req, usr.ID)
 	productReview, err := h.services.ProductReviewService.CreateProductReview(c.Context(), d)
 	if err != nil {
+		if errors.Is(err, review.ErrNotPurchased) {
+			return apierror.New().AddError(err).SetHttpCode(fiber.StatusForbidden)
+		}
 		return h.handleError(err, "product")
 	}
 	return c.JSON(response.OkByData(product_review_response.NewFromModel(productReview)))

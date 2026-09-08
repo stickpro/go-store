@@ -14,6 +14,7 @@ type ProductReviewWithPaginationParams struct {
 	base.CommonFindParams
 	VariantID *uuid.UUID
 	UserID    *uuid.UUID
+	Status    *string
 }
 
 type FindRow struct {
@@ -28,12 +29,16 @@ func (s *CustomQueries) GetWithPaginate(
 		TableName:    "product_reviews",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,
+		SoftDelete:   true,
 		WhereBuilder: func(sb *sqlbuilder.SelectBuilder) {
 			if params.UserID != nil {
 				sb.Where(sb.Equal("user_id", params.UserID))
 			}
 			if params.VariantID != nil {
 				sb.Where(sb.Equal("variant_id", params.VariantID))
+			}
+			if params.Status != nil {
+				sb.Where(sb.Equal("status", *params.Status))
 			}
 		},
 		AllowedFieldOrder: map[string]bool{
@@ -53,6 +58,7 @@ func (s *CustomQueries) GetByProductIDWithPaginate(
 		TableName:    "product_reviews",
 		DefaultOrder: "created_at",
 		MaxLimit:     100,
+		SoftDelete:   true,
 		WhereBuilder: func(sb *sqlbuilder.SelectBuilder) {
 			sb.Where(
 				sb.Equal("status", constant.ReviewApproved.String()),
