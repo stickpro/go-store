@@ -667,6 +667,266 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/admin/product-reviews": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Admin review list. Every filter is optional; deleted reviews are hidden unless with_deleted=true.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Product Review"
+                ],
+                "summary": "List product reviews",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "sort_by_rating",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "PENDING",
+                            "APPROVED",
+                            "REJECTED"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "with_deleted",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ResponseWithFullPagination-AdminProductReviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/product-reviews/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Product Review"
+                ],
+                "summary": "Get product review",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AdminProductReviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Product Review"
+                ],
+                "summary": "Delete product review",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/product-reviews/{id}/restore": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Product Review"
+                ],
+                "summary": "Restore product review",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AdminProductReviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/product-reviews/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Product Review"
+                ],
+                "summary": "Update product review status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateProductReviewStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AdminProductReviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/attribute-group": {
             "get": {
                 "security": [
@@ -4316,6 +4576,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/sitemap/categories": {
+            "get": {
+                "description": "Flat feed of enabled category pages (slug + updated_at). Unpaginated.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sitemap"
+                ],
+                "summary": "Sitemap: categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_SitemapEntry"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/sitemap/products": {
+            "get": {
+                "description": "Flat feed of enabled product-variant pages (slug + updated_at). Unpaginated.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sitemap"
+                ],
+                "summary": "Sitemap: products",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_SitemapEntry"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/user/info": {
             "get": {
                 "security": [
@@ -4361,6 +4661,89 @@ const docTemplate = `{
                     },
                     "503": {
                         "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/yandex-delivery/delivery-points": {
+            "get": {
+                "description": "List cached Yandex Delivery pickup points (ПВЗ and postomats). The list is refreshed in the background once a day; use the query params to narrow it down. min_lat/max_lat/min_lon/max_lon narrow the result to a map viewport and must be supplied together.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "YandexDelivery"
+                ],
+                "summary": "List Yandex Delivery pickup points",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Yandex geo id (locality)",
+                        "name": "geo_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Locality name",
+                        "name": "locality",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "pickup_point",
+                            "terminal"
+                        ],
+                        "type": "string",
+                        "description": "Pickup point type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Map viewport min latitude (requires max_lat, min_lon, max_lon)",
+                        "name": "min_lat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Map viewport max latitude (requires min_lat, min_lon, max_lon)",
+                        "name": "max_lat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Map viewport min longitude (requires min_lat, max_lat, max_lon)",
+                        "name": "min_lon",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Map viewport max longitude (requires min_lat, max_lat, min_lon)",
+                        "name": "max_lon",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_YandexDeliveryPointResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -4479,6 +4862,44 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "AdminProductReviewResponse": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "variant_id": {
                     "type": "string"
                 }
             }
@@ -5774,6 +6195,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-AdminProductReviewResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/AdminProductReviewResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-AttributeGroupResponse": {
             "type": "object",
             "properties": {
@@ -6048,6 +6483,20 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/ResponseWithFullPagination-AdminOrderResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-ResponseWithFullPagination-AdminProductReviewResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ResponseWithFullPagination-AdminProductReviewResponse"
                 },
                 "message": {
                     "type": "string"
@@ -6398,6 +6847,23 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-array_SitemapEntry": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SitemapEntry"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-array_VariantCardResponse": {
             "type": "object",
             "properties": {
@@ -6425,6 +6891,23 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/VariantCategoryResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-array_YandexDeliveryPointResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/YandexDeliveryPointResponse"
                     }
                 },
                 "message": {
@@ -6901,6 +7384,20 @@ const docTemplate = `{
                 }
             }
         },
+        "ResponseWithFullPagination-AdminProductReviewResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AdminProductReviewResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/FullPagingData"
+                }
+            }
+        },
         "ResponseWithFullPagination-Attribute": {
             "type": "object",
             "properties": {
@@ -7057,6 +7554,17 @@ const docTemplate = `{
             "properties": {
                 "sent": {
                     "type": "boolean"
+                }
+            }
+        },
+        "SitemapEntry": {
+            "type": "object",
+            "properties": {
+                "slug": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -7378,6 +7886,22 @@ const docTemplate = `{
                 }
             }
         },
+        "UpdateProductReviewStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED"
+                    ]
+                }
+            }
+        },
         "UpdateProductVariantRequest": {
             "type": "object",
             "required": [
@@ -7604,6 +8128,115 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/ViewedItemResponse"
                     }
+                }
+            }
+        },
+        "YandexDeliveryPointResponse": {
+            "type": "object",
+            "properties": {
+                "available_for_dropoff": {
+                    "type": "boolean"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "deactivation_date": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_address": {
+                    "type": "string"
+                },
+                "geo_id": {
+                    "type": "integer"
+                },
+                "house": {
+                    "type": "string"
+                },
+                "instruction": {
+                    "type": "string"
+                },
+                "is_market_partner": {
+                    "type": "boolean"
+                },
+                "is_post_office": {
+                    "type": "boolean"
+                },
+                "is_yandex_branded": {
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "locality": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "operator_id": {
+                    "type": "string"
+                },
+                "operator_station_id": {
+                    "type": "string"
+                },
+                "payment_methods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "schedule": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/YandexDeliveryScheduleResponse"
+                    }
+                },
+                "street": {
+                    "type": "string"
+                },
+                "sub_region": {
+                    "type": "string"
+                },
+                "time_zone": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "YandexDeliveryScheduleResponse": {
+            "type": "object",
+            "properties": {
+                "days": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "time_from": {
+                    "type": "string"
+                },
+                "time_to": {
+                    "type": "string"
                 }
             }
         },

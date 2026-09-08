@@ -75,6 +75,31 @@ definitions:
       user_id:
         type: string
     type: object
+  AdminProductReviewResponse:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      order_id:
+        type: string
+      rating:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      variant_id:
+        type: string
+    type: object
   Attribute:
     properties:
       attribute_group_id:
@@ -944,6 +969,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-AdminProductReviewResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/AdminProductReviewResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-AttributeGroupResponse:
     properties:
       code:
@@ -1121,6 +1155,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/ResponseWithFullPagination-AdminOrderResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-AdminProductReviewResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-AdminProductReviewResponse'
       message:
         type: string
     type: object
@@ -1346,6 +1389,17 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_SitemapEntry:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/SitemapEntry'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_VariantCardResponse:
     properties:
       code:
@@ -1364,6 +1418,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/VariantCategoryResponse'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_YandexDeliveryPointResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/YandexDeliveryPointResponse'
         type: array
       message:
         type: string
@@ -1676,6 +1741,15 @@ definitions:
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
+  ResponseWithFullPagination-AdminProductReviewResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/AdminProductReviewResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
   ResponseWithFullPagination-Attribute:
     properties:
       items:
@@ -1777,6 +1851,13 @@ definitions:
     properties:
       sent:
         type: boolean
+    type: object
+  SitemapEntry:
+    properties:
+      slug:
+        type: string
+      updated_at:
+        type: string
     type: object
   StockStatus:
     enum:
@@ -2000,6 +2081,17 @@ definitions:
       width:
         type: number
     type: object
+  UpdateProductReviewStatusRequest:
+    properties:
+      status:
+        enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+        type: string
+    required:
+    - status
+    type: object
   UpdateProductVariantRequest:
     properties:
       category_id:
@@ -2152,6 +2244,78 @@ definitions:
         items:
           $ref: '#/definitions/ViewedItemResponse'
         type: array
+    type: object
+  YandexDeliveryPointResponse:
+    properties:
+      available_for_dropoff:
+        type: boolean
+      code:
+        type: string
+      country:
+        type: string
+      deactivation_date:
+        type: string
+      email:
+        type: string
+      full_address:
+        type: string
+      geo_id:
+        type: integer
+      house:
+        type: string
+      instruction:
+        type: string
+      is_market_partner:
+        type: boolean
+      is_post_office:
+        type: boolean
+      is_yandex_branded:
+        type: boolean
+      latitude:
+        type: number
+      locality:
+        type: string
+      longitude:
+        type: number
+      name:
+        type: string
+      operator_id:
+        type: string
+      operator_station_id:
+        type: string
+      payment_methods:
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      postal_code:
+        type: string
+      region:
+        type: string
+      schedule:
+        items:
+          $ref: '#/definitions/YandexDeliveryScheduleResponse'
+        type: array
+      street:
+        type: string
+      sub_region:
+        type: string
+      time_zone:
+        type: integer
+      type:
+        type: string
+    type: object
+  YandexDeliveryScheduleResponse:
+    properties:
+      days:
+        items:
+          type: integer
+        type: array
+      time_from:
+        type: string
+      time_to:
+        type: string
     type: object
   decimal.NullDecimal:
     properties:
@@ -2835,6 +2999,170 @@ paths:
       summary: Update order status
       tags:
       - Admin Order
+  /v1/admin/product-reviews:
+    get:
+      consumes:
+      - application/json
+      description: Admin review list. Every filter is optional; deleted reviews are
+        hidden unless with_deleted=true.
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: sort_by_rating
+        type: string
+      - enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+        in: query
+        name: status
+        type: string
+      - in: query
+        name: with_deleted
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-AdminProductReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: List product reviews
+      tags:
+      - Admin Product Review
+  /v1/admin/product-reviews/{id}:
+    delete:
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Delete product review
+      tags:
+      - Admin Product Review
+    get:
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminProductReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get product review
+      tags:
+      - Admin Product Review
+  /v1/admin/product-reviews/{id}/restore:
+    post:
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminProductReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Restore product review
+      tags:
+      - Admin Product Review
+  /v1/admin/product-reviews/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateProductReviewStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminProductReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Update product review status
+      tags:
+      - Admin Product Review
   /v1/attribute-group:
     get:
       consumes:
@@ -5196,6 +5524,33 @@ paths:
       summary: Search products
       tags:
       - Search
+  /v1/sitemap/categories:
+    get:
+      description: Flat feed of enabled category pages (slug + updated_at). Unpaginated.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_SitemapEntry'
+      summary: 'Sitemap: categories'
+      tags:
+      - Sitemap
+  /v1/sitemap/products:
+    get:
+      description: Flat feed of enabled product-variant pages (slug + updated_at).
+        Unpaginated.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_SitemapEntry'
+      summary: 'Sitemap: products'
+      tags:
+      - Sitemap
   /v1/user/info:
     get:
       consumes:
@@ -5229,6 +5584,64 @@ paths:
       summary: Auth user
       tags:
       - User
+  /v1/yandex-delivery/delivery-points:
+    get:
+      consumes:
+      - application/json
+      description: List cached Yandex Delivery pickup points (ПВЗ and postomats).
+        The list is refreshed in the background once a day; use the query params to
+        narrow it down. min_lat/max_lat/min_lon/max_lon narrow the result to a map
+        viewport and must be supplied together.
+      parameters:
+      - description: Yandex geo id (locality)
+        in: query
+        name: geo_id
+        type: integer
+      - description: Locality name
+        in: query
+        name: locality
+        type: string
+      - description: Pickup point type
+        enum:
+        - pickup_point
+        - terminal
+        in: query
+        name: type
+        type: string
+      - description: Map viewport min latitude (requires max_lat, min_lon, max_lon)
+        in: query
+        name: min_lat
+        type: number
+      - description: Map viewport max latitude (requires min_lat, min_lon, max_lon)
+        in: query
+        name: max_lat
+        type: number
+      - description: Map viewport min longitude (requires min_lat, max_lat, max_lon)
+        in: query
+        name: min_lon
+        type: number
+      - description: Map viewport max longitude (requires min_lat, max_lat, min_lon)
+        in: query
+        name: max_lon
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_YandexDeliveryPointResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: List Yandex Delivery pickup points
+      tags:
+      - YandexDelivery
 securityDefinitions:
   BearerAuth:
     in: header
