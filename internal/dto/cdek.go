@@ -45,11 +45,5 @@ type CDEKDeliveryPointsFilter struct {
 }
 
 // CDEKDeliveryPointsBBox narrows delivery points to a rectangular geographic
-// area (typically a map viewport), inclusive on all bounds. It does not
-// handle boxes that cross the antimeridian.
-type CDEKDeliveryPointsBBox struct {
-	MinLat float64
-	MaxLat float64
-	MinLon float64
-	MaxLon float64
-}
+// area (typically a map viewport). It is an alias for the shared GeoBBox.
+type CDEKDeliveryPointsBBox = GeoBBox

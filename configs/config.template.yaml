@@ -88,3 +88,10 @@ cdek:
   delivery_points_cache_ttl: 48h0m0s
   delivery_points_refresh_every: 24h0m0s
   delivery_points_country_code: RU
+yandex_delivery:
+  enabled: false
+  base_url: https://b2b-authproxy.taxi.yandex.net
+  oauth_token: ""
+  request_timeout: 3m0s
+  delivery_points_cache_ttl: 48h0m0s
+  delivery_points_refresh_every: 24h0m0s

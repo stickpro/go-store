@@ -51,5 +51,9 @@ func buildWorkers(
 		services.CDEKService.RunCacheRefresher(ctx)
 	})
 
+	add("yandex_delivery_points_cache", services.YandexDeliveryService != nil, func(ctx context.Context) {
+		services.YandexDeliveryService.RunCacheRefresher(ctx)
+	})
+
 	return workers
 }

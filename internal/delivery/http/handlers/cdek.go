@@ -44,7 +44,7 @@ func (h *Handler) listCDEKDeliveryPoints(c fiber.Ctx) error {
 		filter.CityCode = &cityCode
 	}
 
-	bbox, err := parseCDEKBBox(c)
+	bbox, err := parseViewportBBox(c)
 	if err != nil {
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusBadRequest)
 	}
@@ -58,10 +58,10 @@ func (h *Handler) listCDEKDeliveryPoints(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(cdek_response.NewListFromDTO(points)))
 }
 
-// parseCDEKBBox parses the min_lat/max_lat/min_lon/max_lon query params into a
-// bbox filter. It returns nil (no error) if none of them are set, and an
+// parseViewportBBox parses the min_lat/max_lat/min_lon/max_lon query params into
+// a bbox filter. It returns nil (no error) if none of them are set, and an
 // error if only some are set or the bounds are invalid.
-func parseCDEKBBox(c fiber.Ctx) (*dto.CDEKDeliveryPointsBBox, error) {
+func parseViewportBBox(c fiber.Ctx) (*dto.GeoBBox, error) {
 	raw := [4]string{c.Query("min_lat"), c.Query("max_lat"), c.Query("min_lon"), c.Query("max_lon")}
 
 	set := 0
@@ -87,7 +87,7 @@ func parseCDEKBBox(c fiber.Ctx) (*dto.CDEKDeliveryPointsBBox, error) {
 		vals[i] = f
 	}
 
-	bbox := &dto.CDEKDeliveryPointsBBox{MinLat: vals[0], MaxLat: vals[1], MinLon: vals[2], MaxLon: vals[3]}
+	bbox := &dto.GeoBBox{MinLat: vals[0], MaxLat: vals[1], MinLon: vals[2], MaxLon: vals[3]}
 	if bbox.MinLat > bbox.MaxLat || bbox.MinLon > bbox.MaxLon {
 		return nil, fmt.Errorf("min_lat/min_lon must not exceed max_lat/max_lon")
 	}
