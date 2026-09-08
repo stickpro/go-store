@@ -9,4 +9,10 @@ const (
 	// CacheKeyCDEKDeliveryPoints caches the full CDEK delivery points (offices +
 	// postomats) list. Repopulated once a day by the CDEK cache refresher.
 	CacheKeyCDEKDeliveryPoints = "cdek:delivery_points"
+
+	// CacheKeyYandexDeliveryPoints holds a persisted copy of the full Yandex
+	// Delivery pickup points (ПВЗ + postomats) list, used only to warm-start the
+	// in-memory list after a restart. The read path is process memory, not this
+	// key. Repopulated once a day by the Yandex Delivery cache refresher.
+	CacheKeyYandexDeliveryPoints = "yandex_delivery:delivery_points"
 )

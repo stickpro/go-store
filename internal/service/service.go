@@ -20,29 +20,31 @@ import (
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/service/user"
 	"github.com/stickpro/go-store/internal/service/viewed"
+	"github.com/stickpro/go-store/internal/service/yandexdelivery"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/pkg/logger"
 	"github.com/stickpro/go-store/pkg/queue"
 )
 
 type Services struct {
-	UserService          user.IUserService
-	AuthService          auth.IAuthService
-	CategoryService      category.ICategoryService
-	ProductService       product.IProductService
-	ProductReviewService review.IProductReviewService
-	CollectionService    collections.ICollectionsService
-	MediaService         media.IMediaService
-	SearchService        searchtypes.ISearchService
-	ManufacturerService  manufacturer.IManufacturerService
-	AttributeService     attribute.IAttributeService
-	GeoService           geo.IGeoService
-	CartService          cart.ICartService
-	ViewedService        viewed.IViewedService
-	MailService          mail.IMailService
-	OrderService         order.IOrderService
-	CDEKService          cdek.ICDEKService
-	DashboardService     dashboard.IDashboardService
+	UserService           user.IUserService
+	AuthService           auth.IAuthService
+	CategoryService       category.ICategoryService
+	ProductService        product.IProductService
+	ProductReviewService  review.IProductReviewService
+	CollectionService     collections.ICollectionsService
+	MediaService          media.IMediaService
+	SearchService         searchtypes.ISearchService
+	ManufacturerService   manufacturer.IManufacturerService
+	AttributeService      attribute.IAttributeService
+	GeoService            geo.IGeoService
+	CartService           cart.ICartService
+	ViewedService         viewed.IViewedService
+	MailService           mail.IMailService
+	OrderService          order.IOrderService
+	CDEKService           cdek.ICDEKService
+	YandexDeliveryService yandexdelivery.IYandexDeliveryService
+	DashboardService      dashboard.IDashboardService
 }
 
 func InitService(
@@ -82,6 +84,7 @@ func InitService(
 	}
 
 	cdekService := cdek.New(conf, logger, storage.KeyValue())
+	yandexDeliveryService := yandexdelivery.New(conf, logger, storage.KeyValue())
 
 	dashboardService, err := dashboard.New(conf, logger, storage)
 	if err != nil {
@@ -89,23 +92,24 @@ func InitService(
 	}
 
 	return &Services{
-		UserService:          userService,
-		AuthService:          authService,
-		CategoryService:      categoryService,
-		ProductService:       productService,
-		ProductReviewService: productReviewService,
-		CollectionService:    collectionServer,
-		MediaService:         mediaService,
-		SearchService:        searchService,
-		ManufacturerService:  manufacturerService,
-		AttributeService:     attributeService,
-		GeoService:           geoService,
-		CartService:          cartService,
-		ViewedService:        viewedService,
-		MailService:          mailService,
-		OrderService:         orderService,
-		CDEKService:          cdekService,
-		DashboardService:     dashboardService,
+		UserService:           userService,
+		AuthService:           authService,
+		CategoryService:       categoryService,
+		ProductService:        productService,
+		ProductReviewService:  productReviewService,
+		CollectionService:     collectionServer,
+		MediaService:          mediaService,
+		SearchService:         searchService,
+		ManufacturerService:   manufacturerService,
+		AttributeService:      attributeService,
+		GeoService:            geoService,
+		CartService:           cartService,
+		ViewedService:         viewedService,
+		MailService:           mailService,
+		OrderService:          orderService,
+		CDEKService:           cdekService,
+		YandexDeliveryService: yandexDeliveryService,
+		DashboardService:      dashboardService,
 	}, nil
 }
 

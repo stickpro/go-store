@@ -8,21 +8,22 @@ import (
 
 type (
 	Config struct {
-		App          AppConfig  `yaml:"app"`
-		HTTP         HTTPConfig `yaml:"http"`
-		Postgres     PostgresDB `yaml:"postgres"`
-		Redis        RedisDB    `yaml:"redis"`
-		Log          logger.Config
-		KeyValue     KeyValue      `yaml:"key_value"`
-		FileStorage  FileStorage   `yaml:"file_storage"`
-		SearchEngine SearchEngine  `yaml:"search_engine"`
-		Kafka        KafkaConfig   `yaml:"kafka"`
-		Workers      WorkersConfig `yaml:"workers"`
-		Images       ImagesConfig  `yaml:"images"`
-		Email        EmailConfig   `yaml:"email"`
-		Auth         AuthConfig    `yaml:"auth"`
-		Order        OrderConfig   `yaml:"order"`
-		CDEK         CDEKConfig    `yaml:"cdek"`
+		App            AppConfig  `yaml:"app"`
+		HTTP           HTTPConfig `yaml:"http"`
+		Postgres       PostgresDB `yaml:"postgres"`
+		Redis          RedisDB    `yaml:"redis"`
+		Log            logger.Config
+		KeyValue       KeyValue             `yaml:"key_value"`
+		FileStorage    FileStorage          `yaml:"file_storage"`
+		SearchEngine   SearchEngine         `yaml:"search_engine"`
+		Kafka          KafkaConfig          `yaml:"kafka"`
+		Workers        WorkersConfig        `yaml:"workers"`
+		Images         ImagesConfig         `yaml:"images"`
+		Email          EmailConfig          `yaml:"email"`
+		Auth           AuthConfig           `yaml:"auth"`
+		Order          OrderConfig          `yaml:"order"`
+		CDEK           CDEKConfig           `yaml:"cdek"`
+		YandexDelivery YandexDeliveryConfig `yaml:"yandex_delivery"`
 	}
 
 	// OrderConfig tunes checkout. Money amounts are decimal strings ("0" disables
