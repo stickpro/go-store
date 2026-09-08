@@ -16,6 +16,8 @@ type Querier interface {
 	GetAllForTree(ctx context.Context) ([]*models.Category, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Category, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Category, error)
+	// Enabled category pages for the sitemap feed.
+	SitemapCategories(ctx context.Context) ([]*SitemapCategoriesRow, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.Category, error)
 }
 

@@ -75,31 +75,6 @@ definitions:
       user_id:
         type: string
     type: object
-  AdminProductReviewResponse:
-    properties:
-      body:
-        type: string
-      created_at:
-        type: string
-      deleted_at:
-        type: string
-      id:
-        type: string
-      order_id:
-        type: string
-      rating:
-        type: integer
-      status:
-        type: string
-      title:
-        type: string
-      updated_at:
-        type: string
-      user_id:
-        type: string
-      variant_id:
-        type: string
-    type: object
   Attribute:
     properties:
       attribute_group_id:
@@ -969,15 +944,6 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-AdminProductReviewResponse:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/AdminProductReviewResponse'
-      message:
-        type: string
-    type: object
   JSONResponse-AttributeGroupResponse:
     properties:
       code:
@@ -1158,15 +1124,6 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-ResponseWithFullPagination-AdminProductReviewResponse:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/ResponseWithFullPagination-AdminProductReviewResponse'
-      message:
-        type: string
-    type: object
   JSONResponse-ResponseWithFullPagination-Attribute:
     properties:
       code:
@@ -1200,6 +1157,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/ResponseWithFullPagination-Collection'
+      message:
+        type: string
+    type: object
+  JSONResponse-ResponseWithFullPagination-ManufacturerResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResponseWithFullPagination-ManufacturerResponse'
       message:
         type: string
     type: object
@@ -1741,15 +1707,6 @@ definitions:
       pagination:
         $ref: '#/definitions/FullPagingData'
     type: object
-  ResponseWithFullPagination-AdminProductReviewResponse:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/AdminProductReviewResponse'
-        type: array
-      pagination:
-        $ref: '#/definitions/FullPagingData'
-    type: object
   ResponseWithFullPagination-Attribute:
     properties:
       items:
@@ -1782,6 +1739,15 @@ definitions:
       items:
         items:
           $ref: '#/definitions/Collection'
+        type: array
+      pagination:
+        $ref: '#/definitions/FullPagingData'
+    type: object
+  ResponseWithFullPagination-ManufacturerResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/ManufacturerResponse'
         type: array
       pagination:
         $ref: '#/definitions/FullPagingData'
@@ -2699,91 +2665,6 @@ paths:
       summary: Update cart item quantity
       tags:
       - Cart
-  /api/v1/product_review/:
-    post:
-      consumes:
-      - application/json
-      description: Create Product Review
-      parameters:
-      - description: Create Product Review Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_product_review_request.CreateProductReviewRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      security:
-      - BearerAuth: []
-      summary: Create Product Review
-      tags:
-      - Product Review
-  /api/v1/product_review/by-product/{id}:
-    post:
-      consumes:
-      - application/json
-      description: Get Product Reviews By Product ID
-      parameters:
-      - in: query
-        name: page
-        type: integer
-      - in: query
-        name: page_size
-        type: integer
-      - in: query
-        name: product_id
-        type: string
-      - description: '"asc" or "desc"'
-        in: query
-        name: sort_by_rating
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-ProductReviewResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Get Product Reviews By Product ID
-      tags:
-      - Product Review
   /api/v1/viewed-products:
     get:
       description: Returns the last 10 viewed product variants for the current user
@@ -3026,6 +2907,12 @@ paths:
         name: status
         type: string
       - in: query
+        name: user_id
+        type: string
+      - in: query
+        name: variant_id
+        type: string
+      - in: query
         name: with_deleted
         type: boolean
       produces:
@@ -3034,7 +2921,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-AdminProductReviewResponse'
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-ProductReviewResponse'
         "400":
           description: Bad Request
           schema:
@@ -3085,7 +2972,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-AdminProductReviewResponse'
+            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
         "400":
           description: Bad Request
           schema:
@@ -3113,7 +3000,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-AdminProductReviewResponse'
+            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
         "400":
           description: Bad Request
           schema:
@@ -3149,7 +3036,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JSONResponse-AdminProductReviewResponse'
+            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
         "400":
           description: Bad Request
           schema:
@@ -3234,7 +3121,7 @@ paths:
       summary: Create attribute group
       tags:
       - Attribute
-  /v1/attribute-group/:id:
+  /v1/attribute-group/{id}:
     delete:
       consumes:
       - application/json
@@ -3296,6 +3183,11 @@ paths:
       - application/json
       description: Update attribute group
       parameters:
+      - description: Attribute group ID
+        in: path
+        name: id
+        required: true
+        type: string
       - description: Update attribute group
         in: body
         name: update
@@ -3395,7 +3287,7 @@ paths:
       summary: Create attribute value
       tags:
       - Attribute
-  /v1/attribute-value/:id:
+  /v1/attribute-value/{id}:
     delete:
       consumes:
       - application/json
@@ -3526,7 +3418,7 @@ paths:
       summary: Create attribute
       tags:
       - Attribute
-  /v1/attribute/:attribute_id/values:
+  /v1/attribute/{attribute_id}/values:
     get:
       consumes:
       - application/json
@@ -3551,7 +3443,7 @@ paths:
       summary: Get attribute values
       tags:
       - Attribute
-  /v1/attribute/:id:
+  /v1/attribute/{id}:
     delete:
       consumes:
       - application/json
@@ -3739,6 +3631,7 @@ paths:
       consumes:
       - application/json
       description: Get categories
+      operationId: getCategories
       parameters:
       - in: query
         name: page
@@ -3797,7 +3690,7 @@ paths:
       summary: Create Category
       tags:
       - Category
-  /v1/category/:id:
+  /v1/category/{id}:
     put:
       consumes:
       - application/json
@@ -3831,11 +3724,12 @@ paths:
       summary: Update Category
       tags:
       - Category
-  /v1/category/:id/products:
+  /v1/category/{id}/products:
     get:
       consumes:
       - application/json
       description: Get paginated product variants of a category and its subcategories
+      operationId: getAdminCategoryProducts
       parameters:
       - in: query
         name: page
@@ -3868,10 +3762,11 @@ paths:
       consumes:
       - application/json
       description: Get category by slug
+      operationId: getCategoryBySlug
       parameters:
       - description: Category Slug
         in: path
-        name: id
+        name: slug
         required: true
         type: string
       produces:
@@ -3960,6 +3855,7 @@ paths:
       - application/json
       description: Get paginated, filtered and faceted product variants of a category
         and its subcategories
+      operationId: getCategoryProducts
       parameters:
       - description: Category Slug
         in: path
@@ -4124,6 +4020,7 @@ paths:
       consumes:
       - application/json
       description: Get collections with pagination
+      operationId: getAdminCollections
       parameters:
       - in: query
         name: page
@@ -4190,7 +4087,7 @@ paths:
       summary: Create Collection
       tags:
       - Collections
-  /v1/collection/:id:
+  /v1/collection/{id}:
     put:
       consumes:
       - application/json
@@ -4226,11 +4123,12 @@ paths:
       summary: Update Collection
       tags:
       - Collections
-  /v1/collection/:slug/:
+  /v1/collection/{slug}/:
     get:
       consumes:
       - application/json
       description: Get collection by slug
+      operationId: getCollectionBySlug
       parameters:
       - description: Collection Slug
         in: path
@@ -4259,7 +4157,7 @@ paths:
       summary: Collection
       tags:
       - Collection
-  /v1/collection/id/:id/:
+  /v1/collection/id/{id}/:
     get:
       consumes:
       - application/json
@@ -4385,6 +4283,36 @@ paths:
       tags:
       - Geo
   /v1/manufacturer/:
+    get:
+      consumes:
+      - application/json
+      description: Get manufacturers with pagination
+      operationId: getManufacturers
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-ManufacturerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get manufacturers
+      tags:
+      - Manufacturer
     post:
       consumes:
       - application/json
@@ -4418,12 +4346,17 @@ paths:
       summary: Create Manufacturer
       tags:
       - Manufacturer
-  /v1/manufacturer/:id:
+  /v1/manufacturer/{id}:
     put:
       consumes:
       - application/json
       description: Update Manufacturer
       parameters:
+      - description: Manufacturer ID
+        in: path
+        name: id
+        required: true
+        type: string
       - description: Update manufacturer
         in: body
         name: create
@@ -4452,15 +4385,16 @@ paths:
       summary: Update Manufacturer
       tags:
       - Manufacturer
-  /v1/manufacturer/:slug/:
+  /v1/manufacturer/{slug}/:
     get:
       consumes:
       - application/json
       description: Get Manufacturer by slug
+      operationId: getManufacturerBySlug
       parameters:
       - description: Manufacturer Slug
         in: path
-        name: id
+        name: slug
         required: true
         type: string
       produces:
@@ -4485,7 +4419,7 @@ paths:
       summary: Manufacturer
       tags:
       - Manufacturer
-  /v1/manufacturer/id/:id/:
+  /v1/manufacturer/id/{id}/:
     get:
       consumes:
       - application/json
@@ -4518,7 +4452,7 @@ paths:
       summary: Manufacturer
       tags:
       - Manufacturer
-  /v1/media/:id:
+  /v1/media/{id}:
     delete:
       consumes:
       - application/json
@@ -4680,11 +4614,56 @@ paths:
       summary: Get order
       tags:
       - Order
+  /v1/product-review/:
+    post:
+      consumes:
+      - application/json
+      description: Create Product Review
+      parameters:
+      - description: Create Product Review Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_stickpro_go-store_internal_delivery_http_request_product_review_request.CreateProductReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ProductReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "403":
+          description: variant was not purchased by this user
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Create Product Review
+      tags:
+      - Product Review
   /v1/product/:
     get:
       consumes:
       - application/json
       description: Get products
+      operationId: getProducts
       parameters:
       - in: query
         name: page
@@ -4745,7 +4724,7 @@ paths:
       summary: Create Product
       tags:
       - Product
-  /v1/product/:id:
+  /v1/product/{id}:
     put:
       consumes:
       - application/json
@@ -4779,7 +4758,41 @@ paths:
       summary: Update Product
       tags:
       - Product
-  /v1/product/:id/sync-attribute:
+  /v1/product/{id}/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Get product attributes by product ID
+      operationId: getProductAttributesById
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AttributeGroupsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get product attributes
+      tags:
+      - Product
+  /v1/product/{id}/sync-attribute:
     post:
       consumes:
       - application/json
@@ -4813,11 +4826,12 @@ paths:
       summary: Sync Product Attribute
       tags:
       - Product
-  /v1/product/:id/variants:
+  /v1/product/{id}/variants:
     get:
       consumes:
       - application/json
       description: Get all variants (name/slug/category) for an existing base product
+      operationId: getAdminProductVariants
       produces:
       - application/json
       responses:
@@ -4879,7 +4893,7 @@ paths:
       summary: Create Product Variant
       tags:
       - Product
-  /v1/product/:id/variants/:variant_id:
+  /v1/product/{id}/variants/{variant_id}:
     delete:
       consumes:
       - application/json
@@ -4975,81 +4989,16 @@ paths:
       summary: Update Product Variant
       tags:
       - Product
-  /v1/product/:slug/related-products:
-    get:
-      consumes:
-      - application/json
-      description: Get related products by variant slug
-      parameters:
-      - description: Variant slug
-        in: path
-        name: slug
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-array_VariantCardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Get related products by slug
-      tags:
-      - Product
-  /v1/product/{id}/attributes:
-    get:
-      consumes:
-      - application/json
-      description: Get product attributes by product ID
-      parameters:
-      - description: Product ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-AttributeGroupsResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: Get product attributes
-      tags:
-      - Product
   /v1/product/{slug}/:
     get:
       consumes:
       - application/json
       description: Get product by slug
+      operationId: getProductBySlug
       parameters:
       - description: Product Slug
         in: path
-        name: id
+        name: slug
         required: true
         type: string
       produces:
@@ -5079,6 +5028,7 @@ paths:
       consumes:
       - application/json
       description: Get product attributes by variant slug
+      operationId: getProductAttributesBySlug
       parameters:
       - description: Product Slug
         in: path
@@ -5140,12 +5090,50 @@ paths:
       summary: Get product breadcrumbs
       tags:
       - Product
+  /v1/product/{slug}/related-products:
+    get:
+      consumes:
+      - application/json
+      description: Get related products by variant slug
+      parameters:
+      - description: Variant slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_VariantCardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get related products by slug
+      tags:
+      - Product
   /v1/product/{slug}/reviews:
     get:
       consumes:
       - application/json
-      description: Get Product Reviews By Product ID
+      description: Approved reviews for a variant, by variant slug, paginated
       parameters:
+      - description: Variant slug
+        in: path
+        name: slug
+        required: true
+        type: string
       - in: query
         name: page
         type: integer
@@ -5178,7 +5166,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/APIErrors'
-      summary: Get Product Reviews By Product ID
+      summary: Get Product Reviews By Variant Slug
       tags:
       - Product Review
   /v1/product/id/{id}/:
@@ -5208,6 +5196,52 @@ paths:
       summary: Product
       tags:
       - Product
+  /v1/product/id/{id}/reviews:
+    get:
+      consumes:
+      - application/json
+      description: Approved reviews for a variant, by variant ID, paginated
+      parameters:
+      - description: Variant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: product_id
+        type: string
+      - description: '"asc" or "desc"'
+        in: query
+        name: sort_by_rating
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResponseWithFullPagination-ProductReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get Product Reviews By Variant ID
+      tags:
+      - Product Review
   /v1/product/id/{id}/with-media:
     get:
       consumes:
@@ -5267,7 +5301,7 @@ paths:
       summary: Get products without variants
       tags:
       - Product
-  /v1/product/variant/:variant_id/categories:
+  /v1/product/variant/{variant_id}/categories:
     get:
       consumes:
       - application/json
@@ -5296,7 +5330,7 @@ paths:
       summary: Get Variant Categories
       tags:
       - Product
-  /v1/product/variant/:variant_id/sync-categories:
+  /v1/product/variant/{variant_id}/sync-categories:
     post:
       consumes:
       - application/json
@@ -5332,7 +5366,7 @@ paths:
       summary: Sync Variant Categories
       tags:
       - Product
-  /v1/product/variant/:variant_id/sync-related-products:
+  /v1/product/variant/{variant_id}/sync-related-products:
     post:
       consumes:
       - application/json
@@ -5366,7 +5400,7 @@ paths:
       summary: Sync Related Products
       tags:
       - Product
-  /v1/product/variant/id/:id/related-products:
+  /v1/product/variant/id/{id}/related-products:
     get:
       consumes:
       - application/json
@@ -5434,6 +5468,7 @@ paths:
       consumes:
       - application/json
       description: Get a paginated list of all product variants
+      operationId: getAdminVariantsWithPagination
       parameters:
       - in: query
         name: page

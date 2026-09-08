@@ -32,6 +32,7 @@ type IProductService interface { //nolint:interfacebloat
 	GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*dto.ProductWithMediaDTO, error)
 	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 	GetProductsWithoutVariants(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
+	GetSitemapEntries(ctx context.Context) ([]dto.SitemapEntryDTO, error)
 
 	// Attributes (by product ID)
 	GetProductAttributesByID(ctx context.Context, id uuid.UUID) ([]*dto.AttributeGroupWithValuesDTO, error)

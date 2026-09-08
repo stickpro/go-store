@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -79,4 +80,39 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.ProductVa
 		&i.UpdatedAt,
 	)
 	return &i, err
+}
+
+const sitemapProducts = `-- name: SitemapProducts :many
+SELECT pv.slug, pv.updated_at
+FROM product_variants pv
+JOIN products p ON p.id = pv.product_id
+WHERE pv.is_enable AND p.is_enable
+ORDER BY pv.updated_at DESC NULLS LAST
+`
+
+type SitemapProductsRow struct {
+	Slug      string           `db:"slug" json:"slug"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+}
+
+// Enabled product-variant pages for the sitemap feed. Both the variant and its
+// parent product must be enabled; updated_at is the variant's own last change.
+func (q *Queries) SitemapProducts(ctx context.Context) ([]*SitemapProductsRow, error) {
+	rows, err := q.db.Query(ctx, sitemapProducts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*SitemapProductsRow{}
+	for rows.Next() {
+		var i SitemapProductsRow
+		if err := rows.Scan(&i.Slug, &i.UpdatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

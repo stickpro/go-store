@@ -28,11 +28,11 @@ import (
 //	@Success		200		{object}	response.Result[product_review_response.ProductReviewResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		401		{object}	apierror.Errors
-//	@Failure		403		{object}	apierror.Errors
+//	@Failure		403		{object}	apierror.Errors	"variant was not purchased by this user"
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
 //	@Security		BearerAuth
-//	@Router			/api/v1/product_review/ [post]
+//	@Router			/v1/product-review/ [post]
 func (h *Handler) createProductReview(c fiber.Ctx) error {
 	usr, err := loadAuthUser(c)
 	if err != nil {
@@ -56,18 +56,18 @@ func (h *Handler) createProductReview(c fiber.Ctx) error {
 
 // getProductReviewsByProductID
 //
-//	@Summary		Get Product Reviews By Product ID
+//	@Summary		Get Product Reviews By Variant ID
 //	@Tags			Product Review
-//	@Description	Get Product Reviews By Product ID
+//	@Description	Approved reviews for a variant, by variant ID, paginated
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		uuid.UUID												true	"Product ID"
+//	@Param			id		path		string													true	"Variant ID"
 //	@Param			request	query		product_review_request.GetProductReviewsWithPagination	true	"GetProductReviewsWithPagination"
 //	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[product_review_response.ProductReviewResponse]]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/api/v1/product_review/by-product/{id} [post]
+//	@Router			/v1/product/id/{id}/reviews [get]
 func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 	id, err := tools.ValidateUUID(c.Params("id"))
 	if err != nil {
@@ -88,12 +88,12 @@ func (h *Handler) getProductReviewsByProductID(c fiber.Ctx) error {
 
 // getProductReviewsBySlug
 //
-//	@Summary		Get Product Reviews By Product ID
+//	@Summary		Get Product Reviews By Variant Slug
 //	@Tags			Product Review
-//	@Description	Get Product Reviews By Product ID
+//	@Description	Approved reviews for a variant, by variant slug, paginated
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		uuid.UUID												true	"Product ID"
+//	@Param			slug	path		string													true	"Variant slug"
 //	@Param			request	query		product_review_request.GetProductReviewsWithPagination	true	"GetProductReviewsWithPagination"
 //	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[product_review_response.ProductReviewResponse]]
 //	@Failure		400		{object}	apierror.Errors

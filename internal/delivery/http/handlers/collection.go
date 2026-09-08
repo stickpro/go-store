@@ -20,7 +20,7 @@ import (
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/collection/id/:id/ [get]
+//	@Router			/v1/collection/id/{id}/ [get]
 func (h *Handler) getCollectionByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -46,7 +46,8 @@ func (h *Handler) getCollectionByID(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/collection/:slug/ [get]
+//	@ID				getCollectionBySlug
+//	@Router			/v1/collection/{slug}/ [get]
 func (h *Handler) getCollectionBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	collectionDTO, err := h.services.CollectionService.GetCollectionBySlug(c.Context(), slug)

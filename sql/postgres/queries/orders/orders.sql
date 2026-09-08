@@ -71,6 +71,20 @@ WHERE (sqlc.narg('status')::varchar IS NULL OR status = sqlc.narg('status'))
   AND (sqlc.narg('created_from')::timestamp IS NULL OR created_at >= sqlc.narg('created_from'))
   AND (sqlc.narg('created_to')::timestamp IS NULL OR created_at <= sqlc.narg('created_to'));
 
+-- name: HasUserPurchasedVariant :one
+-- Newest paid, non-cancelled/refunded order of the user that contains the
+-- variant. Gates review creation to actually-purchased variants; the returned
+-- order id is stored on the review.
+SELECT o.id
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.id
+WHERE o.user_id = sqlc.arg('user_id')::uuid
+  AND oi.variant_id = sqlc.arg('variant_id')::uuid
+  AND o.payment_status = 'paid'
+  AND o.status NOT IN ('cancelled', 'refunded')
+ORDER BY o.created_at DESC
+LIMIT 1;
+
 -- name: DashboardOrderStats :one
 -- One-shot order snapshot for the admin dashboard. Status / payment buckets and
 -- `total` are all-time (current distribution); `today` and `revenue_today` use

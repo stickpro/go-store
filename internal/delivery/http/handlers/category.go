@@ -29,11 +29,12 @@ import (
 //	@Tags			Category
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"Category Slug"
-//	@Success		200	{object}	response.Result[category_response.CategoryResponse]
-//	@Failure		400	{object}	apierror.Errors
-//	@Failure		404	{object}	apierror.Errors
-//	@Failure		500	{object}	apierror.Errors
+//	@Param			slug	path		string	true	"Category Slug"
+//	@Success		200		{object}	response.Result[category_response.CategoryResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@ID				getCategoryBySlug
 //	@Router			/v1/category/{slug}/ [get]
 func (h *Handler) getCategoryBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
@@ -80,6 +81,7 @@ func (h *Handler) getCategoryByID(c fiber.Ctx) error {
 //	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[category_response.CategoryResponse]]
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
+//	@ID				getCategories
 //	@Router			/v1/category/ [get]
 func (h *Handler) getCategories(c fiber.Ctx) error {
 	req := &category_request.GetCategoryWithPagination{}
@@ -128,6 +130,7 @@ func (h *Handler) getCategoryTree(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
+//	@ID				getCategoryProducts
 //	@Router			/v1/category/{slug}/products [get]
 func (h *Handler) getCategoryProducts(c fiber.Ctx) error {
 	req := &product_request.GetCategoryProductsRequest{}

@@ -24,6 +24,7 @@ type ICategoryService interface {
 	GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error)
 	UpdateCategory(ctx context.Context, dto UpdateDTO) (*models.Category, error)
 	GetCategoryTree(ctx context.Context) ([]*dto.CategoryTreeDTO, error)
+	GetSitemapEntries(ctx context.Context) ([]dto.SitemapEntryDTO, error)
 
 	IBreadcrumb
 }

@@ -55,7 +55,7 @@ func (h *Handler) createProduct(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/product/:id [PUT]
+//	@Router			/v1/product/{id} [PUT]
 func (h *Handler) updateProduct(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -88,7 +88,7 @@ func (h *Handler) updateProduct(c fiber.Ctx) error {
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/product/:id/variants [POST]
+//	@Router			/v1/product/{id}/variants [POST]
 func (h *Handler) createProductVariant(c fiber.Ctx) error {
 	productID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -138,7 +138,7 @@ func (h *Handler) createProductVariant(c fiber.Ctx) error {
 //	@Failure		400			{object}	apierror.Errors
 //	@Failure		404			{object}	apierror.Errors
 //	@Failure		500			{object}	apierror.Errors
-//	@Router			/v1/product/:id/variants/:variant_id [GET]
+//	@Router			/v1/product/{id}/variants/{variant_id} [GET]
 //	@Security		BearerAuth
 func (h *Handler) getProductVariantByID(c fiber.Ctx) error {
 	variantID, err := uuid.Parse(c.Params("id"))
@@ -166,7 +166,8 @@ func (h *Handler) getProductVariantByID(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/product/:id/variants [GET]
+//	@ID				getAdminProductVariants
+//	@Router			/v1/product/{id}/variants [GET]
 //	@Security		BearerAuth
 func (h *Handler) getProductVariants(c fiber.Ctx) error {
 	productID, err := uuid.Parse(c.Params("id"))
@@ -195,7 +196,7 @@ func (h *Handler) getProductVariants(c fiber.Ctx) error {
 //	@Failure		404			{object}	apierror.Errors
 //	@Failure		422			{object}	apierror.Errors
 //	@Failure		500			{object}	apierror.Errors
-//	@Router			/v1/product/:id/variants/:variant_id [PUT]
+//	@Router			/v1/product/{id}/variants/{variant_id} [PUT]
 //	@Security		BearerAuth
 func (h *Handler) updateProductVariant(c fiber.Ctx) error {
 	variantID, err := uuid.Parse(c.Params("variant_id"))
@@ -246,7 +247,7 @@ func (h *Handler) updateProductVariant(c fiber.Ctx) error {
 //	@Failure		400			{object}	apierror.Errors
 //	@Failure		404			{object}	apierror.Errors
 //	@Failure		500			{object}	apierror.Errors
-//	@Router			/v1/product/:id/variants/:variant_id [DELETE]
+//	@Router			/v1/product/{id}/variants/{variant_id} [DELETE]
 //	@Security		BearerAuth
 func (h *Handler) deleteProductVariant(c fiber.Ctx) error {
 	variantID, err := uuid.Parse(c.Params("id"))
@@ -275,7 +276,7 @@ func (h *Handler) deleteProductVariant(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/product/:id/sync-attribute [POST]
+//	@Router			/v1/product/{id}/sync-attribute [POST]
 func (h *Handler) syncProductAttribute(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -336,7 +337,7 @@ func (h *Handler) getProductsWithoutVariants(c fiber.Ctx) error {
 //	@Failure		400			{object}	apierror.Errors
 //	@Failure		422			{object}	apierror.Errors
 //	@Failure		500			{object}	apierror.Errors
-//	@Router			/v1/product/variant/:variant_id/sync-related-products [POST]
+//	@Router			/v1/product/variant/{variant_id}/sync-related-products [POST]
 func (h *Handler) syncRelatedProducts(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("variant_id"))
 	if err != nil {
@@ -364,6 +365,7 @@ func (h *Handler) syncRelatedProducts(c fiber.Ctx) error {
 //	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[repository_product_variants.FindRow]]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
+//	@ID				getAdminVariantsWithPagination
 //	@Router			/v1/product/variants [GET]
 //	@Security		BearerAuth
 func (h *Handler) getVariantsWithPagination(c fiber.Ctx) error {
@@ -391,7 +393,7 @@ func (h *Handler) getVariantsWithPagination(c fiber.Ctx) error {
 //	@Failure		400			{object}	apierror.Errors
 //	@Failure		404			{object}	apierror.Errors
 //	@Failure		500			{object}	apierror.Errors
-//	@Router			/v1/product/variant/:variant_id/categories [GET]
+//	@Router			/v1/product/variant/{variant_id}/categories [GET]
 //	@Security		BearerAuth
 func (h *Handler) getVariantCategories(c fiber.Ctx) error {
 	variantID, err := uuid.Parse(c.Params("variant_id"))
@@ -419,7 +421,7 @@ func (h *Handler) getVariantCategories(c fiber.Ctx) error {
 //	@Failure		400			{object}	apierror.Errors
 //	@Failure		422			{object}	apierror.Errors
 //	@Failure		500			{object}	apierror.Errors
-//	@Router			/v1/product/variant/:variant_id/sync-categories [POST]
+//	@Router			/v1/product/variant/{variant_id}/sync-categories [POST]
 //	@Security		BearerAuth
 func (h *Handler) syncVariantCategories(c fiber.Ctx) error {
 	variantID, err := uuid.Parse(c.Params("variant_id"))

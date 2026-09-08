@@ -13,10 +13,6 @@ import (
 
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.OrderItem, error)
-	// Most recent paid-or-later order by this user that contains the given variant.
-	// Drives the "verified purchase" gate on product reviews; returns no row when
-	// the user has not bought the variant.
-	GetVerifiedPurchaseOrderID(ctx context.Context, arg GetVerifiedPurchaseOrderIDParams) (uuid.UUID, error)
 	ListByOrderID(ctx context.Context, orderID uuid.UUID) ([]*models.OrderItem, error)
 	ListByOrderIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*models.OrderItem, error)
 }

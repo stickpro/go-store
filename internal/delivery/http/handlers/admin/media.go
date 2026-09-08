@@ -101,7 +101,7 @@ func (h *Handler) storeFile(c fiber.Ctx) error {
 //	@Success		200	{object}	response.Result[string]
 //	@Failure		400	{object}	apierror.Errors	"Unsupported file type"
 //	@Failure		500	{object}	apierror.Errors	"Internal server error"
-//	@Router			/v1/media/:id [delete]
+//	@Router			/v1/media/{id} [delete]
 func (h *Handler) deleteFile(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {

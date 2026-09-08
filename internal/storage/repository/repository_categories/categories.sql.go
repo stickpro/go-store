@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stickpro/go-store/internal/models"
 )
 
@@ -100,4 +101,37 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Category,
 		&i.UpdatedAt,
 	)
 	return &i, err
+}
+
+const sitemapCategories = `-- name: SitemapCategories :many
+SELECT slug, updated_at
+FROM categories
+WHERE is_enable = true
+ORDER BY updated_at DESC NULLS LAST
+`
+
+type SitemapCategoriesRow struct {
+	Slug      string           `db:"slug" json:"slug"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+}
+
+// Enabled category pages for the sitemap feed.
+func (q *Queries) SitemapCategories(ctx context.Context) ([]*SitemapCategoriesRow, error) {
+	rows, err := q.db.Query(ctx, sitemapCategories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*SitemapCategoriesRow{}
+	for rows.Next() {
+		var i SitemapCategoriesRow
+		if err := rows.Scan(&i.Slug, &i.UpdatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

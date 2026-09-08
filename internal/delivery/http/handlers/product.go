@@ -23,11 +23,12 @@ import (
 //	@Tags			Product
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"Product Slug"
-//	@Success		200	{object}	response.Result[product_response.ProductWithMediumResponse]
-//	@Failure		400	{object}	apierror.Errors
-//	@Failure		404	{object}	apierror.Errors
-//	@Failure		500	{object}	apierror.Errors
+//	@Param			slug	path		string	true	"Product Slug"
+//	@Success		200		{object}	response.Result[product_response.ProductWithMediumResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@ID				getProductBySlug
 //	@Router			/v1/product/{slug}/ [get]
 func (h *Handler) getProductBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
@@ -84,6 +85,7 @@ func (h *Handler) getProductByID(c fiber.Ctx) error {
 //	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[product_response.ProductResponse]]
 //	@Failure		401		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
+//	@ID				getProducts
 //	@Router			/v1/product/ [get]
 //	@Security		BearerAuth
 func (h *Handler) getProducts(c fiber.Ctx) error {
@@ -137,6 +139,7 @@ func (h *Handler) getProductWithMediaByID(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
+//	@ID				getProductAttributesBySlug
 //	@Router			/v1/product/{slug}/attributes [get]
 func (h *Handler) getProductAttributes(c fiber.Ctx) error {
 	slug := c.Params("slug")
@@ -181,7 +184,7 @@ func (h *Handler) getProductBreadcrumbs(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/product/variant/id/:id/related-products [get]
+//	@Router			/v1/product/variant/id/{id}/related-products [get]
 func (h *Handler) getRelatedProducts(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -234,7 +237,7 @@ func (h *Handler) getRelatedProductsBatch(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/product/:slug/related-products [get]
+//	@Router			/v1/product/{slug}/related-products [get]
 func (h *Handler) getRelatedProductsBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	prd, err := h.services.ProductService.GetRelatedProductsBySlug(c.Context(), slug)
@@ -256,6 +259,7 @@ func (h *Handler) getRelatedProductsBySlug(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
+//	@ID				getProductAttributesById
 //	@Router			/v1/product/{id}/attributes [get]
 func (h *Handler) getProductAttributesByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))

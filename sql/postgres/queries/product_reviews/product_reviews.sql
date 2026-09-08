@@ -1,7 +1,8 @@
--- name: UpdateStatus :exec
+-- name: UpdateStatus :one
 UPDATE product_reviews
 	SET  status=$1, updated_at=now()
-	WHERE id=$2;
+	WHERE id=$2
+RETURNING *;
 
 -- name: GetByID :one
 SELECT * FROM product_reviews

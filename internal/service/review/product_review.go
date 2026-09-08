@@ -3,6 +3,7 @@ package review
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -13,7 +14,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/product"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
-	"github.com/stickpro/go-store/internal/storage/repository/repository_order_items"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_orders"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_reviews"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -22,12 +23,13 @@ import (
 
 type IProductReviewService interface {
 	GetProductReviewsWithPaginate(ctx context.Context, d dto.GetProductReviewsDTO) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
+	GetProductReviewsForAdmin(ctx context.Context, f dto.AdminProductReviewFilter) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	GetProductReviewByID(ctx context.Context, id uuid.UUID) (*models.ProductReview, error)
 	GetProductReviewsByVariantID(ctx context.Context, d dto.GetProductReviewsDTO, variantID *uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	GetProductReviewsByVariantSlug(ctx context.Context, d dto.GetProductReviewsDTO, slug string) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	GetUserProductReviews(ctx context.Context, d dto.GetProductReviewsDTO, userID uuid.UUID) (*base.FindResponseWithFullPagination[*models.ProductReview], error)
 	CreateProductReview(ctx context.Context, d dto.CreateProductReviewDTO) (*models.ProductReview, error)
-	UpdateProductReviewStatus(ctx context.Context, d dto.UpdateProductReviewStatusDTO) error
+	UpdateProductReviewStatus(ctx context.Context, d dto.UpdateProductReviewStatusDTO) (*models.ProductReview, error)
 	DeleteProductReview(ctx context.Context, id uuid.UUID) error
 	RestoreProductReview(ctx context.Context, id uuid.UUID) (*models.ProductReview, error)
 }
@@ -56,16 +58,9 @@ func (s *Service) GetProductReviewsWithPaginate(ctx context.Context, d dto.GetPr
 	if d.Page != nil {
 		commonParams.Page = d.Page
 	}
-	withDeleted := d.WithDeleted
-	commonParams.WithDeleted = &withDeleted
-	if d.SortByRating != nil {
-		commonParams.OrderBy = "rating"
-		commonParams.IsAscOrdering = *d.SortByRating == "asc"
-	}
 
 	productReviews, err := s.storage.ProductReviews().GetWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
 		CommonFindParams: *commonParams,
-		Status:           d.Status,
 	})
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
@@ -91,6 +86,39 @@ func (s *Service) GetUserProductReviews(ctx context.Context, d dto.GetProductRev
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.l.Debug("error getting product reviews with pagination", parsedErr)
+		return nil, parsedErr
+	}
+	return productReviews, nil
+}
+
+// GetProductReviewsForAdmin lists reviews for the moderation panel: every
+// status, optional variant/user filter, deleted rows hidden unless
+// f.WithDeleted is set.
+func (s *Service) GetProductReviewsForAdmin(
+	ctx context.Context,
+	f dto.AdminProductReviewFilter,
+) (*base.FindResponseWithFullPagination[*models.ProductReview], error) {
+	commonParams := base.NewCommonFindParams()
+	commonParams.Page = f.Page
+	commonParams.PageSize = f.PageSize
+	if f.SortByRating != nil {
+		commonParams.OrderBy = "rating"
+		commonParams.IsAscOrdering = *f.SortByRating == "asc"
+	}
+	if !f.WithDeleted {
+		hideDeleted := false
+		commonParams.WithDeleted = &hideDeleted
+	}
+
+	productReviews, err := s.storage.ProductReviews().GetWithPaginate(ctx, repository_product_reviews.ProductReviewWithPaginationParams{
+		CommonFindParams: *commonParams,
+		VariantID:        f.VariantID,
+		UserID:           f.UserID,
+		Status:           f.Status,
+	})
+	if err != nil {
+		parsedErr := pgerror.ParseError(err)
+		s.l.Debug("error getting admin product reviews", parsedErr)
 		return nil, parsedErr
 	}
 	return productReviews, nil
@@ -147,9 +175,9 @@ func (s *Service) CreateProductReview(ctx context.Context, d dto.CreateProductRe
 		return nil, parsedErr
 	}
 
-	// A review is allowed only for a variant the user has actually bought; the
-	// order it was bought in is stored on the review as the purchase reference.
-	orderID, err := s.storage.OrderItems().GetVerifiedPurchaseOrderID(ctx, repository_order_items.GetVerifiedPurchaseOrderIDParams{
+	// A review is only allowed for a variant the author actually bought: there
+	// must be a paid, non-cancelled/refunded order of theirs containing it.
+	orderID, err := s.storage.Orders().HasUserPurchasedVariant(ctx, repository_orders.HasUserPurchasedVariantParams{
 		UserID:    d.UserID,
 		VariantID: d.VariantID,
 	})
@@ -157,9 +185,7 @@ func (s *Service) CreateProductReview(ctx context.Context, d dto.CreateProductRe
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotPurchased
 		}
-		parsedErr := pgerror.ParseError(err)
-		s.l.Debug("error checking verified purchase", parsedErr)
-		return nil, parsedErr
+		return nil, fmt.Errorf("review: check purchase: %w", err)
 	}
 
 	params := repository_product_reviews.CreateParams{
@@ -180,18 +206,18 @@ func (s *Service) CreateProductReview(ctx context.Context, d dto.CreateProductRe
 	return productReview, nil
 }
 
-func (s *Service) UpdateProductReviewStatus(ctx context.Context, d dto.UpdateProductReviewStatusDTO) error {
+func (s *Service) UpdateProductReviewStatus(ctx context.Context, d dto.UpdateProductReviewStatusDTO) (*models.ProductReview, error) {
 	params := repository_product_reviews.UpdateStatusParams{
 		ID:     d.ID,
 		Status: d.Status.String(),
 	}
-	err := s.storage.ProductReviews().UpdateStatus(ctx, params)
+	productReview, err := s.storage.ProductReviews().UpdateStatus(ctx, params)
 	if err != nil {
 		parsedErr := pgerror.ParseError(err)
 		s.l.Debug("error update product review status", parsedErr)
-		return parsedErr
+		return nil, parsedErr
 	}
-	return nil
+	return productReview, nil
 }
 
 func (s *Service) DeleteProductReview(ctx context.Context, id uuid.UUID) error {

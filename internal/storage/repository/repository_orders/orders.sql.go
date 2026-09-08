@@ -260,6 +260,33 @@ func (q *Queries) GetByNumberForUpdate(ctx context.Context, orderNumber int64) (
 	return &i, err
 }
 
+const hasUserPurchasedVariant = `-- name: HasUserPurchasedVariant :one
+SELECT o.id
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.id
+WHERE o.user_id = $1::uuid
+  AND oi.variant_id = $2::uuid
+  AND o.payment_status = 'paid'
+  AND o.status NOT IN ('cancelled', 'refunded')
+ORDER BY o.created_at DESC
+LIMIT 1
+`
+
+type HasUserPurchasedVariantParams struct {
+	UserID    uuid.UUID `db:"user_id" json:"user_id"`
+	VariantID uuid.UUID `db:"variant_id" json:"variant_id"`
+}
+
+// Newest paid, non-cancelled/refunded order of the user that contains the
+// variant. Gates review creation to actually-purchased variants; the returned
+// order id is stored on the review.
+func (q *Queries) HasUserPurchasedVariant(ctx context.Context, arg HasUserPurchasedVariantParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, hasUserPurchasedVariant, arg.UserID, arg.VariantID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const listAdmin = `-- name: ListAdmin :many
 SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at FROM orders
 WHERE ($1::varchar IS NULL OR status = $1)

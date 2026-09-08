@@ -82,12 +82,13 @@ func (h *Handler) createAttributeGroup(c fiber.Ctx) error {
 //	@Tags			Attribute
 //	@Accept			json
 //	@Produce		json
+//	@Param			id		path		string											true	"Attribute group ID"
 //	@Param			update	body		attribute_request.UpdateAttributeGroupRequest	true	"Update attribute group"
 //	@Success		200		{object}	response.Result[attribute_response.AttributeGroupResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/attribute-group/:id [PUT]
+//	@Router			/v1/attribute-group/{id} [PUT]
 //
 //	@Security		BearerAuth
 func (h *Handler) updateAttributeGroup(c fiber.Ctx) error {
@@ -121,7 +122,7 @@ func (h *Handler) updateAttributeGroup(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		422	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/attribute-group/:id [GET]
+//	@Router			/v1/attribute-group/{id} [GET]
 //
 //	@Security		BearerAuth
 func (h *Handler) getAttributeGroupByID(c fiber.Ctx) error {
@@ -150,7 +151,7 @@ func (h *Handler) getAttributeGroupByID(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		422	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/attribute-group/:id [DELETE]
+//	@Router			/v1/attribute-group/{id} [DELETE]
 //
 //	@Security		BearerAuth
 func (h *Handler) deleteAttributeGroup(c fiber.Ctx) error {
@@ -207,7 +208,7 @@ func (h *Handler) createAttribute(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		422	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/attribute/:id [GET]
+//	@Router			/v1/attribute/{id} [GET]
 //
 //	@Security		BearerAuth
 func (h *Handler) getAttributeByID(c fiber.Ctx) error {
@@ -284,7 +285,7 @@ func (h *Handler) updateAttribute(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		422	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/attribute/:id [DELETE]
+//	@Router			/v1/attribute/{id} [DELETE]
 //
 //	@Security		BearerAuth
 func (h *Handler) deleteAttribute(c fiber.Ctx) error {
@@ -425,7 +426,7 @@ func (h *Handler) createAttributeValue(c fiber.Ctx) error {
 //	@Success		200				{object}	response.Result[[]dto.AttributeValueDTO]
 //	@Failure		400				{object}	apierror.Errors
 //	@Failure		500				{object}	apierror.Errors
-//	@Router			/v1/attribute/:attribute_id/values [GET]
+//	@Router			/v1/attribute/{attribute_id}/values [GET]
 //
 //	@Security		BearerAuth
 func (h *Handler) getAttributeValues(c fiber.Ctx) error {
@@ -455,7 +456,7 @@ func (h *Handler) getAttributeValues(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/attribute-value/:id [PUT]
+//	@Router			/v1/attribute-value/{id} [PUT]
 //
 //	@Security		BearerAuth
 func (h *Handler) updateAttributeValue(c fiber.Ctx) error {
@@ -496,7 +497,7 @@ func (h *Handler) updateAttributeValue(c fiber.Ctx) error {
 //	@Success		200	{object}	response.Result[string]
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/attribute-value/:id [DELETE]
+//	@Router			/v1/attribute-value/{id} [DELETE]
 //
 //	@Security		BearerAuth
 func (h *Handler) deleteAttributeValue(c fiber.Ctx) error {

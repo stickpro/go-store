@@ -26,6 +26,7 @@ import (
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
+//	@ID				getAdminCollections
 //	@Router			/v1/collection/ [get]
 //
 //	@Security		BearerAuth
@@ -86,7 +87,7 @@ func (h *Handler) createCollection(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/collection/:id [put]
+//	@Router			/v1/collection/{id} [put]
 //
 //	@Security		BearerAuth
 func (h *Handler) updateCollection(c fiber.Ctx) error {

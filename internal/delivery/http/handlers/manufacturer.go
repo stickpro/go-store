@@ -8,6 +8,9 @@ import (
 	"github.com/stickpro/go-store/internal/delivery/http/response/manufacturer_response"
 	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/tools/apierror"
+
+	// swag-gen import
+	_ "github.com/stickpro/go-store/internal/storage/base"
 )
 
 // getManufacturerBySlug is a function get Manufacturer by slug
@@ -17,12 +20,13 @@ import (
 //	@Tags			Manufacturer
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"Manufacturer Slug"
-//	@Success		200	{object}	response.Result[manufacturer_response.ManufacturerResponse]
-//	@Failure		400	{object}	apierror.Errors
-//	@Failure		404	{object}	apierror.Errors
-//	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/manufacturer/:slug/ [get]
+//	@Param			slug	path		string	true	"Manufacturer Slug"
+//	@Success		200		{object}	response.Result[manufacturer_response.ManufacturerResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@ID				getManufacturerBySlug
+//	@Router			/v1/manufacturer/{slug}/ [get]
 func (h *Handler) getManufacturerBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	mfc, err := h.services.ManufacturerService.GetManufacturerBySlug(c.Context(), slug)
@@ -44,7 +48,7 @@ func (h *Handler) getManufacturerBySlug(c fiber.Ctx) error {
 //	@Failure		400	{object}	apierror.Errors
 //	@Failure		404	{object}	apierror.Errors
 //	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/manufacturer/id/:id/ [get]
+//	@Router			/v1/manufacturer/id/{id}/ [get]
 func (h *Handler) getManufacturerByID(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -57,19 +61,19 @@ func (h *Handler) getManufacturerByID(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(manufacturer_response.NewFromModel(mfc)))
 }
 
-// getManufacturerByID is a function get Manufacturer by ID
+// getManufacturers is a function to load manufacturers with pagination
 //
-//	@Summary		Manufacturer
-//	@Description	Get Manufacturer by ID
+//	@Summary		Get manufacturers
+//	@Description	Get manufacturers with pagination
 //	@Tags			Manufacturer
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"Manufacturer ID"
-//	@Success		200	{object}	response.Result[manufacturer_response.ManufacturerResponse]
-//	@Failure		400	{object}	apierror.Errors
-//	@Failure		404	{object}	apierror.Errors
-//	@Failure		500	{object}	apierror.Errors
-//	@Router			/v1/manufacturer/id/:id/ [get]
+//	@Param			request	query		manufacturer_request.GetManufacturerWithPagination	true	"GetManufacturerWithPagination"
+//	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[manufacturer_response.ManufacturerResponse]]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		500		{object}	apierror.Errors
+//	@ID				getManufacturers
+//	@Router			/v1/manufacturer/ [get]
 func (h *Handler) getManufacturers(c fiber.Ctx) error {
 	req := &manufacturer_request.GetManufacturerWithPagination{}
 	if err := c.Bind().Query(req); err != nil {

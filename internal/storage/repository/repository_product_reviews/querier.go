@@ -18,7 +18,7 @@ type Querier interface {
 	Restore(ctx context.Context, id uuid.UUID) (*models.ProductReview, error)
 	SoftDelete(ctx context.Context, id uuid.UUID) error
 	Update(ctx context.Context, arg UpdateParams) (*models.ProductReview, error)
-	UpdateStatus(ctx context.Context, arg UpdateStatusParams) error
+	UpdateStatus(ctx context.Context, arg UpdateStatusParams) (*models.ProductReview, error)
 }
 
 var _ Querier = (*Queries)(nil)

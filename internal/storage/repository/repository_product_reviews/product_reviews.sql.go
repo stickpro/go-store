@@ -73,10 +73,11 @@ func (q *Queries) SoftDelete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const updateStatus = `-- name: UpdateStatus :exec
+const updateStatus = `-- name: UpdateStatus :one
 UPDATE product_reviews
 	SET  status=$1, updated_at=now()
 	WHERE id=$2
+RETURNING id, variant_id, user_id, order_id, rating, title, body, status, created_at, updated_at, deleted_at
 `
 
 type UpdateStatusParams struct {
@@ -84,7 +85,21 @@ type UpdateStatusParams struct {
 	ID     uuid.UUID `db:"id" json:"id"`
 }
 
-func (q *Queries) UpdateStatus(ctx context.Context, arg UpdateStatusParams) error {
-	_, err := q.db.Exec(ctx, updateStatus, arg.Status, arg.ID)
-	return err
+func (q *Queries) UpdateStatus(ctx context.Context, arg UpdateStatusParams) (*models.ProductReview, error) {
+	row := q.db.QueryRow(ctx, updateStatus, arg.Status, arg.ID)
+	var i models.ProductReview
+	err := row.Scan(
+		&i.ID,
+		&i.VariantID,
+		&i.UserID,
+		&i.OrderID,
+		&i.Rating,
+		&i.Title,
+		&i.Body,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return &i, err
 }

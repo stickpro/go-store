@@ -18,6 +18,9 @@ type Querier interface {
 	GetAll(ctx context.Context, arg GetAllParams) ([]*models.ProductVariant, error)
 	GetByProductID(ctx context.Context, productID uuid.UUID) ([]*models.ProductVariant, error)
 	GetBySlug(ctx context.Context, slug string) (*models.ProductVariant, error)
+	// Enabled product-variant pages for the sitemap feed. Both the variant and its
+	// parent product must be enabled; updated_at is the variant's own last change.
+	SitemapProducts(ctx context.Context) ([]*SitemapProductsRow, error)
 	Update(ctx context.Context, arg UpdateParams) (*models.ProductVariant, error)
 }
 

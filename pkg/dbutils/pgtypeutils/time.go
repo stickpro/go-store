@@ -19,3 +19,11 @@ func DecodeTime(value pgtype.Timestamp) time.Time {
 	}
 	return value.Time
 }
+
+func DecodeTimePtr(value pgtype.Timestamp) *time.Time {
+	if !value.Valid {
+		return nil
+	}
+	t := value.Time
+	return &t
+}

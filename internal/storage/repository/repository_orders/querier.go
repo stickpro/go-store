@@ -26,6 +26,10 @@ type Querier interface {
 	GetByNumber(ctx context.Context, orderNumber int64) (*models.Order, error)
 	// Row-locks the order for a status transition. Transaction only.
 	GetByNumberForUpdate(ctx context.Context, orderNumber int64) (*models.Order, error)
+	// Newest paid, non-cancelled/refunded order of the user that contains the
+	// variant. Gates review creation to actually-purchased variants; the returned
+	// order id is stored on the review.
+	HasUserPurchasedVariant(ctx context.Context, arg HasUserPurchasedVariantParams) (uuid.UUID, error)
 	// Every filter is optional (NULL = don't filter on it); used by the admin order list.
 	ListAdmin(ctx context.Context, arg ListAdminParams) ([]*models.Order, error)
 	ListByUser(ctx context.Context, arg ListByUserParams) ([]*models.Order, error)

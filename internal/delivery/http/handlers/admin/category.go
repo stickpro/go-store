@@ -54,7 +54,7 @@ func (h *Handler) createCategory(c fiber.Ctx) error {
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/category/:id [PUT]
+//	@Router			/v1/category/{id} [PUT]
 func (h *Handler) updateCategory(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -92,7 +92,8 @@ func (h *Handler) updateCategory(c fiber.Ctx) error {
 //	@Success		200		{object}	response.Result[base.FindResponseWithFullPagination[dto.EnrichedVariantDTO]]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/category/:id/products [GET]
+//	@ID				getAdminCategoryProducts
+//	@Router			/v1/category/{id}/products [GET]
 //	@Security		BearerAuth
 func (h *Handler) getCategoryProducts(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))

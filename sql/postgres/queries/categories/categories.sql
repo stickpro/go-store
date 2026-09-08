@@ -9,3 +9,10 @@ SELECT * FROM categories
 WHERE is_enable = true
 ORDER BY id ASC ;
 
+
+-- name: SitemapCategories :many
+-- Enabled category pages for the sitemap feed.
+SELECT slug, updated_at
+FROM categories
+WHERE is_enable = true
+ORDER BY updated_at DESC NULLS LAST;

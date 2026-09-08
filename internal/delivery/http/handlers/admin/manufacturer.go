@@ -44,12 +44,13 @@ func (h *Handler) createManufacturer(c fiber.Ctx) error {
 //	@Tags			Manufacturer
 //	@Accept			json
 //	@Produce		json
+//	@Param			id		path		string											true	"Manufacturer ID"
 //	@Param			create	body		manufacturer_request.UpdateManufacturerRequest	true	"Update manufacturer"
 //	@Success		200		{object}	response.Result[manufacturer_response.ManufacturerResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		422		{object}	apierror.Errors
 //	@Failure		500		{object}	apierror.Errors
-//	@Router			/v1/manufacturer/:id [PUT]
+//	@Router			/v1/manufacturer/{id} [PUT]
 func (h *Handler) updateManufacturer(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
