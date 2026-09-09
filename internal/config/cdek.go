@@ -23,4 +23,9 @@ type CDEKConfig struct {
 	// DeliveryPointsCountryCode limits the cached list to one country (ISO 3166-1
 	// alpha-2, e.g. "RU"). Empty fetches every CDEK delivery point worldwide.
 	DeliveryPointsCountryCode string `yaml:"delivery_points_country_code" default:"RU" usage:"ISO 3166-1 alpha-2 country code to limit cached delivery points to; empty = worldwide"`
+
+	// TariffCodes are the CDEK tariff codes offered when calculating shipping
+	// cost, e.g. 136 (warehouse-warehouse parcel), 137 (warehouse-door),
+	// 139 (door-door), 366/368 (E-commerce express). Each is quoted separately.
+	TariffCodes []int `yaml:"tariff_codes" usage:"CDEK tariff codes to quote for shipping cost (e.g. 136, 137, 139)"`
 }

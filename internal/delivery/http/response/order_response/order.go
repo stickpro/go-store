@@ -11,12 +11,17 @@ import (
 )
 
 type OrderShippingResponse struct {
-	CityID    *uuid.UUID `json:"city_id"`
-	CityName  string     `json:"city_name"`
-	Address   string     `json:"address"`
-	Postcode  *string    `json:"postcode"`
-	Recipient string     `json:"recipient"`
-	Method    *string    `json:"method"`
+	CityID     *uuid.UUID `json:"city_id"`
+	CityName   string     `json:"city_name"`
+	Address    string     `json:"address"`
+	Postcode   *string    `json:"postcode"`
+	Recipient  string     `json:"recipient"`
+	Method     *string    `json:"method"`
+	Provider   *string    `json:"provider"`
+	TariffCode *string    `json:"tariff_code"`
+	PointCode  *string    `json:"point_code"`
+	MinDays    *int32     `json:"min_days"`
+	MaxDays    *int32     `json:"max_days"`
 } //	@name	OrderShippingResponse
 
 type OrderItemResponse struct {
@@ -79,12 +84,17 @@ func NewFromDTO(d *dto.OrderDTO) *OrderResponse {
 		Email:         d.Email,
 		Phone:         d.Phone,
 		Shipping: OrderShippingResponse{
-			CityID:    d.Shipping.CityID,
-			CityName:  d.Shipping.CityName,
-			Address:   d.Shipping.Address,
-			Postcode:  d.Shipping.Postcode,
-			Recipient: d.Shipping.Recipient,
-			Method:    d.Shipping.Method,
+			CityID:     d.Shipping.CityID,
+			CityName:   d.Shipping.CityName,
+			Address:    d.Shipping.Address,
+			Postcode:   d.Shipping.Postcode,
+			Recipient:  d.Shipping.Recipient,
+			Method:     d.Shipping.Method,
+			Provider:   d.Shipping.Provider,
+			TariffCode: d.Shipping.TariffCode,
+			PointCode:  d.Shipping.PointCode,
+			MinDays:    d.Shipping.MinDays,
+			MaxDays:    d.Shipping.MaxDays,
 		},
 		Items:         items,
 		Subtotal:      d.Subtotal,

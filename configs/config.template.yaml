@@ -79,6 +79,14 @@ order:
   free_shipping_from: "0"
   pending_ttl: 30m0s
   timezone: UTC
+shipping:
+  origin_postal_code: ""
+  default_weight_kg: "0.5"
+  default_length_cm: "20"
+  default_width_cm: "15"
+  default_height_cm: "10"
+  quote_cache_ttl: 6h0m0s
+  methods: []
 cdek:
   enabled: false
   base_url: https://api.cdek.ru/v2
@@ -88,6 +96,7 @@ cdek:
   delivery_points_cache_ttl: 48h0m0s
   delivery_points_refresh_every: 24h0m0s
   delivery_points_country_code: RU
+  tariff_codes: []
 yandex_delivery:
   enabled: false
   base_url: https://b2b-authproxy.taxi.yandex.net
@@ -95,3 +104,16 @@ yandex_delivery:
   request_timeout: 3m0s
   delivery_points_cache_ttl: 48h0m0s
   delivery_points_refresh_every: 24h0m0s
+pochta:
+  enabled: false
+  base_url: https://otpravka-api.pochta.ru
+  access_token: ""
+  user_login: ""
+  user_password: ""
+  request_timeout: 3m0s
+  unload_type: ALL
+  delivery_points_cache_ttl: 72h0m0s
+  delivery_points_refresh_every: 24h0m0s
+  tariff_url: https://tariff.pochta.ru
+  tariff_object_code: 27030
+  tariff_pack_type: 30

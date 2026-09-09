@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/goccy/go-json"
@@ -171,8 +172,18 @@ func (c *client) listAllDeliveryPoints(ctx context.Context) ([]dto.YandexDeliver
 		return nil, fmt.Errorf("yandex delivery pickup-points: unexpected status %d", resp.StatusCode)
 	}
 
+	// Drain the whole (tens-of-MB) body into memory first, then parse. Feeding
+	// the streaming decoder straight off the network makes it read the body in
+	// tiny increments while it works, dragging one request out to minutes — long
+	// enough for the server to drop the connection mid-JSON ("unexpected end of
+	// JSON input"). A plain ReadAll finishes the transfer in a few seconds.
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read pickup-points response: %w", err)
+	}
+
 	var parsed pickupPointsListResponse
-	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+	if err := json.Unmarshal(raw, &parsed); err != nil {
 		return nil, fmt.Errorf("decode pickup-points response: %w", err)
 	}
 

@@ -1,15 +1,19 @@
 package cdek
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/goccy/go-json"
+	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/pkg/logger"
@@ -243,4 +247,83 @@ func (c *client) searchAllDeliveryPoints(ctx context.Context, countryCode string
 	}
 
 	return nil, fmt.Errorf("exceeded %d pages without an empty page from cdek deliverypoints", maxDeliveryPointsPages)
+}
+
+// --- shipping cost calculation (/v2/calculator/tariff) ------------------------
+
+type cdekTariffLocation struct {
+	Code       int    `json:"code,omitempty"`
+	PostalCode string `json:"postal_code,omitempty"`
+	Address    string `json:"address,omitempty"`
+}
+
+type cdekTariffPackage struct {
+	Weight int `json:"weight"` // grams
+	Length int `json:"length"` // cm
+	Width  int `json:"width"`  // cm
+	Height int `json:"height"` // cm
+}
+
+type cdekTariffRequest struct {
+	Type         int                 `json:"type"` // 1 = интернет-магазин, 2 = доставка
+	TariffCode   int                 `json:"tariff_code"`
+	FromLocation cdekTariffLocation  `json:"from_location"`
+	ToLocation   cdekTariffLocation  `json:"to_location"`
+	Packages     []cdekTariffPackage `json:"packages"`
+}
+
+type cdekTariffResponse struct {
+	TotalSum     decimal.Decimal `json:"total_sum"`
+	Currency     string          `json:"currency"`
+	PeriodMin    int             `json:"period_min"`
+	PeriodMax    int             `json:"period_max"`
+	WeightCalc   int             `json:"weight_calc"`
+	DeliveryMode int             `json:"delivery_mode"`
+	Errors       []cdekError     `json:"errors"`
+}
+
+type cdekError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// calculateTariff calls POST /v2/calculator/tariff for a single tariff code.
+func (c *client) calculateTariff(ctx context.Context, reqBody cdekTariffRequest) (*cdekTariffResponse, error) {
+	token, err := c.token(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get access token: %w", err)
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal tariff request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.BaseURL+"/calculator/tariff", bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("build tariff request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request tariff: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 2<<10))
+		return nil, fmt.Errorf("cdek tariff: status %d: %s", resp.StatusCode, strings.TrimSpace(string(raw)))
+	}
+
+	var parsed cdekTariffResponse
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return nil, fmt.Errorf("decode tariff response: %w", err)
+	}
+	if len(parsed.Errors) > 0 {
+		return nil, fmt.Errorf("cdek tariff: %s: %s", parsed.Errors[0].Code, parsed.Errors[0].Message)
+	}
+	return &parsed, nil
 }

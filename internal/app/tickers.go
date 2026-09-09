@@ -47,13 +47,12 @@ func buildWorkers(
 		queueworker.NewMailWorker(q, services.MailService, conf.Workers.MailSend, l).Run(ctx)
 	})
 
-	add("cdek_delivery_points_cache", services.CDEKService != nil, func(ctx context.Context) {
-		services.CDEKService.RunCacheRefresher(ctx)
-	})
-
-	add("yandex_delivery_points_cache", services.YandexDeliveryService != nil, func(ctx context.Context) {
-		services.YandexDeliveryService.RunCacheRefresher(ctx)
-	})
+	for _, provider := range services.Shipping.All() {
+		provider := provider
+		add(provider.Code()+"_delivery_points_cache", provider.Enabled(), func(ctx context.Context) {
+			provider.RunCacheRefresher(ctx)
+		})
+	}
 
 	return workers
 }

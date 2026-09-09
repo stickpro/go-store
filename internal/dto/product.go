@@ -20,6 +20,10 @@ type ProductUpsertDTO struct {
 	StockStatus    constant.StockStatus
 	IsEnable       bool
 	ManufacturerID uuid.NullUUID
+	Weight         decimal.Decimal
+	Length         decimal.Decimal
+	Width          decimal.Decimal
+	Height         decimal.Decimal
 }
 
 type CreateProductVariantDTO struct {

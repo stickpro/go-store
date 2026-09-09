@@ -247,6 +247,10 @@ func (s *Service) enrichCart(ctx context.Context, cart *models.Cart) (*dto.CartD
 			Quantity:    int64(qty),
 			MaxQuantity: row.MaxQuantity,
 			Available:   available,
+			WeightKG:    row.Weight,
+			LengthCM:    row.Length,
+			WidthCM:     row.Width,
+			HeightCM:    row.Height,
 		})
 
 		totalPrice = totalPrice.Add(row.PriceRetail.Mul(decimal.NewFromInt(int64(qty))))

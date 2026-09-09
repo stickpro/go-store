@@ -21,14 +21,13 @@ func NewRedisStorage(client *redis.Client) IKeyValue {
 }
 
 func (o *redisStorage) Get(ctx context.Context, key string) (KeyValueResult, error) {
-	if v := o.client.Get(ctx, key); v.Err() != nil && errors.Is(v.Err(), redis.Nil) {
-		return nil, ErrEntryNotFound
-	}
 	kType, err := o.client.Type(ctx, key).Result()
 	if err != nil {
 		return nil, fmt.Errorf("get key type: %w", err)
 	}
 	switch kType {
+	case "none":
+		return nil, ErrEntryNotFound
 	case "hash":
 		res, err := o.client.HGetAll(ctx, key).Result()
 		if err != nil {
@@ -36,7 +35,14 @@ func (o *redisStorage) Get(ctx context.Context, key string) (KeyValueResult, err
 		}
 		return json.Marshal(res)
 	case "string":
-		return o.client.Get(ctx, key).Bytes()
+		b, err := o.client.Get(ctx, key).Bytes()
+		if err != nil {
+			if errors.Is(err, redis.Nil) {
+				return nil, ErrEntryNotFound
+			}
+			return nil, fmt.Errorf("get key from redis: %w", err)
+		}
+		return b, nil
 	default:
 		return nil, fmt.Errorf("unsupported key type: %s", kType)
 	}

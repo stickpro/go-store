@@ -13,6 +13,7 @@ import (
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/order"
+	"github.com/stickpro/go-store/internal/service/shipping"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
@@ -66,6 +67,43 @@ func (h *Handler) createOrder(c fiber.Ctx) error {
 	}
 
 	return c.JSON(response.OkByData(order_response.NewFromDTO(created)))
+}
+
+// previewCheckout returns the server-computed cart total for a delivery choice.
+//
+//	@Summary		Checkout preview
+//	@Description	Server-computed money breakdown (subtotal + shipping + grand total) for the caller's cart under a delivery choice. Send `delivery_method_code` from GET /v1/delivery/methods plus `ship_point_code` (pickup) or `ship_postcode` (courier). Nothing is persisted; the frontend renders `grand_total` from here instead of adding shipping to the cart total itself.
+//	@Tags			Order
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		order_request.CheckoutPreviewRequest	true	"Delivery choice"
+//	@Success		200		{object}	response.Result[order_response.CheckoutPreviewResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Router			/v1/orders/preview [post]
+func (h *Handler) previewCheckout(c fiber.Ctx) error {
+	owner, err := h.cartOwner(c)
+	if err != nil {
+		return err
+	}
+
+	req := &order_request.CheckoutPreviewRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	var user *models.User
+	if u, aErr := loadAuthUser(c); aErr == nil {
+		user = u
+	}
+
+	result, err := h.services.OrderService.PreviewCheckout(c.Context(), dto.RequestToCheckoutPreviewDTO(req, owner, user))
+	if err != nil {
+		return h.orderError(err)
+	}
+
+	return c.JSON(response.OkByData(order_response.NewCheckoutPreviewFromDTO(result)))
 }
 
 // listOrders returns the authenticated account's orders, newest first.
@@ -140,7 +178,9 @@ func (h *Handler) orderError(err error) error {
 	case errors.As(err, &lineErr):
 		return apierror.New().AddError(lineErr, apierror.WithField(lineErr.VariantID.String())).
 			SetHttpCode(fiber.StatusUnprocessableEntity)
-	case errors.Is(err, order.ErrCartEmpty), errors.Is(err, dto.ErrEmailRequired):
+	case errors.Is(err, order.ErrCartEmpty), errors.Is(err, dto.ErrEmailRequired),
+		errors.Is(err, order.ErrShippingUnavailable), errors.Is(err, order.ErrShippingMethodUnknown),
+		errors.Is(err, shipping.ErrRatesNotSupported):
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusUnprocessableEntity)
 	case errors.Is(err, order.ErrPriceChanged), errors.Is(err, order.ErrInvalidTransition):
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusConflict)
@@ -154,6 +194,7 @@ func (h *Handler) orderError(err error) error {
 func (h *Handler) initOrderRoutes(v1 fiber.Router) {
 	o := v1.Group("/orders")
 	o.Post("/", middleware.OptionalAuthMiddleware(h.services.AuthService), h.createOrder)
+	o.Post("/preview", middleware.OptionalAuthMiddleware(h.services.AuthService), h.previewCheckout)
 	o.Get("/", middleware.AuthMiddleware(h.services.AuthService), h.listOrders)
 	o.Get("/:number", middleware.AuthMiddleware(h.services.AuthService), h.getOrder)
 }

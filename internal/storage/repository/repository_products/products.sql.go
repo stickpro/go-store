@@ -199,6 +199,10 @@ SELECT p.id        AS product_id,
        p.price_wholesale,
        p.quantity   AS max_quantity,
        p.is_enable  AS product_enabled,
+       p.weight,
+       p.length,
+       p.width,
+       p.height,
        pv.id        AS variant_id,
        pv.name,
        pv.slug,
@@ -224,6 +228,10 @@ type GetCartItemsByVariantIDsRow struct {
 	PriceWholesale decimal.Decimal `db:"price_wholesale" json:"price_wholesale"`
 	MaxQuantity    int64           `db:"max_quantity" json:"max_quantity"`
 	ProductEnabled bool            `db:"product_enabled" json:"product_enabled"`
+	Weight         decimal.Decimal `db:"weight" json:"weight"`
+	Length         decimal.Decimal `db:"length" json:"length"`
+	Width          decimal.Decimal `db:"width" json:"width"`
+	Height         decimal.Decimal `db:"height" json:"height"`
 	VariantID      uuid.UUID       `db:"variant_id" json:"variant_id"`
 	Name           string          `db:"name" json:"name"`
 	Slug           string          `db:"slug" json:"slug"`
@@ -250,6 +258,10 @@ func (q *Queries) GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.
 			&i.PriceWholesale,
 			&i.MaxQuantity,
 			&i.ProductEnabled,
+			&i.Weight,
+			&i.Length,
+			&i.Width,
+			&i.Height,
 			&i.VariantID,
 			&i.Name,
 			&i.Slug,
@@ -279,6 +291,10 @@ SELECT p.id          AS product_id,
        p.subtract,
        p.minimum,
        p.is_enable   AS product_enabled,
+       p.weight,
+       p.length,
+       p.width,
+       p.height,
        pv.id         AS variant_id,
        pv.name,
        pv.slug,
@@ -306,6 +322,10 @@ type GetOrderLinesByVariantIDsRow struct {
 	Subtract       bool            `db:"subtract" json:"subtract"`
 	Minimum        int64           `db:"minimum" json:"minimum"`
 	ProductEnabled bool            `db:"product_enabled" json:"product_enabled"`
+	Weight         decimal.Decimal `db:"weight" json:"weight"`
+	Length         decimal.Decimal `db:"length" json:"length"`
+	Width          decimal.Decimal `db:"width" json:"width"`
+	Height         decimal.Decimal `db:"height" json:"height"`
 	VariantID      uuid.UUID       `db:"variant_id" json:"variant_id"`
 	Name           string          `db:"name" json:"name"`
 	Slug           string          `db:"slug" json:"slug"`
@@ -336,6 +356,10 @@ func (q *Queries) GetOrderLinesByVariantIDs(ctx context.Context, dollar_1 []uuid
 			&i.Subtract,
 			&i.Minimum,
 			&i.ProductEnabled,
+			&i.Weight,
+			&i.Length,
+			&i.Width,
+			&i.Height,
 			&i.VariantID,
 			&i.Name,
 			&i.Slug,

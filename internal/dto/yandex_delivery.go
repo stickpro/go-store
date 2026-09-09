@@ -45,12 +45,3 @@ type YandexDeliveryScheduleDTO struct {
 	TimeFrom string `json:"time_from"`
 	TimeTo   string `json:"time_to"`
 }
-
-// YandexDeliveryPointsFilter narrows the cached delivery points list. All fields
-// are optional; the zero value of a field means "don't filter on it".
-type YandexDeliveryPointsFilter struct {
-	GeoID    *int
-	Locality string
-	Type     string // "pickup_point" or "terminal"
-	BBox     *GeoBBox
-}

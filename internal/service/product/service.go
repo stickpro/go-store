@@ -328,6 +328,10 @@ func (s *Service) UpsertProductByExternalID(ctx context.Context, externalID stri
 			PriceRetail:    d.PriceRetail,
 			PriceBusiness:  d.PriceBusiness,
 			PriceWholesale: d.PriceWholesale,
+			Weight:         d.Weight,
+			Length:         d.Length,
+			Width:          d.Width,
+			Height:         d.Height,
 			IsEnable:       d.IsEnable,
 		})
 	}
@@ -343,6 +347,10 @@ func (s *Service) UpsertProductByExternalID(ctx context.Context, externalID stri
 		PriceRetail:    d.PriceRetail,
 		PriceBusiness:  d.PriceBusiness,
 		PriceWholesale: d.PriceWholesale,
+		Weight:         d.Weight,
+		Length:         d.Length,
+		Width:          d.Width,
+		Height:         d.Height,
 		IsEnable:       d.IsEnable,
 	})
 	if err != nil {

@@ -37,6 +37,10 @@ func (h *ProductHandler) HandleProduct(ctx context.Context, p contracts.ProductP
 		Quantity:       p.Quantity,
 		StockStatus:    p.StockStatus,
 		IsEnable:       p.IsEnable,
+		Weight:         p.Weight.Decimal,
+		Length:         p.Length.Decimal,
+		Width:          p.Width.Decimal,
+		Height:         p.Height.Decimal,
 	}
 
 	items := make([]dto.AttributeKafkaItem, len(p.Attributes))

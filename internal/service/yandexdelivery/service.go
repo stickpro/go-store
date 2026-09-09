@@ -1,191 +1,74 @@
 package yandexdelivery
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"sync"
-	"time"
-
-	"github.com/goccy/go-json"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/service/shipping"
 	"github.com/stickpro/go-store/pkg/key_value"
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
-// IYandexDeliveryService exposes the Yandex Delivery pickup points list. The
-// list is fetched from the Yandex Delivery API and kept in process memory
-// (the full list is tens of MB, so it is not re-read from the key/value store
-// per request); the key/value store only holds a copy for a warm start after a
-// restart. Callers never hit the Yandex API directly.
-type IYandexDeliveryService interface {
-	// ListDeliveryPoints returns the in-memory delivery points, optionally
-	// narrowed by filter. Returns an empty slice (not an error) if the list
-	// hasn't been loaded yet or the integration is disabled.
-	ListDeliveryPoints(ctx context.Context, filter dto.YandexDeliveryPointsFilter) ([]dto.YandexDeliveryPointDTO, error)
-	// RefreshDeliveryPoints fetches the full pickup points list from the Yandex
-	// Delivery API, swaps it into memory and persists a copy to the key/value
-	// store.
-	RefreshDeliveryPoints(ctx context.Context) error
-	// RunCacheRefresher blocks, keeping the in-memory list warm: it seeds memory
-	// from the persisted copy (or the API if there is none), then refreshes it
-	// on cfg.YandexDelivery.DeliveryPointsRefreshEvery until ctx is cancelled.
-	// No-op if the integration is disabled.
-	RunCacheRefresher(ctx context.Context)
+// New builds the Yandex Delivery (Яндекс Доставка) provider. It serves pickup
+// points via the shared cache engine but is not a shipping.RateProvider —
+// Yandex cost calculation (Platform offers/create) needs a platform_station_id,
+// a warehouse registered in the Yandex cabinet, which is not configured. So
+// /v1/delivery/yandex_delivery/rates returns 404 and QuoteAll skips it.
+func New(cfg *config.Config, l logger.Logger, kv key_value.IKeyValue) shipping.Provider {
+	c := newClient(cfg.YandexDelivery, l)
+	return shipping.NewCachedProvider(shipping.ProviderConfig{
+		Code:         "yandex_delivery",
+		Enabled:      cfg.YandexDelivery.Enabled,
+		CacheKey:     constant.CacheKeyYandexDeliveryPoints,
+		CacheTTL:     cfg.YandexDelivery.DeliveryPointsCacheTTL,
+		RefreshEvery: cfg.YandexDelivery.DeliveryPointsRefreshEvery,
+	}, kv, l, c.listAllDeliveryPoints, toDeliveryPoint)
 }
 
-type Service struct {
-	cfg    *config.Config
-	logger logger.Logger
-	kv     key_value.IKeyValue
-	client *client
-
-	mu     sync.RWMutex
-	points []dto.YandexDeliveryPointDTO
-	loaded bool
-}
-
-func New(cfg *config.Config, l logger.Logger, kv key_value.IKeyValue) *Service {
-	return &Service{
-		cfg:    cfg,
-		logger: l,
-		kv:     kv,
-		client: newClient(cfg.YandexDelivery, l),
-	}
-}
-
-func (s *Service) ListDeliveryPoints(_ context.Context, filter dto.YandexDeliveryPointsFilter) ([]dto.YandexDeliveryPointDTO, error) {
-	if !s.cfg.YandexDelivery.Enabled {
-		return []dto.YandexDeliveryPointDTO{}, nil
+func toDeliveryPoint(p dto.YandexDeliveryPointDTO) dto.DeliveryPoint {
+	var phones []string
+	if p.Phone != "" {
+		phones = []string{p.Phone}
 	}
 
-	s.mu.RLock()
-	points := s.points // the slice is only ever replaced wholesale, never mutated
-	s.mu.RUnlock()
-
-	return applyFilter(points, filter), nil
-}
-
-func (s *Service) RefreshDeliveryPoints(ctx context.Context) error {
-	points, err := s.client.listAllDeliveryPoints(ctx)
-	if err != nil {
-		return fmt.Errorf("list yandex delivery pickup points: %w", err)
-	}
-
-	s.store(points)
-
-	if err := s.persist(ctx, points); err != nil {
-		// Memory is the source of truth; a failed persist only costs a warm start.
-		s.logger.Errorw("yandex delivery: persist delivery points cache", "error", err)
-	}
-
-	s.logger.Infow("yandex delivery: delivery points refreshed", "count", len(points))
-	return nil
-}
-
-func (s *Service) RunCacheRefresher(ctx context.Context) {
-	if !s.cfg.YandexDelivery.Enabled {
-		return
-	}
-
-	if points, err := s.loadPersisted(ctx); err != nil {
-		s.logger.Errorw("yandex delivery: read persisted delivery points", "error", err)
-	} else if points != nil {
-		s.store(points)
-		s.logger.Infow("yandex delivery: delivery points loaded from cache", "count", len(points))
-	}
-
-	if !s.isLoaded() {
-		if err := s.RefreshDeliveryPoints(ctx); err != nil {
-			s.logger.Errorw("yandex delivery: initial delivery points refresh failed", "error", err)
+	hasCard := false
+	for _, m := range p.PaymentMethods {
+		if m == "card_on_receipt" || m == "card" {
+			hasCard = true
 		}
 	}
 
-	interval := s.cfg.YandexDelivery.DeliveryPointsRefreshEvery
-	if interval <= 0 {
-		interval = 24 * time.Hour
+	return dto.DeliveryPoint{
+		Provider:    "yandex_delivery",
+		Code:        p.Code,
+		Name:        p.Name,
+		Type:        p.Type,
+		PostalCode:  p.PostalCode,
+		Country:     p.Country,
+		Region:      p.Region,
+		Locality:    p.Locality,
+		Address:     p.FullAddress,
+		Latitude:    p.Latitude,
+		Longitude:   p.Longitude,
+		Phones:      phones,
+		Email:       p.Email,
+		CardPayment: hasCard,
+		Details: map[string]any{
+			"operator_station_id":   p.OperatorStationID,
+			"operator_id":           p.OperatorID,
+			"sub_region":            p.SubRegion,
+			"street":                p.Street,
+			"house":                 p.House,
+			"geo_id":                p.GeoID,
+			"instruction":           p.Instruction,
+			"payment_methods":       p.PaymentMethods,
+			"time_zone":             p.TimeZone,
+			"schedule":              p.Schedule,
+			"is_yandex_branded":     p.IsYandexBranded,
+			"is_market_partner":     p.IsMarketPartner,
+			"is_post_office":        p.IsPostOffice,
+			"available_for_dropoff": p.AvailableForDropoff,
+			"deactivation_date":     p.DeactivationDate,
+		},
 	}
-
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			if err := s.RefreshDeliveryPoints(ctx); err != nil {
-				s.logger.Errorw("yandex delivery: delivery points refresh failed", "error", err)
-			}
-		}
-	}
-}
-
-func (s *Service) store(points []dto.YandexDeliveryPointDTO) {
-	s.mu.Lock()
-	s.points = points
-	s.loaded = true
-	s.mu.Unlock()
-}
-
-func (s *Service) isLoaded() bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.loaded
-}
-
-func (s *Service) persist(ctx context.Context, points []dto.YandexDeliveryPointDTO) error {
-	data, err := json.Marshal(points)
-	if err != nil {
-		return fmt.Errorf("marshal delivery points: %w", err)
-	}
-	if err := s.kv.Set(ctx, constant.CacheKeyYandexDeliveryPoints, string(data), s.cfg.YandexDelivery.DeliveryPointsCacheTTL); err != nil {
-		return fmt.Errorf("cache delivery points: %w", err)
-	}
-	return nil
-}
-
-// loadPersisted returns nil (no error) if there is no persisted copy yet.
-func (s *Service) loadPersisted(ctx context.Context) ([]dto.YandexDeliveryPointDTO, error) {
-	data, err := s.kv.Get(ctx, constant.CacheKeyYandexDeliveryPoints)
-	if err != nil {
-		if errors.Is(err, key_value.ErrEntryNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	var points []dto.YandexDeliveryPointDTO
-	if err := json.Unmarshal(data.Bytes(), &points); err != nil {
-		return nil, fmt.Errorf("unmarshal persisted delivery points: %w", err)
-	}
-
-	return points, nil
-}
-
-func applyFilter(points []dto.YandexDeliveryPointDTO, filter dto.YandexDeliveryPointsFilter) []dto.YandexDeliveryPointDTO {
-	if filter.GeoID == nil && filter.Locality == "" && filter.Type == "" && filter.BBox == nil {
-		return points
-	}
-
-	result := make([]dto.YandexDeliveryPointDTO, 0, len(points))
-	for _, p := range points {
-		if filter.GeoID != nil && p.GeoID != *filter.GeoID {
-			continue
-		}
-		if filter.Locality != "" && p.Locality != filter.Locality {
-			continue
-		}
-		if filter.Type != "" && p.Type != filter.Type {
-			continue
-		}
-		if filter.BBox != nil && !filter.BBox.Contains(p.Latitude, p.Longitude) {
-			continue
-		}
-		result = append(result, p)
-	}
-
-	return result
 }

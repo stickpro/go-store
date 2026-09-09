@@ -134,15 +134,23 @@ func (s *Service) buildOrder(
 			imagePath: pgtypeutils.DecodeText(r.ImagePath),
 			unitPrice: unit,
 			quantity:  qty,
+			weightKG:  r.Weight,
+			lengthCM:  r.Length,
+			widthCM:   r.Width,
+			heightCM:  r.Height,
 		})
 	}
 
-	totals := computeTotals(lines, s.shippingFor(sumSubtotal(lines)))
+	shipChoice, err := s.resolveShipping(ctx, d.ShippingSelection(), lines)
+	if err != nil {
+		return nil, nil, err
+	}
+	totals := computeTotals(lines, shipChoice.cost)
 	if d.ExpectedTotal != nil && !d.ExpectedTotal.Equal(totals.grand) {
 		return nil, nil, ErrPriceChanged
 	}
 
-	createdOrder, err := s.storage.Orders(repository.WithTx(tx)).Create(ctx, s.createParams(d, totals))
+	createdOrder, err := s.storage.Orders(repository.WithTx(tx)).Create(ctx, s.createParams(d, totals, shipChoice))
 	if err != nil {
 		if uc := new(pgerror.UniqueConstraintError); errors.As(pgerror.ParseError(err), &uc) {
 			return nil, nil, errDuplicateOrder
@@ -200,7 +208,7 @@ func (s *Service) buildOrder(
 	return createdOrder, orderItems, nil
 }
 
-func (s *Service) createParams(d dto.CreateOrderDTO, t orderTotals) repository_orders.CreateParams {
+func (s *Service) createParams(d dto.CreateOrderDTO, t orderTotals, sc shippingChoice) repository_orders.CreateParams {
 	var userID uuid.NullUUID
 	if d.User != nil {
 		userID = uuid.NullUUID{UUID: d.User.ID, Valid: true}
@@ -226,7 +234,12 @@ func (s *Service) createParams(d dto.CreateOrderDTO, t orderTotals) repository_o
 		ShipAddress:    d.ShipAddress,
 		ShipPostcode:   pgtypeutils.EncodeText(d.ShipPostcode),
 		ShipRecipient:  d.ShipRecipient,
-		ShippingMethod: pgtypeutils.EncodeText(d.ShippingMethod),
+		ShippingMethod: pgtypeutils.EncodeText(firstNonNil(sc.method, d.ShippingMethod)),
+		ShipProvider:   pgtypeutils.EncodeText(sc.provider),
+		ShipTariffCode: pgtypeutils.EncodeText(sc.tariff),
+		ShipPointCode:  pgtypeutils.EncodeText(sc.point),
+		ShipMinDays:    pgtypeutils.EncodeInt4(sc.minDays),
+		ShipMaxDays:    pgtypeutils.EncodeInt4(sc.maxDays),
 		Subtotal:       t.subtotal,
 		DiscountTotal:  t.discount,
 		ShippingTotal:  t.shipping,

@@ -32,6 +32,14 @@ type CreateOrderDTO struct {
 	ShipRecipient  string
 	ShippingMethod *string
 
+	// Delivery choice. DeliveryMethodCode (from GET /v1/delivery/methods) is
+	// resolved to a carrier + tariff by the order service; ShipProvider +
+	// ShipTariffCode are the raw fallback. With neither, flat/free shipping.
+	DeliveryMethodCode *string
+	ShipProvider       *string
+	ShipTariffCode     *string
+	ShipPointCode      *string
+
 	PaymentMethod string
 	Comment       *string
 
@@ -68,20 +76,73 @@ func RequestToCreateOrderDTO(req *order_request.CreateOrderRequest, owner Owner,
 	}
 
 	return CreateOrderDTO{
-		Owner:          owner,
-		User:           user,
-		Email:          email,
-		Phone:          req.Phone,
-		ShipCityID:     req.ShipCityID,
-		ShipCityName:   req.ShipCityName,
-		ShipAddress:    req.ShipAddress,
-		ShipPostcode:   req.ShipPostcode,
-		ShipRecipient:  req.ShipRecipient,
-		ShippingMethod: req.ShippingMethod,
-		PaymentMethod:  req.PaymentMethod,
-		Comment:        req.Comment,
-		ExpectedTotal:  expected,
+		Owner:              owner,
+		User:               user,
+		Email:              email,
+		Phone:              req.Phone,
+		ShipCityID:         req.ShipCityID,
+		ShipCityName:       req.ShipCityName,
+		ShipAddress:        req.ShipAddress,
+		ShipPostcode:       req.ShipPostcode,
+		ShipRecipient:      req.ShipRecipient,
+		ShippingMethod:     req.ShippingMethod,
+		DeliveryMethodCode: req.DeliveryMethodCode,
+		ShipProvider:       req.ShipProvider,
+		ShipTariffCode:     req.ShipTariffCode,
+		ShipPointCode:      req.ShipPointCode,
+		PaymentMethod:      req.PaymentMethod,
+		Comment:            req.Comment,
+		ExpectedTotal:      expected,
 	}, nil
+}
+
+// ShippingSelection groups the delivery-choice fields of the checkout DTO.
+func (d CreateOrderDTO) ShippingSelection() ShippingSelection {
+	return ShippingSelection{
+		MethodCode: d.DeliveryMethodCode,
+		Provider:   d.ShipProvider,
+		TariffCode: d.ShipTariffCode,
+		PointCode:  d.ShipPointCode,
+		Postcode:   d.ShipPostcode,
+		Method:     d.ShippingMethod,
+	}
+}
+
+// CheckoutPreviewDTO asks the order service for the server-computed cart total
+// under a delivery choice, without creating an order. The cart is the caller's.
+type CheckoutPreviewDTO struct {
+	Owner    Owner
+	User     *models.User
+	Shipping ShippingSelection
+}
+
+// CheckoutPreviewResultDTO is the authoritative money breakdown for a cart +
+// delivery choice. The frontend renders GrandTotal directly instead of adding
+// shipping to the cart total itself.
+type CheckoutPreviewResultDTO struct {
+	Currency      string
+	ItemCount     int
+	Subtotal      decimal.Decimal
+	DiscountTotal decimal.Decimal
+	ShippingTotal decimal.Decimal
+	TaxTotal      decimal.Decimal
+	GrandTotal    decimal.Decimal
+	Shipping      OrderShippingDTO
+}
+
+// RequestToCheckoutPreviewDTO builds the preview input from the HTTP request.
+func RequestToCheckoutPreviewDTO(req *order_request.CheckoutPreviewRequest, owner Owner, user *models.User) CheckoutPreviewDTO {
+	return CheckoutPreviewDTO{
+		Owner: owner,
+		User:  user,
+		Shipping: ShippingSelection{
+			MethodCode: req.DeliveryMethodCode,
+			Provider:   req.ShipProvider,
+			TariffCode: req.ShipTariffCode,
+			PointCode:  req.ShipPointCode,
+			Postcode:   req.ShipPostcode,
+		},
+	}
 }
 
 // RequestToListOrdersDTO maps the paging query into the shared GetDTO.
@@ -146,6 +207,21 @@ type OrderStatusUpdateDTO struct {
 	PaymentMethod *string
 }
 
+// ShippingSelection is the customer's delivery choice, shared by the checkout
+// preview and the checkout itself.
+//
+// MethodCode (from GET /v1/delivery/methods) is the preferred input — the order
+// service resolves it to a carrier + tariff. Provider + TariffCode are the raw
+// fallback. With neither, the configured flat/free shipping applies.
+type ShippingSelection struct {
+	MethodCode *string
+	Provider   *string
+	TariffCode *string
+	PointCode  *string
+	Postcode   *string
+	Method     *string
+}
+
 type OrderShippingDTO struct {
 	CityID    *uuid.UUID
 	CityName  string
@@ -153,6 +229,13 @@ type OrderShippingDTO struct {
 	Postcode  *string
 	Recipient string
 	Method    *string
+
+	// Carrier snapshot: what was picked and quoted at checkout.
+	Provider   *string
+	TariffCode *string
+	PointCode  *string
+	MinDays    *int32
+	MaxDays    *int32
 }
 
 type OrderItemDTO struct {
@@ -206,12 +289,17 @@ func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
 		Email:         o.Email,
 		Phone:         pgtypeutils.DecodeText(o.Phone),
 		Shipping: OrderShippingDTO{
-			CityID:    nullUUIDPtr(o.ShipCityID),
-			CityName:  o.ShipCityName,
-			Address:   o.ShipAddress,
-			Postcode:  pgtypeutils.DecodeText(o.ShipPostcode),
-			Recipient: o.ShipRecipient,
-			Method:    pgtypeutils.DecodeText(o.ShippingMethod),
+			CityID:     nullUUIDPtr(o.ShipCityID),
+			CityName:   o.ShipCityName,
+			Address:    o.ShipAddress,
+			Postcode:   pgtypeutils.DecodeText(o.ShipPostcode),
+			Recipient:  o.ShipRecipient,
+			Method:     pgtypeutils.DecodeText(o.ShippingMethod),
+			Provider:   pgtypeutils.DecodeText(o.ShipProvider),
+			TariffCode: pgtypeutils.DecodeText(o.ShipTariffCode),
+			PointCode:  pgtypeutils.DecodeText(o.ShipPointCode),
+			MinDays:    pgtypeutils.DecodeInt4(o.ShipMinDays),
+			MaxDays:    pgtypeutils.DecodeInt4(o.ShipMaxDays),
 		},
 		Subtotal:      o.Subtotal,
 		DiscountTotal: o.DiscountTotal,

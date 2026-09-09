@@ -22,6 +22,13 @@ type CartItemsDTO struct {
 	Quantity    int64
 	MaxQuantity int64
 	Available   bool
+
+	// Parcel dimensions of the product, from the products table.
+	// Weight is kilograms, dimensions are centimetres; zero means "not set".
+	WeightKG decimal.Decimal
+	LengthCM decimal.Decimal
+	WidthCM  decimal.Decimal
+	HeightCM decimal.Decimal
 }
 
 type AddCartItemDTO struct {

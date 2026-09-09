@@ -2205,89 +2205,6 @@
                 }
             }
         },
-        "/v1/cdek/delivery-points": {
-            "get": {
-                "description": "List cached CDEK delivery points (offices and postomats). The list is refreshed in the background once a day; use the query params to narrow it down. min_lat/max_lat/min_lon/max_lon narrow the result to a map viewport and must be supplied together.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "CDEK"
-                ],
-                "summary": "List CDEK delivery points",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "CDEK city code",
-                        "name": "city_code",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Postal code",
-                        "name": "postal_code",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "PVZ",
-                            "POSTAMAT"
-                        ],
-                        "type": "string",
-                        "description": "Delivery point type",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Map viewport min latitude (requires max_lat, min_lon, max_lon)",
-                        "name": "min_lat",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Map viewport max latitude (requires min_lat, min_lon, max_lon)",
-                        "name": "max_lat",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Map viewport min longitude (requires min_lat, max_lat, max_lon)",
-                        "name": "min_lon",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Map viewport max longitude (requires min_lat, max_lat, min_lon)",
-                        "name": "max_lon",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_CDEKDeliveryPointResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/collection/": {
             "get": {
                 "security": [
@@ -2544,6 +2461,268 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/delivery/methods": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Delivery"
+                ],
+                "summary": "List delivery methods",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_DeliveryMethodResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/delivery/providers": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Delivery"
+                ],
+                "summary": "List delivery carriers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_DeliveryProviderResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/delivery/rates": {
+            "post": {
+                "description": "Shipping cost for a parcel from every enabled carrier. Destination is a pickup point (to_point_code) or a postal code (to_postal_code). Parcel weight (kg) / dimensions (cm) are optional: omit them and the parcel is derived from the caller's cart (auth or X-Session-ID), falling back to the store default. Results are cached server-side per route.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Delivery"
+                ],
+                "summary": "Calculate shipping rates (all carriers)",
+                "parameters": [
+                    {
+                        "description": "Parcel and route",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CalculateRatesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_ShippingRateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/delivery/{provider}/points": {
+            "get": {
+                "description": "Cached pickup points for one delivery carrier, mapped to a common shape (carrier-specific fields live under `details`). min_lat/max_lat/min_lon/max_lon narrow the result to a map viewport and must be supplied together; latitude+longitude (with optional radius_km) narrow it to a radius around a point, nearest first.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Delivery"
+                ],
+                "summary": "List carrier pickup points",
+                "parameters": [
+                    {
+                        "enum": [
+                            "cdek",
+                            "yandex_delivery",
+                            "pochta"
+                        ],
+                        "type": "string",
+                        "description": "Delivery carrier",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 20,
+                        "type": "string",
+                        "name": "index",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "name": "latitude",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 200,
+                        "type": "string",
+                        "name": "locality",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "name": "longitude",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "name": "max_lat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "name": "max_lon",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "name": "min_lat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "name": "min_lon",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 2000,
+                        "type": "number",
+                        "name": "radius_km",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 200,
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 100,
+                        "type": "string",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_DeliveryPointResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/delivery/{provider}/rates": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Delivery"
+                ],
+                "summary": "Calculate shipping rates (one carrier)",
+                "parameters": [
+                    {
+                        "enum": [
+                            "cdek",
+                            "yandex_delivery",
+                            "pochta"
+                        ],
+                        "type": "string",
+                        "description": "Delivery carrier",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Parcel and route",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CalculateRatesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_ShippingRateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -3144,6 +3323,58 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/orders/preview": {
+            "post": {
+                "description": "Server-computed money breakdown (subtotal + shipping + grand total) for the caller's cart under a delivery choice. Send `delivery_method_code` from GET /v1/delivery/methods plus `ship_point_code` (pickup) or `ship_postcode` (courier). Nothing is persisted; the frontend renders `grand_total` from here instead of adding shipping to the cart total itself.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Checkout preview",
+                "parameters": [
+                    {
+                        "description": "Delivery choice",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CheckoutPreviewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-CheckoutPreviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -4757,89 +4988,6 @@
                     }
                 }
             }
-        },
-        "/v1/yandex-delivery/delivery-points": {
-            "get": {
-                "description": "List cached Yandex Delivery pickup points (ПВЗ and postomats). The list is refreshed in the background once a day; use the query params to narrow it down. min_lat/max_lat/min_lon/max_lon narrow the result to a map viewport and must be supplied together.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "YandexDelivery"
-                ],
-                "summary": "List Yandex Delivery pickup points",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Yandex geo id (locality)",
-                        "name": "geo_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Locality name",
-                        "name": "locality",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "pickup_point",
-                            "terminal"
-                        ],
-                        "type": "string",
-                        "description": "Pickup point type",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Map viewport min latitude (requires max_lat, min_lon, max_lon)",
-                        "name": "min_lat",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Map viewport max latitude (requires min_lat, min_lon, max_lon)",
-                        "name": "max_lat",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Map viewport min longitude (requires min_lat, max_lat, max_lon)",
-                        "name": "min_lon",
-                        "in": "query"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Map viewport max longitude (requires min_lat, max_lat, min_lon)",
-                        "name": "max_lon",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/JSONResponse-array_YandexDeliveryPointResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/APIErrors"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -5203,88 +5351,39 @@
                 }
             }
         },
-        "CDEKDeliveryPointResponse": {
+        "CalculateRatesRequest": {
             "type": "object",
             "properties": {
-                "address": {
+                "declared_value": {
                     "type": "string"
                 },
-                "address_full": {
+                "delivery_type": {
+                    "type": "string",
+                    "enum": [
+                        "pickup",
+                        "courier"
+                    ]
+                },
+                "from_postal_code": {
                     "type": "string"
                 },
-                "allowed_cod": {
-                    "type": "boolean"
-                },
-                "city": {
+                "height_cm": {
                     "type": "string"
                 },
-                "city_code": {
-                    "type": "integer"
-                },
-                "code": {
+                "length_cm": {
                     "type": "string"
                 },
-                "country_code": {
+                "to_point_code": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "to_postal_code": {
                     "type": "string"
                 },
-                "email": {
+                "weight_kg": {
                     "type": "string"
                 },
-                "have_cash": {
-                    "type": "boolean"
-                },
-                "have_cashless": {
-                    "type": "boolean"
-                },
-                "is_dressing_room": {
-                    "type": "boolean"
-                },
-                "is_handout": {
-                    "type": "boolean"
-                },
-                "is_reception": {
-                    "type": "boolean"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "phones": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "region_code": {
-                    "type": "integer"
-                },
-                "take_only": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "weight_max": {
-                    "type": "number"
-                },
-                "weight_min": {
-                    "type": "number"
-                },
-                "work_time": {
+                "width_cm": {
                     "type": "string"
                 }
             }
@@ -5482,6 +5581,65 @@
                 },
                 "slug": {
                     "type": "string"
+                }
+            }
+        },
+        "CheckoutPreviewRequest": {
+            "type": "object",
+            "properties": {
+                "delivery_method_code": {
+                    "description": "delivery_method_code from GET /v1/delivery/methods (preferred).",
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "ship_point_code": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "ship_postcode": {
+                    "type": "string",
+                    "maxLength": 16
+                },
+                "ship_provider": {
+                    "type": "string",
+                    "enum": [
+                        "cdek",
+                        "yandex_delivery",
+                        "pochta"
+                    ]
+                },
+                "ship_tariff_code": {
+                    "type": "string",
+                    "maxLength": 64
+                }
+            }
+        },
+        "CheckoutPreviewResponse": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "discount_total": {
+                    "type": "number"
+                },
+                "grand_total": {
+                    "type": "number"
+                },
+                "item_count": {
+                    "type": "integer"
+                },
+                "shipping": {
+                    "$ref": "#/definitions/OrderShippingResponse"
+                },
+                "shipping_total": {
+                    "type": "number"
+                },
+                "subtotal": {
+                    "type": "number"
+                },
+                "tax_total": {
+                    "type": "number"
                 }
             }
         },
@@ -5871,6 +6029,11 @@
                     "type": "string",
                     "maxLength": 2000
                 },
+                "delivery_method_code": {
+                    "description": "Delivery choice. delivery_method_code (from GET /v1/delivery/methods) is\nresolved server-side to a carrier + tariff — the frontend never sends\ntariff codes. ship_provider + ship_tariff_code are the raw fallback\n(ship_tariff_code must be paired with ship_provider). ship_point_code is\nthe chosen pickup point; for courier methods send ship_postcode instead.",
+                    "type": "string",
+                    "maxLength": 32
+                },
                 "email": {
                     "type": "string"
                 },
@@ -5897,13 +6060,29 @@
                     "type": "string",
                     "maxLength": 255
                 },
+                "ship_point_code": {
+                    "type": "string",
+                    "maxLength": 64
+                },
                 "ship_postcode": {
                     "type": "string",
                     "maxLength": 16
                 },
+                "ship_provider": {
+                    "type": "string",
+                    "enum": [
+                        "cdek",
+                        "yandex_delivery",
+                        "pochta"
+                    ]
+                },
                 "ship_recipient": {
                     "type": "string",
                     "maxLength": 255
+                },
+                "ship_tariff_code": {
+                    "type": "string",
+                    "maxLength": 64
                 },
                 "shipping_method": {
                     "type": "string",
@@ -6179,6 +6358,113 @@
                 }
             }
         },
+        "DeliveryMethodResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "free": {
+                    "type": "boolean"
+                },
+                "has_points": {
+                    "type": "boolean"
+                },
+                "has_rates": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "description": "self_pickup | pickup | courier",
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "tariff_code": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "DeliveryPointResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "card_payment": {
+                    "type": "boolean"
+                },
+                "cash_payment": {
+                    "type": "boolean"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "email": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "locality": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phones": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "work_time": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "DeliveryProviderResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
         "FullPagingData": {
             "type": "object",
             "properties": {
@@ -6353,6 +6639,20 @@
                 },
                 "data": {
                     "$ref": "#/definitions/CategoryResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-CheckoutPreviewResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/CheckoutPreviewResponse"
                 },
                 "message": {
                     "type": "string"
@@ -6817,23 +7117,6 @@
                 }
             }
         },
-        "JSONResponse-array_CDEKDeliveryPointResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/CDEKDeliveryPointResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
         "JSONResponse-array_CategoryTreeResponse": {
             "type": "object",
             "properties": {
@@ -6868,6 +7151,57 @@
                 }
             }
         },
+        "JSONResponse-array_DeliveryMethodResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DeliveryMethodResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-array_DeliveryPointResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DeliveryPointResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-array_DeliveryProviderResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DeliveryProviderResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-array_ProductVariantResponse": {
             "type": "object",
             "properties": {
@@ -6878,6 +7212,23 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/ProductVariantResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-array_ShippingRateResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ShippingRateResponse"
                     }
                 },
                 "message": {
@@ -6929,23 +7280,6 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/VariantCategoryResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "JSONResponse-array_YandexDeliveryPointResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/YandexDeliveryPointResponse"
                     }
                 },
                 "message": {
@@ -7183,13 +7517,28 @@
                 "city_name": {
                     "type": "string"
                 },
+                "max_days": {
+                    "type": "integer"
+                },
                 "method": {
+                    "type": "string"
+                },
+                "min_days": {
+                    "type": "integer"
+                },
+                "point_code": {
                     "type": "string"
                 },
                 "postcode": {
                     "type": "string"
                 },
+                "provider": {
+                    "type": "string"
+                },
                 "recipient": {
+                    "type": "string"
+                },
+                "tariff_code": {
                     "type": "string"
                 }
             }
@@ -7592,6 +7941,39 @@
             "properties": {
                 "sent": {
                     "type": "boolean"
+                }
+            }
+        },
+        "ShippingRateResponse": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "delivery_type": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "max_days": {
+                    "type": "integer"
+                },
+                "min_days": {
+                    "type": "integer"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "tariff_code": {
+                    "type": "string"
+                },
+                "tariff_name": {
+                    "type": "string"
                 }
             }
         },
@@ -8166,115 +8548,6 @@
                     "items": {
                         "$ref": "#/definitions/ViewedItemResponse"
                     }
-                }
-            }
-        },
-        "YandexDeliveryPointResponse": {
-            "type": "object",
-            "properties": {
-                "available_for_dropoff": {
-                    "type": "boolean"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "deactivation_date": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "full_address": {
-                    "type": "string"
-                },
-                "geo_id": {
-                    "type": "integer"
-                },
-                "house": {
-                    "type": "string"
-                },
-                "instruction": {
-                    "type": "string"
-                },
-                "is_market_partner": {
-                    "type": "boolean"
-                },
-                "is_post_office": {
-                    "type": "boolean"
-                },
-                "is_yandex_branded": {
-                    "type": "boolean"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "locality": {
-                    "type": "string"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "operator_id": {
-                    "type": "string"
-                },
-                "operator_station_id": {
-                    "type": "string"
-                },
-                "payment_methods": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "schedule": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/YandexDeliveryScheduleResponse"
-                    }
-                },
-                "street": {
-                    "type": "string"
-                },
-                "sub_region": {
-                    "type": "string"
-                },
-                "time_zone": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "YandexDeliveryScheduleResponse": {
-            "type": "object",
-            "properties": {
-                "days": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "time_from": {
-                    "type": "string"
-                },
-                "time_to": {
-                    "type": "string"
                 }
             }
         },

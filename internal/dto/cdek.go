@@ -34,16 +34,3 @@ type CDEKDeliveryPointDTO struct {
 	WeightMin float64 `json:"weight_min"`
 	WeightMax float64 `json:"weight_max"`
 }
-
-// CDEKDeliveryPointsFilter narrows the cached delivery points list. All fields
-// are optional; the zero value of a field means "don't filter on it".
-type CDEKDeliveryPointsFilter struct {
-	CityCode   *int
-	PostalCode string
-	Type       string // "PVZ" or "POSTAMAT"
-	BBox       *CDEKDeliveryPointsBBox
-}
-
-// CDEKDeliveryPointsBBox narrows delivery points to a rectangular geographic
-// area (typically a map viewport). It is an alias for the shared GeoBBox.
-type CDEKDeliveryPointsBBox = GeoBBox

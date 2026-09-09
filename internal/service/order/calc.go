@@ -36,6 +36,12 @@ type checkoutLine struct {
 	imagePath *string
 	unitPrice decimal.Decimal
 	quantity  int64
+
+	// product parcel data (kg / cm), for shipping-cost calculation
+	weightKG decimal.Decimal
+	lengthCM decimal.Decimal
+	widthCM  decimal.Decimal
+	heightCM decimal.Decimal
 }
 
 func (l checkoutLine) lineTotal() decimal.Decimal {

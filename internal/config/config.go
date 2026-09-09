@@ -22,8 +22,10 @@ type (
 		Email          EmailConfig          `yaml:"email"`
 		Auth           AuthConfig           `yaml:"auth"`
 		Order          OrderConfig          `yaml:"order"`
+		Shipping       ShippingConfig       `yaml:"shipping"`
 		CDEK           CDEKConfig           `yaml:"cdek"`
 		YandexDelivery YandexDeliveryConfig `yaml:"yandex_delivery"`
+		Pochta         PochtaConfig         `yaml:"pochta"`
 	}
 
 	// OrderConfig tunes checkout. Money amounts are decimal strings ("0" disables

@@ -16,6 +16,16 @@ type CreateOrderRequest struct {
 	ShipRecipient  string     `json:"ship_recipient" validate:"required,max=255"`
 	ShippingMethod *string    `json:"shipping_method" validate:"omitempty,max=64"`
 
+	// Delivery choice. delivery_method_code (from GET /v1/delivery/methods) is
+	// resolved server-side to a carrier + tariff — the frontend never sends
+	// tariff codes. ship_provider + ship_tariff_code are the raw fallback
+	// (ship_tariff_code must be paired with ship_provider). ship_point_code is
+	// the chosen pickup point; for courier methods send ship_postcode instead.
+	DeliveryMethodCode *string `json:"delivery_method_code" validate:"omitempty,max=32"`
+	ShipProvider       *string `json:"ship_provider" validate:"omitempty,oneof=cdek yandex_delivery pochta"`
+	ShipTariffCode     *string `json:"ship_tariff_code" validate:"omitempty,max=64,required_with=ShipProvider"`
+	ShipPointCode      *string `json:"ship_point_code" validate:"omitempty,max=64"`
+
 	PaymentMethod string  `json:"payment_method" validate:"required,max=32"`
 	Comment       *string `json:"comment" validate:"omitempty,max=2000"`
 

@@ -14,6 +14,7 @@ import (
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/service/cart"
 	"github.com/stickpro/go-store/internal/service/mail"
+	"github.com/stickpro/go-store/internal/service/shipping"
 	"github.com/stickpro/go-store/internal/service/user"
 	"github.com/stickpro/go-store/internal/storage"
 	"github.com/stickpro/go-store/internal/storage/base"
@@ -25,6 +26,9 @@ type IOrderService interface {
 	// stock, clears the cart, and fires the confirmation email + order.created
 	// event. Idempotent when CreateOrderDTO.IdempotencyKey is set.
 	CreateOrder(ctx context.Context, d dto.CreateOrderDTO) (*dto.OrderDTO, error)
+	// PreviewCheckout returns the server-computed cart total (subtotal +
+	// shipping + …) for a delivery choice, without creating an order.
+	PreviewCheckout(ctx context.Context, d dto.CheckoutPreviewDTO) (*dto.CheckoutPreviewResultDTO, error)
 	// GetByNumber returns an order by its human-facing number, scoped to userID
 	// (guest orders are not reachable this way).
 	GetByNumber(ctx context.Context, userID uuid.UUID, number int64) (*dto.OrderDTO, error)
@@ -52,6 +56,7 @@ type Service struct {
 	users     user.IUserService
 	mail      mail.IMailService
 	publisher EventPublisher
+	shipping  *shipping.Registry
 
 	flatShipping     decimal.Decimal
 	freeShippingFrom decimal.Decimal
@@ -64,6 +69,7 @@ func New(
 	cartService cart.ICartService,
 	userService user.IUserService,
 	mailService mail.IMailService,
+	shippingRegistry *shipping.Registry,
 	publisher EventPublisher,
 ) (*Service, error) {
 	flat, err := decimal.NewFromString(orDefault(cfg.Order.FlatShipping, "0"))
@@ -87,6 +93,7 @@ func New(
 		users:            userService,
 		mail:             mailService,
 		publisher:        publisher,
+		shipping:         shippingRegistry,
 		flatShipping:     flat,
 		freeShippingFrom: free,
 	}, nil

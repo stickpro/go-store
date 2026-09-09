@@ -237,61 +237,29 @@ definitions:
       slug:
         type: string
     type: object
-  CDEKDeliveryPointResponse:
+  CalculateRatesRequest:
     properties:
-      address:
+      declared_value:
         type: string
-      address_full:
+      delivery_type:
+        enum:
+        - pickup
+        - courier
         type: string
-      allowed_cod:
-        type: boolean
-      city:
+      from_postal_code:
         type: string
-      city_code:
-        type: integer
-      code:
+      height_cm:
         type: string
-      country_code:
+      length_cm:
         type: string
-      email:
+      to_point_code:
+        maxLength: 64
         type: string
-      have_cash:
-        type: boolean
-      have_cashless:
-        type: boolean
-      is_dressing_room:
-        type: boolean
-      is_handout:
-        type: boolean
-      is_reception:
-        type: boolean
-      latitude:
-        type: number
-      longitude:
-        type: number
-      name:
+      to_postal_code:
         type: string
-      note:
+      weight_kg:
         type: string
-      phones:
-        items:
-          type: string
-        type: array
-      postal_code:
-        type: string
-      region:
-        type: string
-      region_code:
-        type: integer
-      take_only:
-        type: boolean
-      type:
-        type: string
-      weight_max:
-        type: number
-      weight_min:
-        type: number
-      work_time:
+      width_cm:
         type: string
     type: object
   CartItemResponse:
@@ -421,6 +389,47 @@ definitions:
         type: string
       slug:
         type: string
+    type: object
+  CheckoutPreviewRequest:
+    properties:
+      delivery_method_code:
+        description: delivery_method_code from GET /v1/delivery/methods (preferred).
+        maxLength: 32
+        type: string
+      ship_point_code:
+        maxLength: 64
+        type: string
+      ship_postcode:
+        maxLength: 16
+        type: string
+      ship_provider:
+        enum:
+        - cdek
+        - yandex_delivery
+        - pochta
+        type: string
+      ship_tariff_code:
+        maxLength: 64
+        type: string
+    type: object
+  CheckoutPreviewResponse:
+    properties:
+      currency:
+        type: string
+      discount_total:
+        type: number
+      grand_total:
+        type: number
+      item_count:
+        type: integer
+      shipping:
+        $ref: '#/definitions/OrderShippingResponse'
+      shipping_total:
+        type: number
+      subtotal:
+        type: number
+      tax_total:
+        type: number
     type: object
   CityResponse:
     properties:
@@ -687,6 +696,15 @@ definitions:
       comment:
         maxLength: 2000
         type: string
+      delivery_method_code:
+        description: |-
+          Delivery choice. delivery_method_code (from GET /v1/delivery/methods) is
+          resolved server-side to a carrier + tariff — the frontend never sends
+          tariff codes. ship_provider + ship_tariff_code are the raw fallback
+          (ship_tariff_code must be paired with ship_provider). ship_point_code is
+          the chosen pickup point; for courier methods send ship_postcode instead.
+        maxLength: 32
+        type: string
       email:
         type: string
       expected_total:
@@ -709,11 +727,23 @@ definitions:
       ship_city_name:
         maxLength: 255
         type: string
+      ship_point_code:
+        maxLength: 64
+        type: string
       ship_postcode:
         maxLength: 16
         type: string
+      ship_provider:
+        enum:
+        - cdek
+        - yandex_delivery
+        - pochta
+        type: string
       ship_recipient:
         maxLength: 255
+        type: string
+      ship_tariff_code:
+        maxLength: 64
         type: string
       shipping_method:
         maxLength: 64
@@ -900,6 +930,77 @@ definitions:
       today:
         type: string
     type: object
+  DeliveryMethodResponse:
+    properties:
+      code:
+        type: string
+      enabled:
+        type: boolean
+      free:
+        type: boolean
+      has_points:
+        type: boolean
+      has_rates:
+        type: boolean
+      kind:
+        description: self_pickup | pickup | courier
+        type: string
+      provider:
+        type: string
+      tariff_code:
+        type: string
+      title:
+        type: string
+    type: object
+  DeliveryPointResponse:
+    properties:
+      address:
+        type: string
+      card_payment:
+        type: boolean
+      cash_payment:
+        type: boolean
+      code:
+        type: string
+      country:
+        type: string
+      details:
+        additionalProperties: {}
+        type: object
+      email:
+        type: string
+      latitude:
+        type: number
+      locality:
+        type: string
+      longitude:
+        type: number
+      name:
+        type: string
+      phones:
+        items:
+          type: string
+        type: array
+      postal_code:
+        type: string
+      provider:
+        type: string
+      region:
+        type: string
+      type:
+        type: string
+      work_time:
+        items:
+          type: string
+        type: array
+    type: object
+  DeliveryProviderResponse:
+    properties:
+      code:
+        type: string
+      enabled:
+        type: boolean
+    type: object
   FullPagingData:
     properties:
       last_page:
@@ -1013,6 +1114,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/CategoryResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-CheckoutPreviewResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/CheckoutPreviewResponse'
       message:
         type: string
     type: object
@@ -1311,17 +1421,6 @@ definitions:
       message:
         type: string
     type: object
-  JSONResponse-array_CDEKDeliveryPointResponse:
-    properties:
-      code:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/CDEKDeliveryPointResponse'
-        type: array
-      message:
-        type: string
-    type: object
   JSONResponse-array_CategoryTreeResponse:
     properties:
       code:
@@ -1344,6 +1443,39 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_DeliveryMethodResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/DeliveryMethodResponse'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_DeliveryPointResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/DeliveryPointResponse'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_DeliveryProviderResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/DeliveryProviderResponse'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_ProductVariantResponse:
     properties:
       code:
@@ -1351,6 +1483,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/ProductVariantResponse'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_ShippingRateResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/ShippingRateResponse'
         type: array
       message:
         type: string
@@ -1384,17 +1527,6 @@ definitions:
       data:
         items:
           $ref: '#/definitions/VariantCategoryResponse'
-        type: array
-      message:
-        type: string
-    type: object
-  JSONResponse-array_YandexDeliveryPointResponse:
-    properties:
-      code:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/YandexDeliveryPointResponse'
         type: array
       message:
         type: string
@@ -1550,11 +1682,21 @@ definitions:
         type: string
       city_name:
         type: string
+      max_days:
+        type: integer
       method:
+        type: string
+      min_days:
+        type: integer
+      point_code:
         type: string
       postcode:
         type: string
+      provider:
+        type: string
       recipient:
+        type: string
+      tariff_code:
         type: string
     type: object
   ProductResponse:
@@ -1817,6 +1959,28 @@ definitions:
     properties:
       sent:
         type: boolean
+    type: object
+  ShippingRateResponse:
+    properties:
+      cost:
+        type: number
+      currency:
+        type: string
+      delivery_type:
+        type: string
+      details:
+        additionalProperties: {}
+        type: object
+      max_days:
+        type: integer
+      min_days:
+        type: integer
+      provider:
+        type: string
+      tariff_code:
+        type: string
+      tariff_name:
+        type: string
     type: object
   SitemapEntry:
     properties:
@@ -2210,78 +2374,6 @@ definitions:
         items:
           $ref: '#/definitions/ViewedItemResponse'
         type: array
-    type: object
-  YandexDeliveryPointResponse:
-    properties:
-      available_for_dropoff:
-        type: boolean
-      code:
-        type: string
-      country:
-        type: string
-      deactivation_date:
-        type: string
-      email:
-        type: string
-      full_address:
-        type: string
-      geo_id:
-        type: integer
-      house:
-        type: string
-      instruction:
-        type: string
-      is_market_partner:
-        type: boolean
-      is_post_office:
-        type: boolean
-      is_yandex_branded:
-        type: boolean
-      latitude:
-        type: number
-      locality:
-        type: string
-      longitude:
-        type: number
-      name:
-        type: string
-      operator_id:
-        type: string
-      operator_station_id:
-        type: string
-      payment_methods:
-        items:
-          type: string
-        type: array
-      phone:
-        type: string
-      postal_code:
-        type: string
-      region:
-        type: string
-      schedule:
-        items:
-          $ref: '#/definitions/YandexDeliveryScheduleResponse'
-        type: array
-      street:
-        type: string
-      sub_region:
-        type: string
-      time_zone:
-        type: integer
-      type:
-        type: string
-    type: object
-  YandexDeliveryScheduleResponse:
-    properties:
-      days:
-        items:
-          type: integer
-        type: array
-      time_from:
-        type: string
-      time_to:
-        type: string
     type: object
   decimal.NullDecimal:
     properties:
@@ -3957,64 +4049,6 @@ paths:
       summary: Get category tree
       tags:
       - Category
-  /v1/cdek/delivery-points:
-    get:
-      consumes:
-      - application/json
-      description: List cached CDEK delivery points (offices and postomats). The list
-        is refreshed in the background once a day; use the query params to narrow
-        it down. min_lat/max_lat/min_lon/max_lon narrow the result to a map viewport
-        and must be supplied together.
-      parameters:
-      - description: CDEK city code
-        in: query
-        name: city_code
-        type: integer
-      - description: Postal code
-        in: query
-        name: postal_code
-        type: string
-      - description: Delivery point type
-        enum:
-        - PVZ
-        - POSTAMAT
-        in: query
-        name: type
-        type: string
-      - description: Map viewport min latitude (requires max_lat, min_lon, max_lon)
-        in: query
-        name: min_lat
-        type: number
-      - description: Map viewport max latitude (requires min_lat, min_lon, max_lon)
-        in: query
-        name: max_lat
-        type: number
-      - description: Map viewport min longitude (requires min_lat, max_lat, max_lon)
-        in: query
-        name: min_lon
-        type: number
-      - description: Map viewport max longitude (requires min_lat, max_lat, min_lon)
-        in: query
-        name: max_lon
-        type: number
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-array_CDEKDeliveryPointResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: List CDEK delivery points
-      tags:
-      - CDEK
   /v1/collection/:
     get:
       consumes:
@@ -4184,6 +4218,184 @@ paths:
       summary: Collection
       tags:
       - Collection
+  /v1/delivery/{provider}/points:
+    get:
+      consumes:
+      - application/json
+      description: Cached pickup points for one delivery carrier, mapped to a common
+        shape (carrier-specific fields live under `details`). min_lat/max_lat/min_lon/max_lon
+        narrow the result to a map viewport and must be supplied together; latitude+longitude
+        (with optional radius_km) narrow it to a radius around a point, nearest first.
+      parameters:
+      - description: Delivery carrier
+        enum:
+        - cdek
+        - yandex_delivery
+        - pochta
+        in: path
+        name: provider
+        required: true
+        type: string
+      - in: query
+        maxLength: 20
+        name: index
+        type: string
+      - in: query
+        name: latitude
+        type: number
+      - in: query
+        maxLength: 200
+        name: locality
+        type: string
+      - in: query
+        name: longitude
+        type: number
+      - in: query
+        name: max_lat
+        type: number
+      - in: query
+        name: max_lon
+        type: number
+      - in: query
+        name: min_lat
+        type: number
+      - in: query
+        name: min_lon
+        type: number
+      - in: query
+        maximum: 2000
+        name: radius_km
+        type: number
+      - in: query
+        maxLength: 200
+        name: region
+        type: string
+      - in: query
+        maxLength: 100
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_DeliveryPointResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: List carrier pickup points
+      tags:
+      - Delivery
+  /v1/delivery/{provider}/rates:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Delivery carrier
+        enum:
+        - cdek
+        - yandex_delivery
+        - pochta
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Parcel and route
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CalculateRatesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_ShippingRateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Calculate shipping rates (one carrier)
+      tags:
+      - Delivery
+  /v1/delivery/methods:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_DeliveryMethodResponse'
+      summary: List delivery methods
+      tags:
+      - Delivery
+  /v1/delivery/providers:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_DeliveryProviderResponse'
+      summary: List delivery carriers
+      tags:
+      - Delivery
+  /v1/delivery/rates:
+    post:
+      consumes:
+      - application/json
+      description: 'Shipping cost for a parcel from every enabled carrier. Destination
+        is a pickup point (to_point_code) or a postal code (to_postal_code). Parcel
+        weight (kg) / dimensions (cm) are optional: omit them and the parcel is derived
+        from the caller''s cart (auth or X-Session-ID), falling back to the store
+        default. Results are cached server-side per route.'
+      parameters:
+      - description: Parcel and route
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CalculateRatesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_ShippingRateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Calculate shipping rates (all carriers)
+      tags:
+      - Delivery
   /v1/filters:
     get:
       consumes:
@@ -4612,6 +4824,44 @@ paths:
       security:
       - BearerAuth: []
       summary: Get order
+      tags:
+      - Order
+  /v1/orders/preview:
+    post:
+      consumes:
+      - application/json
+      description: Server-computed money breakdown (subtotal + shipping + grand total)
+        for the caller's cart under a delivery choice. Send `delivery_method_code`
+        from GET /v1/delivery/methods plus `ship_point_code` (pickup) or `ship_postcode`
+        (courier). Nothing is persisted; the frontend renders `grand_total` from here
+        instead of adding shipping to the cart total itself.
+      parameters:
+      - description: Delivery choice
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CheckoutPreviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-CheckoutPreviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Checkout preview
       tags:
       - Order
   /v1/product-review/:
@@ -5619,64 +5869,6 @@ paths:
       summary: Auth user
       tags:
       - User
-  /v1/yandex-delivery/delivery-points:
-    get:
-      consumes:
-      - application/json
-      description: List cached Yandex Delivery pickup points (ПВЗ and postomats).
-        The list is refreshed in the background once a day; use the query params to
-        narrow it down. min_lat/max_lat/min_lon/max_lon narrow the result to a map
-        viewport and must be supplied together.
-      parameters:
-      - description: Yandex geo id (locality)
-        in: query
-        name: geo_id
-        type: integer
-      - description: Locality name
-        in: query
-        name: locality
-        type: string
-      - description: Pickup point type
-        enum:
-        - pickup_point
-        - terminal
-        in: query
-        name: type
-        type: string
-      - description: Map viewport min latitude (requires max_lat, min_lon, max_lon)
-        in: query
-        name: min_lat
-        type: number
-      - description: Map viewport max latitude (requires min_lat, min_lon, max_lon)
-        in: query
-        name: max_lat
-        type: number
-      - description: Map viewport min longitude (requires min_lat, max_lat, max_lon)
-        in: query
-        name: min_lon
-        type: number
-      - description: Map viewport max longitude (requires min_lat, max_lat, min_lon)
-        in: query
-        name: max_lon
-        type: number
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/JSONResponse-array_YandexDeliveryPointResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIErrors'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIErrors'
-      summary: List Yandex Delivery pickup points
-      tags:
-      - YandexDelivery
 securityDefinitions:
   BearerAuth:
     in: header
