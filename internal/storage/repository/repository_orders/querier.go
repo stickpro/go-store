@@ -40,6 +40,10 @@ type Querier interface {
 	// Refund also clears the payment status back to 'refunded' (unlike a plain
 	// status transition, which never touches payment_status).
 	MarkRefunded(ctx context.Context, id uuid.UUID) (*models.Order, error)
+	// Admin order edit: contact, shipping address + carrier snapshot, payment method,
+	// comment and the money fields that shipping/status changes affect. Item lines and
+	// their prices are never touched here. Transaction only (row must be locked).
+	UpdateDetails(ctx context.Context, arg UpdateDetailsParams) (*models.Order, error)
 	UpdateStatus(ctx context.Context, arg UpdateStatusParams) (*models.Order, error)
 }
 

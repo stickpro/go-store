@@ -24,6 +24,33 @@ SET status = $2,
 WHERE id = $1
 RETURNING *;
 
+-- name: UpdateDetails :one
+-- Admin order edit: contact, shipping address + carrier snapshot, payment method,
+-- comment and the money fields that shipping/status changes affect. Item lines and
+-- their prices are never touched here. Transaction only (row must be locked).
+UPDATE orders
+SET status          = $2,
+    email           = $3,
+    phone           = $4,
+    ship_city_id    = $5,
+    ship_city_name  = $6,
+    ship_address    = $7,
+    ship_postcode   = $8,
+    ship_recipient  = $9,
+    shipping_method = $10,
+    ship_provider   = $11,
+    ship_tariff_code = $12,
+    ship_point_code = $13,
+    ship_min_days   = $14,
+    ship_max_days   = $15,
+    payment_method  = $16,
+    comment         = $17,
+    shipping_total  = $18,
+    grand_total     = $19,
+    updated_at      = now()
+WHERE id = $1
+RETURNING *;
+
 -- name: MarkPaid :one
 UPDATE orders
 SET status = $2,
@@ -57,6 +84,7 @@ RETURNING *;
 SELECT * FROM orders
 WHERE (sqlc.narg('status')::varchar IS NULL OR status = sqlc.narg('status'))
   AND (sqlc.narg('payment_status')::varchar IS NULL OR payment_status = sqlc.narg('payment_status'))
+  AND (sqlc.narg('source')::varchar IS NULL OR source = sqlc.narg('source'))
   AND (sqlc.narg('user_id')::uuid IS NULL OR user_id = sqlc.narg('user_id'))
   AND (sqlc.narg('created_from')::timestamp IS NULL OR created_at >= sqlc.narg('created_from'))
   AND (sqlc.narg('created_to')::timestamp IS NULL OR created_at <= sqlc.narg('created_to'))
@@ -67,6 +95,7 @@ LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 SELECT count(*) FROM orders
 WHERE (sqlc.narg('status')::varchar IS NULL OR status = sqlc.narg('status'))
   AND (sqlc.narg('payment_status')::varchar IS NULL OR payment_status = sqlc.narg('payment_status'))
+  AND (sqlc.narg('source')::varchar IS NULL OR source = sqlc.narg('source'))
   AND (sqlc.narg('user_id')::uuid IS NULL OR user_id = sqlc.narg('user_id'))
   AND (sqlc.narg('created_from')::timestamp IS NULL OR created_at >= sqlc.narg('created_from'))
   AND (sqlc.narg('created_to')::timestamp IS NULL OR created_at <= sqlc.narg('created_to'));

@@ -66,6 +66,8 @@ definitions:
         $ref: '#/definitions/OrderShippingResponse'
       shipping_total:
         type: number
+      source:
+        type: string
       status:
         type: string
       subtotal:
@@ -73,6 +75,50 @@ definitions:
       tax_total:
         type: number
       user_id:
+        type: string
+    type: object
+  AdminUpdateOrderRequest:
+    properties:
+      comment:
+        maxLength: 2000
+        type: string
+      delivery_method_code:
+        maxLength: 32
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      payment_method:
+        maxLength: 32
+        type: string
+      phone:
+        maxLength: 32
+        type: string
+      ship_address:
+        maxLength: 512
+        type: string
+      ship_city_id:
+        type: string
+      ship_city_name:
+        maxLength: 255
+        type: string
+      ship_point_code:
+        maxLength: 64
+        type: string
+      ship_postcode:
+        maxLength: 16
+        type: string
+      ship_provider:
+        enum:
+        - cdek
+        - yandex_delivery
+        - pochta
+        type: string
+      ship_recipient:
+        maxLength: 255
+        type: string
+      ship_tariff_code:
+        maxLength: 64
         type: string
     type: object
   Attribute:
@@ -836,6 +882,24 @@ definitions:
     - name
     - slug
     type: object
+  CreateQuickOrderRequest:
+    properties:
+      comment:
+        maxLength: 2000
+        type: string
+      email:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      phone:
+        maxLength: 32
+        type: string
+    required:
+    - name
+    - phone
+    type: object
   DashboardCatalog:
     properties:
       categories:
@@ -945,6 +1009,10 @@ definitions:
       kind:
         description: self_pickup | pickup | courier
         type: string
+      markup_percent:
+        description: MarkupPercent is added on top of the carrier quote before rounding
+          up.
+        type: number
       provider:
         type: string
       tariff_code:
@@ -1667,6 +1735,8 @@ definitions:
         $ref: '#/definitions/OrderShippingResponse'
       shipping_total:
         type: number
+      source:
+        type: string
       status:
         type: string
       subtotal:
@@ -2865,7 +2935,15 @@ paths:
         in: query
         name: payment_status
         type: string
+      - description: 'Source filters by acquisition channel: "checkout" or "quick".'
+        enum:
+        - checkout
+        - quick
+        in: query
+        name: source
+        type: string
       - enum:
+        - new
         - pending
         - paid
         - processing
@@ -2924,6 +3002,55 @@ paths:
       security:
       - BearerAuth: []
       summary: Get order
+      tags:
+      - Admin Order
+    patch:
+      consumes:
+      - application/json
+      description: Edits an order's contact, shipping address, carrier, payment method
+        and comment. Item lines and prices are not editable. Only orders in status
+        `new` or `pending` can be edited (409 otherwise); editing a `new` (quick)
+        order confirms it into `pending` and requires a shipping address. Send `delivery_method_code`
+        (or `ship_provider` + `ship_tariff_code`) to re-quote the carrier and recompute
+        totals; omit all delivery fields to keep the stored shipping cost.
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      - description: Fields to change
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/AdminUpdateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Update order
       tags:
       - Admin Order
   /v1/admin/orders/{number}/status:
@@ -4862,6 +4989,53 @@ paths:
           schema:
             $ref: '#/definitions/APIErrors'
       summary: Checkout preview
+      tags:
+      - Order
+  /v1/orders/quick:
+    post:
+      consumes:
+      - application/json
+      description: 'One-click checkout: converts the cart (session or account) into
+        an order in status `new` (source `quick`), decrements stock and clears the
+        cart. The customer supplies only name + phone; a manager calls back to collect
+        address, delivery and payment, so `shipping_total` is 0 and `grand_total`
+        is the item subtotal only. Send an `Idempotency-Key` header (UUID) to make
+        retries safe.'
+      parameters:
+      - description: Idempotency key (UUID)
+        in: header
+        name: Idempotency-Key
+        type: string
+      - description: Contact details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateQuickOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Quick order
       tags:
       - Order
   /v1/product-review/:

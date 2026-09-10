@@ -17,13 +17,16 @@ type OrderEventItem struct {
 }
 
 type OrderCreatedPayload struct {
-	OrderNumber int64            `json:"order_number"`
-	UserID      *uuid.UUID       `json:"user_id,omitempty"`
-	Email       string           `json:"email"`
-	Currency    string           `json:"currency"`
-	GrandTotal  decimal.Decimal  `json:"grand_total"`
-	Items       []OrderEventItem `json:"items"`
-	CreatedAt   time.Time        `json:"created_at"`
+	OrderNumber int64      `json:"order_number"`
+	UserID      *uuid.UUID `json:"user_id,omitempty"`
+	// Source is the acquisition channel: "checkout" or "quick" (a quick order
+	// still needs a manager to collect address / delivery / payment).
+	Source     string           `json:"source"`
+	Email      string           `json:"email"`
+	Currency   string           `json:"currency"`
+	GrandTotal decimal.Decimal  `json:"grand_total"`
+	Items      []OrderEventItem `json:"items"`
+	CreatedAt  time.Time        `json:"created_at"`
 }
 
 type OrderPaidPayload struct {

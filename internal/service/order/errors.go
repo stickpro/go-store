@@ -21,6 +21,13 @@ var (
 	// ErrInvalidTransition — the requested status change is not allowed from the
 	// current status.
 	ErrInvalidTransition = errors.New("invalid order status transition")
+	// ErrDetailsLocked — the order is too far along its lifecycle to edit its
+	// contact / shipping / payment details (only "new" and "pending" orders are
+	// editable).
+	ErrDetailsLocked = errors.New("order details can no longer be edited")
+	// ErrShippingAddressRequired — a "new" order cannot be confirmed into
+	// "pending" without a delivery address.
+	ErrShippingAddressRequired = errors.New("shipping address is required to confirm the order")
 )
 
 // LineError points at a specific cart line that blocked checkout.

@@ -5,6 +5,7 @@ import "github.com/stickpro/go-store/internal/constant"
 // allowedTransitions is the order fulfilment state machine. A missing key (e.g.
 // "cancelled", "refunded") is terminal.
 var allowedTransitions = map[constant.OrderStatus][]constant.OrderStatus{
+	constant.OrderNew:        {constant.OrderPending, constant.OrderCancelled},
 	constant.OrderPending:    {constant.OrderPaid, constant.OrderCancelled},
 	constant.OrderPaid:       {constant.OrderProcessing, constant.OrderCancelled, constant.OrderRefunded},
 	constant.OrderProcessing: {constant.OrderShipped, constant.OrderCancelled, constant.OrderRefunded},

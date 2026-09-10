@@ -46,6 +46,10 @@ type ShippingMethodConfig struct {
 	Tariff string `yaml:"tariff"`
 	// Free forces a zero shipping cost regardless of the carrier quote.
 	Free bool `yaml:"free"`
+	// Markup is the percentage added on top of the carrier's calculated cost for
+	// this method; the result is then rounded up to a whole currency unit.
+	// Decimal string, e.g. "10" = +10%. Empty / "0" = carrier cost as-is.
+	Markup string `yaml:"markup"`
 }
 
 // DefaultShippingMethods is used when shipping.methods is empty.

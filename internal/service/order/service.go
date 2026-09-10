@@ -26,6 +26,11 @@ type IOrderService interface {
 	// stock, clears the cart, and fires the confirmation email + order.created
 	// event. Idempotent when CreateOrderDTO.IdempotencyKey is set.
 	CreateOrder(ctx context.Context, d dto.CreateOrderDTO) (*dto.OrderDTO, error)
+	// CreateQuickOrder turns the caller's cart into a "quick order" (name + phone
+	// only): persisted in status "new" / source "quick", stock decremented and
+	// cart cleared as usual, but with shipping unresolved and grand total = item
+	// subtotal. A manager completes it and moves it to "pending".
+	CreateQuickOrder(ctx context.Context, d dto.CreateQuickOrderDTO) (*dto.OrderDTO, error)
 	// PreviewCheckout returns the server-computed cart total (subtotal +
 	// shipping + …) for a delivery choice, without creating an order.
 	PreviewCheckout(ctx context.Context, d dto.CheckoutPreviewDTO) (*dto.CheckoutPreviewResultDTO, error)
@@ -46,6 +51,11 @@ type IOrderService interface {
 	// UpdateStatus drives an admin-initiated status transition. Cancelling is
 	// delegated to Cancel.
 	UpdateStatus(ctx context.Context, number int64, d dto.OrderStatusUpdateDTO) (*dto.OrderDTO, error)
+	// UpdateDetails is the admin order edit: contact, shipping address, carrier,
+	// payment method, comment. Item lines are never touched. Only "new" and
+	// "pending" orders are editable; editing a "new" order confirms it into
+	// "pending". Admin only.
+	UpdateDetails(ctx context.Context, number int64, d dto.OrderDetailsUpdateDTO) (*dto.OrderDTO, error)
 }
 
 type Service struct {

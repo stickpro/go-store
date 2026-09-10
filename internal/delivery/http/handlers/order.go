@@ -69,6 +69,50 @@ func (h *Handler) createOrder(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(order_response.NewFromDTO(created)))
 }
 
+// createQuickOrder turns the caller's cart into a one-click "quick order".
+//
+//	@Summary		Quick order
+//	@Description	One-click checkout: converts the cart (session or account) into an order in status `new` (source `quick`), decrements stock and clears the cart. The customer supplies only name + phone; a manager calls back to collect address, delivery and payment, so `shipping_total` is 0 and `grand_total` is the item subtotal only. Send an `Idempotency-Key` header (UUID) to make retries safe.
+//	@Tags			Order
+//	@Accept			json
+//	@Produce		json
+//	@Param			Idempotency-Key	header		string									false	"Idempotency key (UUID)"
+//	@Param			request			body		order_request.CreateQuickOrderRequest	true	"Contact details"
+//	@Success		200				{object}	response.Result[order_response.OrderResponse]
+//	@Failure		400				{object}	apierror.Errors
+//	@Failure		409				{object}	apierror.Errors
+//	@Failure		422				{object}	apierror.Errors
+//	@Failure		500				{object}	apierror.Errors
+//	@Router			/v1/orders/quick [post]
+func (h *Handler) createQuickOrder(c fiber.Ctx) error {
+	owner, err := h.cartOwner(c)
+	if err != nil {
+		return err
+	}
+
+	req := &order_request.CreateQuickOrderRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	var user *models.User
+	if u, aErr := loadAuthUser(c); aErr == nil {
+		user = u
+	}
+
+	d := dto.RequestToCreateQuickOrderDTO(req, owner, user)
+	if key := c.Get("Idempotency-Key"); key != "" {
+		d.IdempotencyKey = &key
+	}
+
+	created, err := h.services.OrderService.CreateQuickOrder(c.Context(), d)
+	if err != nil {
+		return h.orderError(err)
+	}
+
+	return c.JSON(response.OkByData(order_response.NewFromDTO(created)))
+}
+
 // previewCheckout returns the server-computed cart total for a delivery choice.
 //
 //	@Summary		Checkout preview
@@ -194,6 +238,7 @@ func (h *Handler) orderError(err error) error {
 func (h *Handler) initOrderRoutes(v1 fiber.Router) {
 	o := v1.Group("/orders")
 	o.Post("/", middleware.OptionalAuthMiddleware(h.services.AuthService), h.createOrder)
+	o.Post("/quick", middleware.OptionalAuthMiddleware(h.services.AuthService), h.createQuickOrder)
 	o.Post("/preview", middleware.OptionalAuthMiddleware(h.services.AuthService), h.previewCheckout)
 	o.Get("/", middleware.AuthMiddleware(h.services.AuthService), h.listOrders)
 	o.Get("/:number", middleware.AuthMiddleware(h.services.AuthService), h.getOrder)

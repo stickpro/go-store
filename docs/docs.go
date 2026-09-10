@@ -381,6 +381,17 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
+                            "checkout",
+                            "quick"
+                        ],
+                        "type": "string",
+                        "description": "Source filters by acquisition channel: \"checkout\" or \"quick\".",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "new",
                             "pending",
                             "paid",
                             "processing",
@@ -457,6 +468,74 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Edits an order's contact, shipping address, carrier, payment method and comment. Item lines and prices are not editable. Only orders in status ` + "`" + `new` + "`" + ` or ` + "`" + `pending` + "`" + ` can be edited (409 otherwise); editing a ` + "`" + `new` + "`" + ` (quick) order confirms it into ` + "`" + `pending` + "`" + ` and requires a shipping address. Send ` + "`" + `delivery_method_code` + "`" + ` (or ` + "`" + `ship_provider` + "`" + ` + ` + "`" + `ship_tariff_code` + "`" + `) to re-quote the carrier and recompute totals; omit all delivery fields to keep the stored shipping cost.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Order"
+                ],
+                "summary": "Update order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order number",
+                        "name": "number",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to change",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdminUpdateOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AdminOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
@@ -3389,6 +3468,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/orders/quick": {
+            "post": {
+                "description": "One-click checkout: converts the cart (session or account) into an order in status ` + "`" + `new` + "`" + ` (source ` + "`" + `quick` + "`" + `), decrements stock and clears the cart. The customer supplies only name + phone; a manager calls back to collect address, delivery and payment, so ` + "`" + `shipping_total` + "`" + ` is 0 and ` + "`" + `grand_total` + "`" + ` is the item subtotal only. Send an ` + "`" + `Idempotency-Key` + "`" + ` header (UUID) to make retries safe.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Quick order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Idempotency key (UUID)",
+                        "name": "Idempotency-Key",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Contact details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateQuickOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-OrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/orders/{number}": {
             "get": {
                 "security": [
@@ -5097,6 +5240,9 @@ const docTemplate = `{
                 "shipping_total": {
                     "type": "number"
                 },
+                "source": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 },
@@ -5108,6 +5254,66 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "AdminUpdateOrderRequest": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "delivery_method_code": {
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "payment_method": {
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "ship_address": {
+                    "type": "string",
+                    "maxLength": 512
+                },
+                "ship_city_id": {
+                    "type": "string"
+                },
+                "ship_city_name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "ship_point_code": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "ship_postcode": {
+                    "type": "string",
+                    "maxLength": 16
+                },
+                "ship_provider": {
+                    "type": "string",
+                    "enum": [
+                        "cdek",
+                        "yandex_delivery",
+                        "pochta"
+                    ]
+                },
+                "ship_recipient": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "ship_tariff_code": {
+                    "type": "string",
+                    "maxLength": 64
                 }
             }
         },
@@ -6220,6 +6426,31 @@ const docTemplate = `{
                 }
             }
         },
+        "CreateQuickOrderRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "phone"
+            ],
+            "properties": {
+                "comment": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 32
+                }
+            }
+        },
         "DashboardCatalog": {
             "type": "object",
             "properties": {
@@ -6386,6 +6617,10 @@ const docTemplate = `{
                 "kind": {
                     "description": "self_pickup | pickup | courier",
                     "type": "string"
+                },
+                "markup_percent": {
+                    "description": "MarkupPercent is added on top of the carrier quote before rounding up.",
+                    "type": "number"
                 },
                 "provider": {
                     "type": "string"
@@ -7500,6 +7735,9 @@ const docTemplate = `{
                 },
                 "shipping_total": {
                     "type": "number"
+                },
+                "source": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"

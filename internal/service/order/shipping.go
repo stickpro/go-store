@@ -40,7 +40,9 @@ func (s *Service) resolveShipping(ctx context.Context, sel dto.ShippingSelection
 	}
 
 	// A delivery_method_code resolves to a carrier + tariff (or a free / store
-	// pickup with no carrier at all).
+	// pickup with no carrier at all). A method may also carry a markup that is
+	// applied on top of the carrier quote.
+	var method *shipping.Method
 	if sel.MethodCode != nil && *sel.MethodCode != "" {
 		if s.shipping == nil {
 			return flat(), nil
@@ -49,9 +51,11 @@ func (s *Service) resolveShipping(ctx context.Context, sel dto.ShippingSelection
 		if !ok {
 			return shippingChoice{}, ErrShippingMethodUnknown
 		}
-		if sel.Method == nil {
-			sel.Method = strPtrOrNil(m.Title)
-		}
+		method = &m
+		// shipping_method stores the stable method code, never the human title —
+		// the frontend maps it back via GET /v1/delivery/methods.
+		code := m.Code
+		sel.Method = &code
 		if m.Free || m.Kind == shipping.MethodSelfPickup || m.Provider == "" {
 			return shippingChoice{cost: decimal.Zero, method: sel.Method}, nil
 		}
@@ -70,6 +74,11 @@ func (s *Service) resolveShipping(ctx context.Context, sel dto.ShippingSelection
 		Parcel:       parcel,
 	})
 	if err != nil {
+		// The carrier can't serve this route / parcel / point — that's a bad
+		// delivery choice, not a server fault.
+		if errors.Is(err, shipping.ErrRateUnavailable) {
+			return shippingChoice{}, ErrShippingUnavailable
+		}
 		return shippingChoice{}, fmt.Errorf("order: quote %s: %w", *sel.Provider, err)
 	}
 
@@ -78,9 +87,18 @@ func (s *Service) resolveShipping(ctx context.Context, sel dto.ShippingSelection
 			continue
 		}
 		r := r
+
+		cost := r.Cost
+		if method != nil {
+			cost = method.FinalCost(cost)
+		}
+
+		// method: the chosen method code (set above) when one was picked, else
+		// the client-supplied shipping_method / nil — the raw carrier selection
+		// is captured by ship_provider + ship_tariff_code, both codes.
 		return shippingChoice{
-			cost:     r.Cost,
-			method:   strPtrOrNil(r.TariffName),
+			cost:     cost,
+			method:   sel.Method,
 			provider: strPtrOrNil(r.Provider),
 			tariff:   strPtrOrNil(r.TariffCode),
 			point:    sel.PointCode,

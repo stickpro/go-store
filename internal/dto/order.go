@@ -49,6 +49,72 @@ type CreateOrderDTO struct {
 	// ExpectedTotal, when set, must equal the server-computed grand total or the
 	// order is rejected with ErrPriceChanged.
 	ExpectedTotal *decimal.Decimal
+
+	// Quick marks a one-click "quick order": shipping is not resolved, the order
+	// starts in status "new" with source "quick" and a grand total of the item
+	// subtotal only. Set via CreateQuickOrderDTO, never from the checkout request.
+	Quick bool
+}
+
+// CreateQuickOrderDTO is the "quick order" input: the customer has a cart and
+// leaves only a name + phone (optionally an email / comment). Address, delivery
+// and payment are collected later by a manager, so the resulting order starts in
+// status "new" with source "quick".
+type CreateQuickOrderDTO struct {
+	Owner Owner
+	// User is the authenticated account, or nil for a guest.
+	User *models.User
+
+	Name    string
+	Phone   string
+	Email   *string
+	Comment *string
+
+	// IdempotencyKey, when set, makes repeated calls return the first created
+	// order instead of creating duplicates.
+	IdempotencyKey *string
+}
+
+// ToCreateOrderDTO folds the quick-order input into the shared checkout DTO with
+// Quick set. The account email wins over any email in the request; a guest with
+// no email produces an order with an empty email (phone is the contact then).
+func (d CreateQuickOrderDTO) ToCreateOrderDTO() CreateOrderDTO {
+	email := ""
+	switch {
+	case d.User != nil:
+		email = d.User.Email
+	case d.Email != nil:
+		email = *d.Email
+	}
+	phone := d.Phone
+
+	return CreateOrderDTO{
+		Owner:          d.Owner,
+		User:           d.User,
+		Email:          email,
+		Phone:          &phone,
+		ShipRecipient:  d.Name,
+		Comment:        d.Comment,
+		IdempotencyKey: d.IdempotencyKey,
+		Quick:          true,
+	}
+}
+
+// RequestToCreateQuickOrderDTO builds the quick-order input from the HTTP request
+// plus the resolved caller. user is nil for a guest.
+func RequestToCreateQuickOrderDTO(
+	req *order_request.CreateQuickOrderRequest,
+	owner Owner,
+	user *models.User,
+) CreateQuickOrderDTO {
+	return CreateQuickOrderDTO{
+		Owner:   owner,
+		User:    user,
+		Name:    req.Name,
+		Phone:   req.Phone,
+		Email:   req.Email,
+		Comment: req.Comment,
+	}
 }
 
 // ErrEmailRequired is returned by RequestToCreateOrderDTO when a guest checkout
@@ -157,6 +223,7 @@ type AdminOrderFilter struct {
 	PageSize      *uint64
 	Status        *string
 	PaymentStatus *string
+	Source        *string
 	UserID        *uuid.UUID
 	CreatedFrom   *time.Time
 	CreatedTo     *time.Time
@@ -179,6 +246,7 @@ func RequestToAdminOrderFilter(req *order_request.AdminListOrdersRequest) (Admin
 		PageSize:      req.PageSize,
 		Status:        req.Status,
 		PaymentStatus: req.PaymentStatus,
+		Source:        req.Source,
 		UserID:        req.UserID,
 		CreatedFrom:   from,
 		CreatedTo:     to,
@@ -205,6 +273,60 @@ type OrderStatusUpdateDTO struct {
 	Comment *string
 	// PaymentMethod is only applied when Status is "paid".
 	PaymentMethod *string
+}
+
+// OrderDetailsUpdateDTO is the admin order-edit input. Every field is optional —
+// a nil pointer leaves that column as-is. Item lines and their prices are never
+// touched. When any Shipping selection field is set the carrier is re-quoted and
+// shipping_total / grand_total recomputed from the stored subtotal; otherwise the
+// persisted shipping stands. Editing a "new" order (quick order) transitions it
+// to "pending"; that requires a shipping address.
+type OrderDetailsUpdateDTO struct {
+	Actor string
+
+	Email         *string
+	Phone         *string
+	ShipCityID    *uuid.UUID
+	ShipCityName  *string
+	ShipAddress   *string
+	ShipPostcode  *string
+	ShipRecipient *string
+	PaymentMethod *string
+	Comment       *string
+
+	Shipping ShippingSelection
+}
+
+// HasShippingSelection reports whether the edit carries a delivery choice that
+// should trigger a re-quote.
+func (d OrderDetailsUpdateDTO) HasShippingSelection() bool {
+	s := d.Shipping
+	return nonEmpty(s.MethodCode) || nonEmpty(s.Provider) || nonEmpty(s.TariffCode) || nonEmpty(s.PointCode)
+}
+
+func nonEmpty(s *string) bool { return s != nil && *s != "" }
+
+// RequestToOrderDetailsUpdateDTO maps the admin edit request into the DTO.
+func RequestToOrderDetailsUpdateDTO(req *order_request.AdminUpdateOrderRequest, actor string) OrderDetailsUpdateDTO {
+	return OrderDetailsUpdateDTO{
+		Actor:         actor,
+		Email:         req.Email,
+		Phone:         req.Phone,
+		ShipCityID:    req.ShipCityID,
+		ShipCityName:  req.ShipCityName,
+		ShipAddress:   req.ShipAddress,
+		ShipPostcode:  req.ShipPostcode,
+		ShipRecipient: req.ShipRecipient,
+		PaymentMethod: req.PaymentMethod,
+		Comment:       req.Comment,
+		Shipping: ShippingSelection{
+			MethodCode: req.DeliveryMethodCode,
+			Provider:   req.ShipProvider,
+			TariffCode: req.ShipTariffCode,
+			PointCode:  req.ShipPointCode,
+			Postcode:   req.ShipPostcode,
+		},
+	}
 }
 
 // ShippingSelection is the customer's delivery choice, shared by the checkout
@@ -255,6 +377,7 @@ type OrderDTO struct {
 	Number        int64
 	UserID        *uuid.UUID
 	Status        string
+	Source        string
 	PaymentStatus string
 	PaymentMethod *string
 	Currency      string
@@ -283,6 +406,7 @@ func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
 		Number:        o.OrderNumber,
 		UserID:        nullUUIDPtr(o.UserID),
 		Status:        o.Status,
+		Source:        o.Source,
 		PaymentStatus: o.PaymentStatus,
 		PaymentMethod: pgtypeutils.DecodeText(o.PaymentMethod),
 		Currency:      o.Currency,

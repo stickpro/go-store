@@ -5,6 +5,10 @@ package constant
 type OrderStatus string //	@name	OrderStatus
 
 const (
+	// OrderNew is the entry status of a "quick order": the customer left only a
+	// name + phone and a manager still has to collect address / delivery /
+	// payment before it becomes a normal pending order.
+	OrderNew        OrderStatus = "new"
 	OrderPending    OrderStatus = "pending"
 	OrderPaid       OrderStatus = "paid"
 	OrderProcessing OrderStatus = "processing"
@@ -27,6 +31,16 @@ const (
 )
 
 func (s PaymentStatus) String() string { return string(s) }
+
+// Order acquisition channel, stored in orders.source.
+const (
+	// OrderSourceCheckout — full self-service checkout (address + delivery +
+	// payment chosen by the customer).
+	OrderSourceCheckout = "checkout"
+	// OrderSourceQuick — one-click "quick order": name + phone only, a manager
+	// collects the rest. Starts in OrderNew.
+	OrderSourceQuick = "quick"
+)
 
 // Order status-history actors.
 const (

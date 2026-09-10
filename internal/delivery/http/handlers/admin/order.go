@@ -13,6 +13,7 @@ import (
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/order"
+	"github.com/stickpro/go-store/internal/service/shipping"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
 	// swag-gen import
@@ -124,6 +125,47 @@ func (h *Handler) updateOrderStatus(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(order_response.NewAdminFromDTO(o)))
 }
 
+// updateOrder edits an order's contact / shipping / payment details.
+//
+//	@Summary		Update order
+//	@Description	Edits an order's contact, shipping address, carrier, payment method and comment. Item lines and prices are not editable. Only orders in status `new` or `pending` can be edited (409 otherwise); editing a `new` (quick) order confirms it into `pending` and requires a shipping address. Send `delivery_method_code` (or `ship_provider` + `ship_tariff_code`) to re-quote the carrier and recompute totals; omit all delivery fields to keep the stored shipping cost.
+//	@Tags			Admin Order
+//	@Accept			json
+//	@Produce		json
+//	@Param			number	path		int										true	"Order number"
+//	@Param			request	body		order_request.AdminUpdateOrderRequest	true	"Fields to change"
+//	@Success		200		{object}	response.Result[order_response.AdminOrderResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		409		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Router			/v1/admin/orders/{number} [patch]
+//	@Security		BearerAuth
+func (h *Handler) updateOrder(c fiber.Ctx) error {
+	number, err := parseOrderNumber(c)
+	if err != nil {
+		return err
+	}
+
+	req := &order_request.AdminUpdateOrderRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	admin, ok := c.Locals("user").(*models.User)
+	if !ok {
+		return apierror.New().AddError(errors.New("undefined user")).SetHttpCode(fiber.StatusUnauthorized)
+	}
+
+	o, err := h.services.OrderService.UpdateDetails(c.Context(), number,
+		dto.RequestToOrderDetailsUpdateDTO(req, constant.OrderActorAdmin+":"+admin.ID.String()))
+	if err != nil {
+		return h.orderError(err)
+	}
+
+	return c.JSON(response.OkByData(order_response.NewAdminFromDTO(o)))
+}
+
 // orderError maps order-service errors to HTTP responses. Mirrors the
 // customer-facing handler's orderError (internal/delivery/http/handlers/order.go).
 func (h *Handler) orderError(err error) error {
@@ -132,7 +174,11 @@ func (h *Handler) orderError(err error) error {
 	case errors.As(err, &lineErr):
 		return apierror.New().AddError(lineErr, apierror.WithField(lineErr.VariantID.String())).
 			SetHttpCode(fiber.StatusUnprocessableEntity)
-	case errors.Is(err, order.ErrInvalidTransition):
+	case errors.Is(err, order.ErrShippingAddressRequired),
+		errors.Is(err, order.ErrShippingUnavailable), errors.Is(err, order.ErrShippingMethodUnknown),
+		errors.Is(err, shipping.ErrRatesNotSupported):
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusUnprocessableEntity)
+	case errors.Is(err, order.ErrInvalidTransition), errors.Is(err, order.ErrDetailsLocked):
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusConflict)
 	case errors.Is(err, order.ErrNotFound):
 		return apierror.New().AddError(errors.New("order not found")).SetHttpCode(fiber.StatusNotFound)
@@ -158,5 +204,6 @@ func (h *Handler) initOrderRoutes(v1 fiber.Router) {
 	o := v1.Group("/admin/orders")
 	o.Get("/", h.listOrders)
 	o.Get("/:number", h.getOrder)
+	o.Patch("/:number", h.updateOrder)
 	o.Patch("/:number/status", h.updateOrderStatus)
 }

@@ -15,9 +15,9 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO order_items (order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	RETURNING id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total
+INSERT INTO order_items (order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+	RETURNING id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm
 `
 
 type CreateParams struct {
@@ -31,6 +31,10 @@ type CreateParams struct {
 	UnitPrice decimal.Decimal `db:"unit_price" json:"unit_price"`
 	Quantity  int64           `db:"quantity" json:"quantity"`
 	LineTotal decimal.Decimal `db:"line_total" json:"line_total"`
+	WeightKg  decimal.Decimal `db:"weight_kg" json:"weight_kg"`
+	LengthCm  decimal.Decimal `db:"length_cm" json:"length_cm"`
+	WidthCm   decimal.Decimal `db:"width_cm" json:"width_cm"`
+	HeightCm  decimal.Decimal `db:"height_cm" json:"height_cm"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.OrderItem, error) {
@@ -45,6 +49,10 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.OrderIt
 		arg.UnitPrice,
 		arg.Quantity,
 		arg.LineTotal,
+		arg.WeightKg,
+		arg.LengthCm,
+		arg.WidthCm,
+		arg.HeightCm,
 	)
 	var i models.OrderItem
 	err := row.Scan(
@@ -59,6 +67,10 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.OrderIt
 		&i.UnitPrice,
 		&i.Quantity,
 		&i.LineTotal,
+		&i.WeightKg,
+		&i.LengthCm,
+		&i.WidthCm,
+		&i.HeightCm,
 	)
 	return &i, err
 }

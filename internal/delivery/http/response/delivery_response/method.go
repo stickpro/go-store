@@ -1,6 +1,10 @@
 package delivery_response
 
-import "github.com/stickpro/go-store/internal/service/shipping"
+import (
+	"github.com/shopspring/decimal"
+
+	"github.com/stickpro/go-store/internal/service/shipping"
+)
 
 // DeliveryMethodResponse is one checkout delivery method. The frontend renders
 // its method tabs from this list: it knows the title, whether to show a
@@ -16,19 +20,22 @@ type DeliveryMethodResponse struct {
 	HasPoints  bool   `json:"has_points"`
 	HasRates   bool   `json:"has_rates"`
 	Free       bool   `json:"free"`
+	// MarkupPercent is added on top of the carrier quote before rounding up.
+	MarkupPercent decimal.Decimal `json:"markup_percent"`
 } //	@name	DeliveryMethodResponse
 
 func NewMethodFromInfo(m shipping.MethodInfo) DeliveryMethodResponse {
 	return DeliveryMethodResponse{
-		Code:       m.Code,
-		Title:      m.Title,
-		Kind:       string(m.Kind),
-		Provider:   m.Provider,
-		TariffCode: m.TariffCode,
-		Enabled:    m.Enabled,
-		HasPoints:  m.HasPoints,
-		HasRates:   m.HasRates,
-		Free:       m.Free,
+		Code:          m.Code,
+		Title:         m.Title,
+		Kind:          string(m.Kind),
+		Provider:      m.Provider,
+		TariffCode:    m.TariffCode,
+		Enabled:       m.Enabled,
+		HasPoints:     m.HasPoints,
+		HasRates:      m.HasRates,
+		Free:          m.Free,
+		MarkupPercent: m.MarkupPercent,
 	}
 }
 

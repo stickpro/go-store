@@ -73,6 +73,7 @@ func (s *Service) ListAdmin(
 	countParams := repository_orders.CountAdminParams{
 		Status:        pgtypeutils.EncodeText(f.Status),
 		PaymentStatus: pgtypeutils.EncodeText(f.PaymentStatus),
+		Source:        pgtypeutils.EncodeText(f.Source),
 		UserID:        userID,
 		CreatedFrom:   createdFrom,
 		CreatedTo:     createdTo,
@@ -85,6 +86,7 @@ func (s *Service) ListAdmin(
 	rows, err := s.storage.Orders().ListAdmin(ctx, repository_orders.ListAdminParams{
 		Status:        countParams.Status,
 		PaymentStatus: countParams.PaymentStatus,
+		Source:        countParams.Source,
 		UserID:        countParams.UserID,
 		CreatedFrom:   countParams.CreatedFrom,
 		CreatedTo:     countParams.CreatedTo,

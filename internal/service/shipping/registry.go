@@ -165,7 +165,9 @@ func (r *Registry) QuoteAll(ctx context.Context, q RateQuery) ([]dto.ShippingRat
 	var errs []error
 	for _, res := range results {
 		if res.err != nil {
-			if !errors.Is(res.err, ErrRatesNotSupported) {
+			// A carrier that doesn't do rates, or can't serve this particular
+			// route/parcel, is simply omitted from the options — not an error.
+			if !errors.Is(res.err, ErrRatesNotSupported) && !errors.Is(res.err, ErrRateUnavailable) {
 				errs = append(errs, res.err)
 			}
 			continue

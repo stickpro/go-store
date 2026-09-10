@@ -171,6 +171,7 @@ type Order struct {
 	ShipPointCode  pgtype.Text      `db:"ship_point_code" json:"ship_point_code"`
 	ShipMinDays    pgtype.Int4      `db:"ship_min_days" json:"ship_min_days"`
 	ShipMaxDays    pgtype.Int4      `db:"ship_max_days" json:"ship_max_days"`
+	Source         string           `db:"source" json:"source"`
 } //	@name	Order
 
 type OrderItem struct {
@@ -185,6 +186,10 @@ type OrderItem struct {
 	UnitPrice decimal.Decimal `db:"unit_price" json:"unit_price"`
 	Quantity  int64           `db:"quantity" json:"quantity"`
 	LineTotal decimal.Decimal `db:"line_total" json:"line_total"`
+	WeightKg  decimal.Decimal `db:"weight_kg" json:"weight_kg"`
+	LengthCm  decimal.Decimal `db:"length_cm" json:"length_cm"`
+	WidthCm   decimal.Decimal `db:"width_cm" json:"width_cm"`
+	HeightCm  decimal.Decimal `db:"height_cm" json:"height_cm"`
 } //	@name	OrderItem
 
 type OrderStatusHistory struct {

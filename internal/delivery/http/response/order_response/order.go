@@ -40,6 +40,7 @@ type OrderResponse struct {
 	ID            uuid.UUID             `json:"id"`
 	Number        int64                 `json:"number"`
 	Status        string                `json:"status"`
+	Source        string                `json:"source"`
 	PaymentStatus string                `json:"payment_status"`
 	PaymentMethod *string               `json:"payment_method"`
 	Currency      string                `json:"currency"`
@@ -78,6 +79,7 @@ func NewFromDTO(d *dto.OrderDTO) *OrderResponse {
 		ID:            d.ID,
 		Number:        d.Number,
 		Status:        d.Status,
+		Source:        d.Source,
 		PaymentStatus: d.PaymentStatus,
 		PaymentMethod: d.PaymentMethod,
 		Currency:      d.Currency,

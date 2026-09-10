@@ -74,7 +74,7 @@ func (p *provider) Quote(ctx context.Context, q shipping.RateQuery) ([]dto.Shipp
 		})
 	}
 	if len(rates) == 0 {
-		return nil, fmt.Errorf("cdek: no tariff could be calculated")
+		return nil, fmt.Errorf("%w: cdek could not calculate any tariff for this route", shipping.ErrRateUnavailable)
 	}
 	return rates, nil
 }

@@ -2,6 +2,7 @@ package pochta
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -41,6 +42,10 @@ func (p *provider) Quote(ctx context.Context, q shipping.RateQuery) ([]dto.Shipp
 		SumOCKopecks: q.Parcel.DeclaredValueKopecks,
 	})
 	if err != nil {
+		var te *TariffError
+		if errors.As(err, &te) {
+			return nil, fmt.Errorf("%w: %s", shipping.ErrRateUnavailable, te.Msg)
+		}
 		return nil, err
 	}
 

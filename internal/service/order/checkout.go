@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
@@ -141,9 +142,14 @@ func (s *Service) buildOrder(
 		})
 	}
 
-	shipChoice, err := s.resolveShipping(ctx, d.ShippingSelection(), lines)
-	if err != nil {
-		return nil, nil, err
+	// A quick order carries no delivery choice yet — a manager resolves shipping
+	// when confirming it. Total is the item subtotal only.
+	shipChoice := shippingChoice{cost: decimal.Zero}
+	if !d.Quick {
+		shipChoice, err = s.resolveShipping(ctx, d.ShippingSelection(), lines)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	totals := computeTotals(lines, shipChoice.cost)
 	if d.ExpectedTotal != nil && !d.ExpectedTotal.Equal(totals.grand) {
@@ -171,6 +177,10 @@ func (s *Service) buildOrder(
 			UnitPrice: l.unitPrice,
 			Quantity:  l.quantity,
 			LineTotal: l.lineTotal(),
+			WeightKg:  l.weightKG,
+			LengthCm:  l.lengthCM,
+			WidthCm:   l.widthCM,
+			HeightCm:  l.heightCM,
 		})
 		if err != nil {
 			return nil, nil, fmt.Errorf("order: insert item: %w", err)
@@ -199,7 +209,7 @@ func (s *Service) buildOrder(
 	if _, err := s.storage.OrderStatusHistory(repository.WithTx(tx)).Create(ctx, repository_order_status_history.CreateParams{
 		OrderID:    createdOrder.ID,
 		FromStatus: pgtype.Text{},
-		ToStatus:   constant.OrderPending.String(),
+		ToStatus:   initialStatus(d).String(),
 		Actor:      constant.OrderActorCustomer,
 	}); err != nil {
 		return nil, nil, fmt.Errorf("order: insert history: %w", err)
@@ -223,7 +233,8 @@ func (s *Service) createParams(d dto.CreateOrderDTO, t orderTotals, sc shippingC
 
 	return repository_orders.CreateParams{
 		UserID:         userID,
-		Status:         constant.OrderPending.String(),
+		Status:         initialStatus(d).String(),
+		Source:         orderSource(d),
 		PaymentStatus:  constant.PaymentUnpaid.String(),
 		PaymentMethod:  pgtypeutils.EncodeText(strOrNil(d.PaymentMethod)),
 		Currency:       s.currency(),
@@ -257,12 +268,17 @@ func (s *Service) afterCommit(ctx context.Context, owner dto.Owner, o *dto.Order
 		s.logger.Errorw("order: clear cart after checkout", "order", o.Number, "error", err)
 	}
 
-	if err := s.mail.Enqueue(ctx, o.Email, mail.OrderConfirmation{
-		OrderNumber: o.Number,
-		Currency:    o.Currency,
-		GrandTotal:  o.GrandTotal.StringFixed(2),
-	}); err != nil {
-		s.logger.Errorw("order: enqueue confirmation email", "order", o.Number, "error", err)
+	// A quick order has no final total yet (shipping/discounts are added when a
+	// manager confirms it) and often no email at all — skip the receipt; the
+	// order.created event notifies the back office instead.
+	if o.Source != constant.OrderSourceQuick && o.Email != "" {
+		if err := s.mail.Enqueue(ctx, o.Email, mail.OrderConfirmation{
+			OrderNumber: o.Number,
+			Currency:    o.Currency,
+			GrandTotal:  o.GrandTotal.StringFixed(2),
+		}); err != nil {
+			s.logger.Errorw("order: enqueue confirmation email", "order", o.Number, "error", err)
+		}
 	}
 
 	if err := s.publisher.OrderCreated(ctx, orderCreatedEvent(o)); err != nil {
@@ -286,6 +302,7 @@ func orderCreatedEvent(o *dto.OrderDTO) contracts.OrderCreatedPayload {
 	return contracts.OrderCreatedPayload{
 		OrderNumber: o.Number,
 		UserID:      o.UserID,
+		Source:      o.Source,
 		Email:       o.Email,
 		Currency:    o.Currency,
 		GrandTotal:  o.GrandTotal,

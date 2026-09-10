@@ -248,6 +248,20 @@ type pochtaTariffResult struct {
 	Deadline     string
 }
 
+// TariffError is a structured error from the tariff calculator: the route,
+// parcel or destination the customer picked cannot be served on this tariff
+// (e.g. the point does not accept this mail category). It is a business
+// condition, not an infrastructure failure — the rater maps it to
+// shipping.ErrRateUnavailable.
+type TariffError struct {
+	Code int
+	Msg  string
+}
+
+func (e *TariffError) Error() string {
+	return fmt.Sprintf("pochta tariff %d: %s", e.Code, e.Msg)
+}
+
 // pochtaTariffResponse is the tariff.pochta.ru JSON shape. Amounts are kopecks.
 type pochtaTariffResponse struct {
 	Name      string `json:"name"`
@@ -302,16 +316,20 @@ func (c *client) calculateTariff(ctx context.Context, q pochtaTariffQuery) (*poc
 	defer resp.Body.Close()
 
 	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+
+	// tariff.pochta.ru answers 400 with a structured {"errors":[...]} body when
+	// the route / parcel / pickup point cannot be served. Parse it first so that
+	// turns into a clean TariffError, not a raw JSON dump.
+	var parsed pochtaTariffResponse
+	jsonErr := json.Unmarshal(raw, &parsed)
+	if jsonErr == nil && len(parsed.Errors) > 0 {
+		return nil, &TariffError{Code: parsed.Errors[0].Code, Msg: parsed.Errors[0].Msg}
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("pochta tariff: status %d: %s", resp.StatusCode, strings.TrimSpace(string(raw)))
 	}
-
-	var parsed pochtaTariffResponse
-	if err := json.Unmarshal(raw, &parsed); err != nil {
-		return nil, fmt.Errorf("decode tariff response: %w", err)
-	}
-	if len(parsed.Errors) > 0 {
-		return nil, fmt.Errorf("pochta tariff: %d: %s", parsed.Errors[0].Code, parsed.Errors[0].Msg)
+	if jsonErr != nil {
+		return nil, fmt.Errorf("decode tariff response: %w", jsonErr)
 	}
 
 	total := parsed.PayNDS
