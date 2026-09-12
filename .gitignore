@@ -6,6 +6,7 @@ vendor
 *config.yml
 *config.yaml
 configs/config.yaml
+configs/config.production.yaml
 .netrc
 .tmp
 /tmp

@@ -1,0 +1,47 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.release.prerelease == false }}
+    steps:
+      - name: Download release binary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ github.event.release.tag_name }}" \
+            --repo "${{ github.repository }}" \
+            --pattern 'go-store_*_linux_amd64.tar.gz' \
+            --output archive.tar.gz
+          tar -xzf archive.tar.gz go-store
+          chmod +x go-store
+
+      - name: Copy binary to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          source: "go-store"
+          target: "/etc/go-store"
+          strip_components: 0
+          overwrite: true
+          rm: false
+
+      - name: Install and restart service
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            sudo /usr/sbin/setcap cap_net_bind_service+ep /etc/go-store/go-store
+            sudo /usr/bin/systemctl restart go-store.service
+            sudo /usr/bin/systemctl is-active --quiet go-store.service
