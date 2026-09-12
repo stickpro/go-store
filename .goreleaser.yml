@@ -34,6 +34,12 @@ nfpms:
     formats:
       - deb
       - rpm
+    dependencies:
+      - libvips42
+    overrides:
+      rpm:
+        dependencies:
+          - vips
     vendor: "Go commerce"
     homepage: "https://github.com/stickpro/go-store"
     maintainer: "Dev Team <stick.qwe@gmail.com>"
