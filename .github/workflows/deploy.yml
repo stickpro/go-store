@@ -1,19 +1,30 @@
 name: Deploy
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.release.prerelease == false }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
+      - name: Resolve release tag and verify it is published
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.workflow_run.head_branch }}"
+          echo "Resolved tag: $TAG"
+          gh release view "$TAG" --repo "${{ github.repository }}" --json isDraft,isPrerelease \
+            --jq 'if .isDraft then error("release is a draft") elif .isPrerelease then error("release is a prerelease") else empty end'
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
       - name: Download release binary
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release download "${{ github.event.release.tag_name }}" \
+          gh release download "$TAG" \
             --repo "${{ github.repository }}" \
             --pattern 'go-store_*_linux_amd64.tar.gz' \
             --output archive.tar.gz
