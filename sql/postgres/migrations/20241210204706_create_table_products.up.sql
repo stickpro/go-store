@@ -28,5 +28,3 @@ create table products
     created_at      timestamp      not null default current_timestamp,
     updated_at      timestamp null     default current_timestamp
 );
-
-create index idx_products_model on products (model);
