@@ -38,6 +38,7 @@ type AttributeItem struct {
 
 type ProductPayload struct {
 	ExternalID     string               `json:"external_id"`
+	Name           string               `json:"name"`
 	Model          string               `json:"model"`
 	Sku            *string              `json:"sku,omitempty"`
 	PriceRetail    decimal.Decimal      `json:"price_retail"`

@@ -11,6 +11,7 @@ import (
 // ProductUpsertDTO used for create or update product from external system
 type ProductUpsertDTO struct {
 	ExternalID     string
+	Name           string
 	Model          string
 	Sku            *string
 	PriceRetail    decimal.Decimal

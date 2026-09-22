@@ -17,14 +17,19 @@ func NewMeiliSearchSearchEngine(cfg config.SearchEngine) *SearchEngine {
 	return &SearchEngine{client: client}
 }
 
+// CreateIndex indexes a batch of documents. Callers that page through a large
+// dataset call this once per page: only the first call (the one carrying opts)
+// should reset the index - every following page just adds to it. Deleting the
+// index on every call, as this used to do, would wipe out every earlier page
+// (and its settings) as soon as a second page came in.
 func (e *SearchEngine) CreateIndex(nameIndex string, data []map[string]interface{}, opts ...searchtypes.IndexOptions) error {
-	_, err := e.client.DeleteIndex(nameIndex)
-	if err != nil {
-		return err
-	}
 	index := e.client.Index(nameIndex)
 
 	if len(opts) > 0 { //nolint:nestif
+		if _, err := e.client.DeleteIndex(nameIndex); err != nil {
+			return err
+		}
+
 		settings := &meilisearchSDK.Settings{}
 
 		if len(opts[0].RankingRules) > 0 {
@@ -43,13 +48,12 @@ func (e *SearchEngine) CreateIndex(nameIndex string, data []map[string]interface
 			settings.DisplayedAttributes = opts[0].DisplayedAttributes
 		}
 
-		_, err := index.UpdateSettings(settings)
-		if err != nil {
+		if _, err := index.UpdateSettings(settings); err != nil {
 			return fmt.Errorf("failed to update index settings: %w", err)
 		}
 	}
 
-	_, err = index.AddDocuments(data, "id")
+	_, err := index.AddDocuments(data, "id")
 	if err != nil {
 		return fmt.Errorf("failed to add documents: %w", err)
 	}

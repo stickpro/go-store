@@ -6,6 +6,7 @@ import (
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
+	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/storage/base"
 	"github.com/stickpro/go-store/internal/tools"
 	utils "github.com/stickpro/go-store/pkg/util"
@@ -44,6 +45,7 @@ func createIndex[T any](
 
 	page := uint64(1)
 	pageSize := uint64(100)
+	isFirstBatch := true
 
 	for {
 		d := dto.GetDTO{
@@ -67,7 +69,15 @@ func createIndex[T any](
 			return err
 		}
 
-		err = s.searchService.CreateIndex(index, data)
+		// Only the first batch resets the index (CreateIndex only wipes it when
+		// passed options) - later batches just append, otherwise each one would
+		// clear out every batch indexed before it.
+		if isFirstBatch {
+			err = s.searchService.CreateIndex(index, data, searchtypes.IndexOptions{})
+			isFirstBatch = false
+		} else {
+			err = s.searchService.CreateIndex(index, data)
+		}
 		if err != nil {
 			s.logger.Error("Failed to index "+entityName+" batch", "page", page, "error", err)
 			return err

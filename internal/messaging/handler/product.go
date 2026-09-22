@@ -29,6 +29,7 @@ func NewProductHandler(svc product.IProductService, attrSvc attribute.IAttribute
 func (h *ProductHandler) HandleProduct(ctx context.Context, p contracts.ProductPayload) error {
 	upsertDTO := dto.ProductUpsertDTO{
 		ExternalID:     p.ExternalID,
+		Name:           p.Name,
 		Model:          p.Model,
 		Sku:            p.Sku,
 		PriceRetail:    p.PriceRetail,

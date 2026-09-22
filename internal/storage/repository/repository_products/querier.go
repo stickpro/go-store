@@ -27,6 +27,7 @@ type Querier interface {
 	DeleteSpecificRelatedProducts(ctx context.Context, arg DeleteSpecificRelatedProductsParams) error
 	GetByExternalID(ctx context.Context, externalID pgtype.Text) (*models.Product, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
+	GetBySku(ctx context.Context, sku pgtype.Text) (*models.Product, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Product, error)
 	GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetCartItemsByVariantIDsRow, error)
 	GetMainMediaByProductIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*GetMainMediaByProductIDsRow, error)

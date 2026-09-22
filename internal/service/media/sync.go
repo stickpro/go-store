@@ -155,7 +155,18 @@ func (s *Service) resolveImage(ctx context.Context, rawURL string) (*models.Medi
 	})
 	if err != nil {
 		_ = s.objectStorage.Delete(ctx, fPath)
-		return nil, fmt.Errorf("create media record: %w", pgerror.ParseError(err))
+		parsedErr := pgerror.ParseError(err)
+		// Two concurrent callers can both miss the lookup above and race to
+		// insert the same source_url (e.g. two products sharing a stock photo,
+		// synced at the same time). The loser just reuses the winner's row.
+		var uc *pgerror.UniqueConstraintError
+		if errors.As(parsedErr, &uc) && strings.Contains(uc.Constraint, "source_url") {
+			existing, getErr := s.storage.Media().GetBySourceURL(ctx, pgtype.Text{String: rawURL, Valid: true})
+			if getErr == nil {
+				return existing, nil
+			}
+		}
+		return nil, fmt.Errorf("create media record: %w", parsedErr)
 	}
 	return medium, nil
 }

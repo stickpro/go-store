@@ -16,9 +16,9 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO products (external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, now())
-	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at
+INSERT INTO products (external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, name)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, now(), $24)
+	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at, name
 `
 
 type CreateParams struct {
@@ -45,6 +45,7 @@ type CreateParams struct {
 	Image          pgtype.Text          `db:"image" json:"image"`
 	SortOrder      int32                `db:"sort_order" json:"sort_order"`
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
+	Name           string               `db:"name" json:"name"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product, error) {
@@ -72,6 +73,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		arg.Image,
 		arg.SortOrder,
 		arg.IsEnable,
+		arg.Name,
 	)
 	var i models.Product
 	err := row.Scan(
@@ -101,15 +103,16 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		&i.IsEnable,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
 	)
 	return &i, err
 }
 
 const update = `-- name: Update :one
 UPDATE products
-	SET external_id=$1, manufacturer_id=$2, sku=$3, upc=$4, ean=$5, jan=$6, isbn=$7, mpn=$8, location=$9, quantity=$10, stock_status=$11, price_retail=$12, price_business=$13, price_wholesale=$14, weight=$15, length=$16, width=$17, height=$18, subtract=$19, minimum=$20, image=$21, sort_order=$22, is_enable=$23, updated_at=now()
-WHERE id=$24
-	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at
+	SET external_id=$1, manufacturer_id=$2, sku=$3, upc=$4, ean=$5, jan=$6, isbn=$7, mpn=$8, location=$9, quantity=$10, stock_status=$11, price_retail=$12, price_business=$13, price_wholesale=$14, weight=$15, length=$16, width=$17, height=$18, subtract=$19, minimum=$20, image=$21, sort_order=$22, is_enable=$23, updated_at=now(), name=$24
+WHERE id=$25
+	RETURNING id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at, name
 `
 
 type UpdateParams struct {
@@ -136,6 +139,7 @@ type UpdateParams struct {
 	Image          pgtype.Text          `db:"image" json:"image"`
 	SortOrder      int32                `db:"sort_order" json:"sort_order"`
 	IsEnable       bool                 `db:"is_enable" json:"is_enable"`
+	Name           string               `db:"name" json:"name"`
 	ID             uuid.UUID            `db:"id" json:"id"`
 }
 
@@ -164,6 +168,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		arg.Image,
 		arg.SortOrder,
 		arg.IsEnable,
+		arg.Name,
 		arg.ID,
 	)
 	var i models.Product
@@ -194,6 +199,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		&i.IsEnable,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
 	)
 	return &i, err
 }

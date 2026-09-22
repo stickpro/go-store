@@ -77,7 +77,7 @@ func (q *Queries) DecrementProductStock(ctx context.Context, arg DecrementProduc
 }
 
 const getByExternalID = `-- name: GetByExternalID :one
-SELECT id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at FROM products WHERE external_id = $1 LIMIT 1
+SELECT id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at, name FROM products WHERE external_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByExternalID(ctx context.Context, externalID pgtype.Text) (*models.Product, error) {
@@ -110,12 +110,13 @@ func (q *Queries) GetByExternalID(ctx context.Context, externalID pgtype.Text) (
 		&i.IsEnable,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
 	)
 	return &i, err
 }
 
 const getByID = `-- name: GetByID :one
-SELECT id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at FROM products WHERE id = $1 LIMIT 1
+SELECT id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at, name FROM products WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
@@ -148,12 +149,52 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, e
 		&i.IsEnable,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
+	)
+	return &i, err
+}
+
+const getBySku = `-- name: GetBySku :one
+SELECT id, external_id, manufacturer_id, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status, price_retail, price_business, price_wholesale, weight, length, width, height, subtract, minimum, image, sort_order, is_enable, created_at, updated_at, name FROM products WHERE sku = $1 LIMIT 1
+`
+
+func (q *Queries) GetBySku(ctx context.Context, sku pgtype.Text) (*models.Product, error) {
+	row := q.db.QueryRow(ctx, getBySku, sku)
+	var i models.Product
+	err := row.Scan(
+		&i.ID,
+		&i.ExternalID,
+		&i.ManufacturerID,
+		&i.Sku,
+		&i.Upc,
+		&i.Ean,
+		&i.Jan,
+		&i.Isbn,
+		&i.Mpn,
+		&i.Location,
+		&i.Quantity,
+		&i.StockStatus,
+		&i.PriceRetail,
+		&i.PriceBusiness,
+		&i.PriceWholesale,
+		&i.Weight,
+		&i.Length,
+		&i.Width,
+		&i.Height,
+		&i.Subtract,
+		&i.Minimum,
+		&i.Image,
+		&i.SortOrder,
+		&i.IsEnable,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
 	)
 	return &i, err
 }
 
 const getBySlug = `-- name: GetBySlug :one
-SELECT p.id, p.external_id, p.manufacturer_id, p.sku, p.upc, p.ean, p.jan, p.isbn, p.mpn, p.location, p.quantity, p.stock_status, p.price_retail, p.price_business, p.price_wholesale, p.weight, p.length, p.width, p.height, p.subtract, p.minimum, p.image, p.sort_order, p.is_enable, p.created_at, p.updated_at FROM products p
+SELECT p.id, p.external_id, p.manufacturer_id, p.sku, p.upc, p.ean, p.jan, p.isbn, p.mpn, p.location, p.quantity, p.stock_status, p.price_retail, p.price_business, p.price_wholesale, p.weight, p.length, p.width, p.height, p.subtract, p.minimum, p.image, p.sort_order, p.is_enable, p.created_at, p.updated_at, p.name FROM products p
 INNER JOIN product_variants pv ON pv.product_id = p.id
 WHERE pv.slug = $1 LIMIT 1
 `
@@ -188,6 +229,7 @@ func (q *Queries) GetBySlug(ctx context.Context, slug string) (*models.Product, 
 		&i.IsEnable,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
 	)
 	return &i, err
 }

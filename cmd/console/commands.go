@@ -20,11 +20,14 @@ func InitCommands(currentAppVersion, appName, _ string) []*cli.Command {
 		{
 			Name:        "start",
 			Description: "Go store server",
-			Flags:       []cli.Flag{cfgPathsFlag()},
+			Flags:       []cli.Flag{cfgPathsFlag(), kafkaGroupIDFlag()},
 			Action: func(ctx context.Context, c *cli.Command) error {
 				conf, err := loadConfig(c.Args().Slice(), c.StringSlice("configs"))
 				if err != nil {
 					return fmt.Errorf("failed to load config: %w", err)
+				}
+				if groupID := c.String("kafka-group-id"); groupID != "" {
+					conf.Kafka.Consumer.GroupID = groupID
 				}
 				loggerOpts := append(defaultLoggerOpts(appName, currentAppVersion), logger.WithConfig(conf.Log))
 
@@ -71,6 +74,12 @@ func InitCommands(currentAppVersion, appName, _ string) []*cli.Command {
 			Flags:       []cli.Flag{cfgPathsFlag()},
 			Commands:    prepareUserCommands(appName, currentAppVersion),
 		},
+		{
+			Name:        "import",
+			Description: "one-off data import commands",
+			Flags:       []cli.Flag{cfgPathsFlag()},
+			Commands:    prepareImportCommands(appName, currentAppVersion),
+		},
 	}
 }
 
@@ -102,6 +111,17 @@ func cfgPathsFlag() *cli.StringSliceFlag {
 		Aliases: []string{"c"},
 		Usage:   "allows you to use your own paths to configuration files, separated by commas (config.yaml,config.prod.yml,.env)",
 		Value:   cli.NewStringSlice(defaultConfigPath).Value(),
+	}
+}
+
+// kafkaGroupIDFlag overrides kafka.consumer.group_id / KAFKA_CONSUMER_GROUP_ID.
+// Use it for local runs against a shared broker so the process joins its own
+// consumer group instead of splitting partitions with another deployment
+// (e.g. production) using the default group id.
+func kafkaGroupIDFlag() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:  "kafka-group-id",
+		Usage: "override the Kafka consumer group id (default from config/KAFKA_CONSUMER_GROUP_ID); set this to a unique value for local runs against a shared broker",
 	}
 }
 

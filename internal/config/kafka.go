@@ -17,5 +17,5 @@ type KafkaProducerConfig struct {
 }
 
 type KafkaConsumerConfig struct {
-	GroupID string `yaml:"group_id" default:"go-store"`
+	GroupID string `yaml:"group_id" default:"go-store" usage:"consumer group id; must be unique per independent deployment sharing a broker"`
 }

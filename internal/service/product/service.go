@@ -29,6 +29,7 @@ type IProductService interface { //nolint:interfacebloat
 	UpsertProductByExternalID(ctx context.Context, externalID string, d dto.ProductUpsertDTO, opts ...repository.Option) (*models.Product, error)
 	GetProductByID(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	GetProductByExternalID(ctx context.Context, externalID string) (*models.Product, error)
+	GetProductBySku(ctx context.Context, sku string, opts ...repository.Option) (*models.Product, error)
 	GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*dto.ProductWithMediaDTO, error)
 	GetProductWithPagination(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
 	GetProductsWithoutVariants(ctx context.Context, d dto.GetDTO) (*base.FindResponseWithFullPagination[*repository_products.FindRow], error)
@@ -176,9 +177,26 @@ func (s *Service) GetProductByExternalID(ctx context.Context, externalID string)
 	return prd, nil
 }
 
+func (s *Service) GetProductBySku(ctx context.Context, sku string, opts ...repository.Option) (*models.Product, error) {
+	prd, err := s.storage.Products(opts...).GetBySku(ctx, pgtypeutils.EncodeText(&sku))
+	if err != nil {
+		return nil, pgerror.ParseError(err)
+	}
+	return prd, nil
+}
+
 func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*models.Product, error) {
+	// Name is populated exclusively via the Kafka product exchange, not the admin
+	// API, so it must be carried over from the existing row to avoid the full
+	// Update statement blanking it out.
+	existing, err := s.storage.Products().GetByID(ctx, d.ID)
+	if err != nil {
+		return nil, pgerror.ParseError(err)
+	}
+
 	productParams := repository_products.UpdateParams{
 		ID:             d.ID,
+		Name:           existing.Name,
 		ManufacturerID: d.ManufacturerID,
 		Sku:            pgtypeutils.EncodeText(d.Sku),
 		Upc:            pgtypeutils.EncodeText(d.Upc),
@@ -204,7 +222,6 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 	}
 
 	var prd *models.Product
-	var err error
 
 	err = repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
 		prd, err = s.storage.Products(repository.WithTx(tx)).Update(ctx, productParams)
@@ -321,6 +338,7 @@ func (s *Service) UpsertProductByExternalID(ctx context.Context, externalID stri
 		// товар не найден — создаём только запись товара без варианта
 		return s.storage.Products(opts...).Create(ctx, repository_products.CreateParams{
 			ExternalID:     pgtypeutils.EncodeText(&externalID),
+			Name:           d.Name,
 			ManufacturerID: d.ManufacturerID,
 			Sku:            pgtypeutils.EncodeText(d.Sku),
 			Quantity:       d.Quantity,
@@ -340,6 +358,7 @@ func (s *Service) UpsertProductByExternalID(ctx context.Context, externalID stri
 	prd, err := s.storage.Products(opts...).Update(ctx, repository_products.UpdateParams{
 		ID:             existing.ID,
 		ExternalID:     pgtypeutils.EncodeText(&externalID),
+		Name:           d.Name,
 		ManufacturerID: d.ManufacturerID,
 		Sku:            pgtypeutils.EncodeText(d.Sku),
 		Quantity:       d.Quantity,
