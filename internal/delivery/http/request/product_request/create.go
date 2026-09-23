@@ -8,7 +8,6 @@ import (
 type CreateProductVariantRequest struct {
 	Name            string     `json:"name" validate:"required"`
 	Slug            string     `json:"slug" validate:"required,slug"`
-	Model           string     `json:"model" validate:"required"`
 	CategoryID      *uuid.UUID `json:"category_id,omitempty" validate:"omitempty,uuid"`
 	Description     *string    `json:"description,omitempty"`
 	MetaTitle       *string    `json:"meta_title,omitempty"`

@@ -14,8 +14,8 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO product_variants (product_id, category_id, name, slug, description, model, meta_title, meta_h1, meta_description, meta_keyword, sort_order, is_enable, viewed, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now())
+INSERT INTO product_variants (product_id, category_id, name, slug, description, meta_title, meta_h1, meta_description, meta_keyword, sort_order, is_enable, viewed, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now())
 	RETURNING id, product_id, category_id, name, slug, description, model, meta_title, meta_h1, meta_description, meta_keyword, sort_order, is_enable, viewed, created_at, updated_at
 `
 
@@ -25,7 +25,6 @@ type CreateParams struct {
 	Name            string        `db:"name" json:"name"`
 	Slug            string        `db:"slug" json:"slug"`
 	Description     pgtype.Text   `db:"description" json:"description"`
-	Model           string        `db:"model" json:"model"`
 	MetaTitle       pgtype.Text   `db:"meta_title" json:"meta_title"`
 	MetaH1          pgtype.Text   `db:"meta_h1" json:"meta_h1"`
 	MetaDescription pgtype.Text   `db:"meta_description" json:"meta_description"`
@@ -42,7 +41,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Product
 		arg.Name,
 		arg.Slug,
 		arg.Description,
-		arg.Model,
 		arg.MetaTitle,
 		arg.MetaH1,
 		arg.MetaDescription,
@@ -158,8 +156,8 @@ func (q *Queries) GetAll(ctx context.Context, arg GetAllParams) ([]*models.Produ
 
 const update = `-- name: Update :one
 UPDATE product_variants
-	SET product_id=$1, category_id=$2, name=$3, slug=$4, description=$5, model=$6, meta_title=$7, meta_h1=$8, meta_description=$9, meta_keyword=$10, sort_order=$11, is_enable=$12, viewed=$13, updated_at=now()
-WHERE id=$14
+	SET product_id=$1, category_id=$2, name=$3, slug=$4, description=$5, meta_title=$6, meta_h1=$7, meta_description=$8, meta_keyword=$9, sort_order=$10, is_enable=$11, viewed=$12, updated_at=now()
+WHERE id=$13
 	RETURNING id, product_id, category_id, name, slug, description, model, meta_title, meta_h1, meta_description, meta_keyword, sort_order, is_enable, viewed, created_at, updated_at
 `
 
@@ -169,7 +167,6 @@ type UpdateParams struct {
 	Name            string        `db:"name" json:"name"`
 	Slug            string        `db:"slug" json:"slug"`
 	Description     pgtype.Text   `db:"description" json:"description"`
-	Model           string        `db:"model" json:"model"`
 	MetaTitle       pgtype.Text   `db:"meta_title" json:"meta_title"`
 	MetaH1          pgtype.Text   `db:"meta_h1" json:"meta_h1"`
 	MetaDescription pgtype.Text   `db:"meta_description" json:"meta_description"`
@@ -187,7 +184,6 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (*models.Product
 		arg.Name,
 		arg.Slug,
 		arg.Description,
-		arg.Model,
 		arg.MetaTitle,
 		arg.MetaH1,
 		arg.MetaDescription,

@@ -261,6 +261,7 @@ schemas:
                         returning: '*'
                         skip_columns:
                             - id
+                            - model
                             - updated_at
                         column_values:
                             created_at: now()
@@ -274,6 +275,7 @@ schemas:
                         returning: '*'
                         skip_columns:
                             - id
+                            - model
                             - created_at
                         column_values:
                             updated_at: now()

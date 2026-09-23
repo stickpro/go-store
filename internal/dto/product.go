@@ -30,7 +30,6 @@ type ProductUpsertDTO struct {
 type CreateProductVariantDTO struct {
 	Name            string
 	Slug            string
-	Model           string
 	CategoryID      uuid.NullUUID
 	Description     *string
 	MetaTitle       *string
@@ -71,7 +70,6 @@ type UpdateProductVariantDTO struct {
 	ID              uuid.UUID
 	Name            string
 	Slug            string
-	Model           string
 	CategoryID      uuid.NullUUID
 	Description     *string
 	MetaTitle       *string

@@ -6379,7 +6379,6 @@
         "CreateProductVariantRequest": {
             "type": "object",
             "required": [
-                "model",
                 "name",
                 "slug"
             ],
@@ -6403,9 +6402,6 @@
                     "type": "string"
                 },
                 "meta_title": {
-                    "type": "string"
-                },
-                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -8563,8 +8559,7 @@
         "UpdateProductVariantRequest": {
             "type": "object",
             "required": [
-                "id",
-                "model"
+                "id"
             ],
             "properties": {
                 "category_id": {
@@ -8592,9 +8587,6 @@
                     "type": "string"
                 },
                 "meta_title": {
-                    "type": "string"
-                },
-                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -9018,6 +9010,9 @@
                 },
                 "mpn": {
                     "$ref": "#/definitions/pgtype.Text"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "price_business": {
                     "type": "number"

@@ -326,19 +326,15 @@ func processModelGroup(
 	if err != nil {
 		return fmt.Errorf("get existing variants: %w", err)
 	}
-	existingByModel := make(map[string]*models.ProductVariant, len(existingVariants))
+	existingBySlug := make(map[string]*models.ProductVariant, len(existingVariants))
 	for _, v := range existingVariants {
-		existingByModel[v.Model] = v
+		existingBySlug[v.Slug] = v
 	}
+	claimed := make(map[uuid.UUID]bool, len(existingVariants))
 
 	sort.Slice(rows, func(i, j int) bool { return rows[i].ID < rows[j].ID })
 
 	for _, row := range rows {
-		variantModel := row.Sku
-		if variantModel == "" {
-			variantModel = fmt.Sprintf("%s-%d", model, row.ID)
-		}
-
 		var mappedCategoryIDs []uuid.UUID
 		for _, oldID := range productCategoryLinks[row.ID] {
 			if newID, ok := categoryIDs[oldID]; ok {
@@ -350,14 +346,17 @@ func processModelGroup(
 			primaryCategoryID = uuid.NullUUID{UUID: mappedCategoryIDs[0], Valid: true}
 		}
 
-		existing, matched := existingByModel[variantModel]
+		existing, matched := matchExistingVariant(row, seoKeywords[row.ID], existingBySlug, claimed)
+		if matched {
+			claimed[existing.ID] = true
+		}
 
 		if dryRun {
 			action := "create"
 			if matched {
 				action = "update"
 			}
-			l.Infow("would "+action+" variant", "model", variantModel, "product_sku", model, "name", row.Name)
+			l.Infow("would "+action+" variant", "oc_product_id", row.ID, "product_sku", model, "name", row.Name)
 			continue
 		}
 
@@ -366,7 +365,6 @@ func processModelGroup(
 				ID:              existing.ID,
 				Name:            row.Name,
 				Slug:            existing.Slug,
-				Model:           variantModel,
 				CategoryID:      primaryCategoryID,
 				Description:     nonEmpty(row.Description),
 				MetaTitle:       nonEmpty(row.MetaTitle),
@@ -376,7 +374,7 @@ func processModelGroup(
 				SortOrder:       row.SortOrder,
 				IsEnable:        row.Status,
 			}); err != nil {
-				report.addErr("variant %d (model %s): update: %v", row.ID, variantModel, err)
+				report.addErr("variant %d (slug %s): update: %v", row.ID, existing.Slug, err)
 				continue
 			}
 			report.inc(&report.VariantsUpdated)
@@ -387,7 +385,6 @@ func processModelGroup(
 		if _, err := services.ProductService.CreateProductVariant(ctx, prd.ID, dto.CreateProductVariantDTO{
 			Name:            row.Name,
 			Slug:            slug,
-			Model:           variantModel,
 			CategoryID:      primaryCategoryID,
 			Description:     nonEmpty(row.Description),
 			MetaTitle:       nonEmpty(row.MetaTitle),
@@ -397,13 +394,35 @@ func processModelGroup(
 			SortOrder:       row.SortOrder,
 			IsEnable:        row.Status,
 		}); err != nil {
-			report.addErr("variant %d (model %s): create: %v", row.ID, variantModel, err)
+			report.addErr("variant %d (slug %s): create: %v", row.ID, slug, err)
 			continue
 		}
 		report.inc(&report.VariantsCreated)
 	}
 
 	return nil
+}
+
+// matchExistingVariant finds the go-store variant a previous run created for
+// row. product_variants.model is sequence-generated and carries no trace of
+// the OpenCart row, so the match goes by the slug the row resolves to.
+// Variants already claimed by an earlier row of the group are skipped so two
+// rows never update the same variant.
+func matchExistingVariant(
+	row ProductRow,
+	seoKeyword string,
+	bySlug map[string]*models.ProductVariant,
+	claimed map[uuid.UUID]bool,
+) (*models.ProductVariant, bool) {
+	baseSlug := SanitizeKeyword(seoKeyword)
+	if baseSlug == "" {
+		baseSlug = Slugify(row.Name)
+	}
+	v, ok := bySlug[baseSlug]
+	if !ok || claimed[v.ID] {
+		return nil, false
+	}
+	return v, true
 }
 
 // resolveSlug prefers a sanitized OpenCart SEO keyword, falling back to a

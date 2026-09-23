@@ -9,7 +9,6 @@ type UpdateProductVariantRequest struct {
 	ID              uuid.UUID  `json:"id" validate:"required,uuid"`
 	Name            string     `json:"name" validate:"omitempty"`
 	Slug            string     `json:"slug" validate:"omitempty,slug"`
-	Model           string     `json:"model" validate:"required"`
 	CategoryID      *uuid.UUID `json:"category_id,omitempty" validate:"omitempty,uuid"`
 	Description     *string    `json:"description,omitempty"`
 	MetaTitle       *string    `json:"meta_title,omitempty"`

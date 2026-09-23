@@ -6386,7 +6386,6 @@ const docTemplate = `{
         "CreateProductVariantRequest": {
             "type": "object",
             "required": [
-                "model",
                 "name",
                 "slug"
             ],
@@ -6410,9 +6409,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "meta_title": {
-                    "type": "string"
-                },
-                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -8570,8 +8566,7 @@ const docTemplate = `{
         "UpdateProductVariantRequest": {
             "type": "object",
             "required": [
-                "id",
-                "model"
+                "id"
             ],
             "properties": {
                 "category_id": {
@@ -8599,9 +8594,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "meta_title": {
-                    "type": "string"
-                },
-                "model": {
                     "type": "string"
                 },
                 "name": {
@@ -9025,6 +9017,9 @@ const docTemplate = `{
                 },
                 "mpn": {
                     "$ref": "#/definitions/pgtype.Text"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "price_business": {
                     "type": "number"
