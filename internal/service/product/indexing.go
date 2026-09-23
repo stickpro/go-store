@@ -37,7 +37,7 @@ func (s *Service) CreateProductVariantIndex(ctx context.Context, reindex bool) e
 	indexOptions := searchtypes.IndexOptions{
 		SearchableAttributes: []string{"name", "description", "meta_keyword", "model"},
 		FilterableAttributes: append(
-			[]string{"price", "category_id", "category_ids", "manufacturer_id", "is_enable", "stock_status"},
+			[]string{"price", "category_id", "category_ids", "manufacturer_id", "is_enable", "stock_status", "model"},
 			filterableAttrs...,
 		),
 		SortableAttributes: []string{"price", "created_at", "name", "sort_order", "viewed"},

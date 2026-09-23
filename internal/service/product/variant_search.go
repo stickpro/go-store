@@ -83,7 +83,7 @@ func (s *Service) SearchVariants(
 		params.Facets = categoryFacetFields(attrTypes)
 	}
 
-	res, err := s.searchService.SearchWithParams(constant.ProductVariantsIndex, params)
+	res, err := s.searchVariantsByModelOrText(params)
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +119,44 @@ func (s *Service) SearchVariants(
 	}
 
 	return result, nil
+}
+
+// searchVariantsByModelOrText gives a query that looks like a variant model (the
+// sequence-generated number) an exact-match pass first: full-text search is typo- and
+// prefix-tolerant, so "100123" would otherwise also rank 100124, 1001234, etc. When no
+// variant has that model, the query falls through to the regular full-text search.
+func (s *Service) searchVariantsByModelOrText(params searchtypes.SearchParams) (*searchtypes.SearchResult, error) {
+	model := strings.TrimSpace(params.Query)
+	if !looksLikeModel(model) {
+		return s.searchService.SearchWithParams(constant.ProductVariantsIndex, params)
+	}
+
+	exact := params
+	exact.Query = ""
+	exact.Filter = params.Filter + " AND model = " + meiliQuote(model)
+	res, err := s.searchService.SearchWithParams(constant.ProductVariantsIndex, exact)
+	switch {
+	case err != nil:
+		// most likely an index built before "model" became filterable - reindex to fix
+		s.logger.Warn("Exact model search failed, falling back to full-text", "model", model, "error", err)
+	case res.TotalHits > 0:
+		return res, nil
+	}
+
+	return s.searchService.SearchWithParams(constant.ProductVariantsIndex, params)
+}
+
+// looksLikeModel reports whether s has the shape of a variant model (digits only).
+func looksLikeModel(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // filterableAttributeTypes returns a slug -> type ("select"|"number"|"boolean"|"text") map of
