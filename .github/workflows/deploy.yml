@@ -39,7 +39,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           source: "go-store"
-          target: "/etc/go-store/.deploy"
+          target: "/etc/go-store/.release"
           strip_components: 0
           overwrite: true
           rm: true
@@ -54,8 +54,8 @@ jobs:
           script: |
             set -euo pipefail
             # Swap via rename: overwriting a running binary in place fails with ETXTBSY
-            chmod +x /etc/go-store/.deploy/go-store
-            sudo /usr/sbin/setcap cap_net_bind_service+ep /etc/go-store/.deploy/go-store
-            mv -f /etc/go-store/.deploy/go-store /etc/go-store/go-store
+            chmod +x /etc/go-store/.release/go-store
+            mv -f /etc/go-store/.release/go-store /etc/go-store/go-store
+            sudo /usr/sbin/setcap cap_net_bind_service+ep /etc/go-store/go-store
             sudo /usr/bin/systemctl restart go-store.service
             sudo /usr/bin/systemctl is-active --quiet go-store.service
