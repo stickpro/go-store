@@ -1290,6 +1290,15 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-ResolveResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/ResolveResponse'
+      message:
+        type: string
+    type: object
   JSONResponse-ResponseWithFullPagination-AdminOrderResponse:
     properties:
       code:
@@ -1906,6 +1915,12 @@ definitions:
         type: array
       product:
         $ref: '#/definitions/ProductResponse'
+    type: object
+  ResolveResponse:
+    properties:
+      data: {}
+      type:
+        type: string
     type: object
   ResponseWithFullPagination-AdminOrderResponse:
     properties:
@@ -5916,6 +5931,37 @@ paths:
       summary: Get Variants With Pagination
       tags:
       - Product
+  /v1/resolve/{slug}:
+    get:
+      consumes:
+      - application/json
+      description: Resolve a slug to a category or a product variant. Category is
+        looked up first, then product.
+      operationId: resolveSlug
+      parameters:
+      - description: Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-ResolveResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Resolve slug
+      tags:
+      - Resolve
   /v1/search:
     get:
       consumes:

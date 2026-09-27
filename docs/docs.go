@@ -4950,6 +4950,51 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/resolve/{slug}": {
+            "get": {
+                "description": "Resolve a slug to a category or a product variant. Category is looked up first, then product.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resolve"
+                ],
+                "summary": "Resolve slug",
+                "operationId": "resolveSlug",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-ResolveResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/search": {
             "get": {
                 "description": "Full-text product-variant search with category, price and attribute filters",
@@ -7051,6 +7096,20 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-ResolveResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/ResolveResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-ResponseWithFullPagination-AdminOrderResponse": {
             "type": "object",
             "properties": {
@@ -7995,6 +8054,15 @@ const docTemplate = `{
                 },
                 "product": {
                     "$ref": "#/definitions/ProductResponse"
+                }
+            }
+        },
+        "ResolveResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "type": {
+                    "type": "string"
                 }
             }
         },
