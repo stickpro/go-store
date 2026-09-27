@@ -14,11 +14,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
@@ -351,6 +354,8 @@ func processModelGroup(
 			claimed[existing.ID] = true
 		}
 
+		description := descriptionToMarkdown(l, row.ID, row.Description)
+
 		if dryRun {
 			action := "create"
 			if matched {
@@ -366,7 +371,7 @@ func processModelGroup(
 				Name:            row.Name,
 				Slug:            existing.Slug,
 				CategoryID:      primaryCategoryID,
-				Description:     nonEmpty(row.Description),
+				Description:     description,
 				MetaTitle:       nonEmpty(row.MetaTitle),
 				MetaH1:          nonEmpty(row.MetaH1),
 				MetaDescription: nonEmpty(row.MetaDescription),
@@ -386,7 +391,7 @@ func processModelGroup(
 			Name:            row.Name,
 			Slug:            slug,
 			CategoryID:      primaryCategoryID,
-			Description:     nonEmpty(row.Description),
+			Description:     description,
 			MetaTitle:       nonEmpty(row.MetaTitle),
 			MetaH1:          nonEmpty(row.MetaH1),
 			MetaDescription: nonEmpty(row.MetaDescription),
@@ -448,6 +453,34 @@ func nonEmpty(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+// descriptionToMarkdown converts OpenCart's WYSIWYG-produced HTML description
+// into Markdown, since go-store stores and renders variant descriptions as
+// Markdown, not HTML. Exact fidelity to the original markup isn't required -
+// on a conversion error it falls back to the raw HTML rather than dropping
+// the description.
+func descriptionToMarkdown(l logger.Logger, ocProductID int64, htmlDescription string) *string {
+	if htmlDescription == "" {
+		return nil
+	}
+	md, err := htmltomarkdown.ConvertString(unescapeIfDoubleEncoded(htmlDescription))
+	if err != nil {
+		l.Warnw("html to markdown conversion failed, keeping raw html", "oc_product_id", ocProductID, "error", err)
+		return nonEmpty(htmlDescription)
+	}
+	return nonEmpty(md)
+}
+
+// unescapeIfDoubleEncoded undoes one extra layer of HTML-entity encoding.
+// Some OpenCart rows store their description HTML-escaped a second time
+// (literal "&lt;span&gt;" instead of "<span>"), which hides every tag from
+// an HTML parser. Content with a real, unescaped tag is left untouched.
+func unescapeIfDoubleEncoded(s string) string {
+	if !strings.Contains(s, "<") && strings.Contains(s, "&lt;") {
+		return html.UnescapeString(s)
+	}
+	return s
 }
 
 func isNotFound(err error) bool {

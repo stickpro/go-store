@@ -80,6 +80,12 @@ func InitCommands(currentAppVersion, appName, _ string) []*cli.Command {
 			Flags:       []cli.Flag{cfgPathsFlag()},
 			Commands:    prepareImportCommands(appName, currentAppVersion),
 		},
+		{
+			Name:        "description",
+			Description: "product variant description maintenance commands",
+			Flags:       []cli.Flag{cfgPathsFlag()},
+			Commands:    prepareDescriptionCommands(appName, currentAppVersion),
+		},
 	}
 }
 
