@@ -99,6 +99,10 @@ linters:
       - linters:
           - dupl
         path: cmd/console/commands.go
+      - linters:
+          - tagliatelle
+        path: internal/service/tbank/types.go
+        text: 'json\(snake\)' # T-Bank's API is PascalCase on the wire (TerminalKey, OrderId, …); these structs mirror it exactly, not our naming
       - path: (.+)\.go$
         text: missing type in composite literal
       - path: (.+)\.go$

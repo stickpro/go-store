@@ -26,7 +26,7 @@ type (
 		CDEK           CDEKConfig           `yaml:"cdek"`
 		YandexDelivery YandexDeliveryConfig `yaml:"yandex_delivery"`
 		Pochta         PochtaConfig         `yaml:"pochta"`
-		TBank          TBankConfig          `yaml:"tbank"`
+		TBank          TBankConfig          `yaml:"tbank"` //nolint:tagliatelle // "tbank" (not "t_bank") matches the provider code used everywhere else (routes, constants, env vars already deployed); don't rename
 		Payment        PaymentConfig        `yaml:"payment"`
 	}
 
