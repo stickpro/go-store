@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/dto/mapper"
 	"github.com/stickpro/go-store/internal/models"
@@ -62,6 +63,9 @@ func (s *Service) CreateProductVariant(ctx context.Context, productID uuid.UUID,
 	if err != nil {
 		return nil, pgerror.ParseError(err)
 	}
+
+	s.reindexProductBestEffort(ctx, productID, "create variant")
+
 	return variant, nil
 }
 
@@ -106,6 +110,9 @@ func (s *Service) UpdateProductVariant(ctx context.Context, variantID uuid.UUID,
 	if err != nil {
 		return nil, pgerror.ParseError(err)
 	}
+
+	s.reindexProductBestEffort(ctx, current.ProductID, "update variant")
+
 	return variant, nil
 }
 
@@ -113,6 +120,11 @@ func (s *Service) DeleteProductVariant(ctx context.Context, variantID uuid.UUID)
 	if err := s.storage.ProductVariants().Delete(ctx, variantID); err != nil {
 		return pgerror.ParseError(err)
 	}
+
+	if err := s.searchService.DeleteDocument(constant.ProductVariantsIndex, variantID.String()); err != nil {
+		s.logger.Errorw("product: remove deleted variant from index", "variant_id", variantID, "error", err)
+	}
+
 	return nil
 }
 

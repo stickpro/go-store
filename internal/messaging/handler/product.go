@@ -68,6 +68,19 @@ func (h *ProductHandler) HandleProduct(ctx context.Context, p contracts.ProductP
 		return err
 	}
 
+	// Best effort: the Postgres write already committed, so a search-side
+	// hiccup here must not fail the handler — that would redeliver the same
+	// Kafka message forever instead of just leaving the index briefly stale.
+	if err := h.svc.IndexProductVariants(ctx, productID); err != nil {
+		h.logger.Errorw("kafka: reindex product variants", "product_id", productID, "error", err)
+	}
+	// A brand-new attribute slug (attrSvc.RunInTx above) defaults to
+	// filterable; push it to the index's settings so category filters can
+	// actually use it as a facet right away, without a full reindex.
+	if err := h.attrSvc.RefreshFilterableAttributes(ctx); err != nil {
+		h.logger.Errorw("kafka: refresh filterable attributes", "product_id", productID, "error", err)
+	}
+
 	if len(p.Images) == 0 && p.ImageMain == nil {
 		return nil
 	}

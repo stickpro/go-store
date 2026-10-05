@@ -2,7 +2,10 @@ package attribute
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/config"
@@ -18,6 +21,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_attribute_values"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
+	"github.com/stickpro/go-store/pkg/key_value"
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
@@ -44,6 +48,11 @@ type IAttributeService interface { //nolint:interfacebloat
 	// Indexing
 	CreateAttributeIndex(ctx context.Context, reindex bool) error
 	CreateAttributeGroupIndex(ctx context.Context, reindex bool) error
+	// RefreshFilterableAttributes pushes the current filterable attribute
+	// slugs to the live product_variants index's settings, incrementally
+	// (no full reindex). Exported so the Kafka product handler can call it
+	// after SyncAttributesFromKafka.
+	RefreshFilterableAttributes(ctx context.Context) error
 }
 
 type Service struct {
@@ -83,6 +92,9 @@ func (s *Service) CreateAttribute(ctx context.Context, d dto.CreateAttributeDTO)
 	}
 
 	s.invalidateFilterableAttributesCache(ctx)
+	if err := s.RefreshFilterableAttributes(ctx); err != nil {
+		s.logger.Errorw("failed to refresh product_variants filterable attributes", "error", err)
+	}
 
 	err = s.IndexAttribute(attribute)
 	if err != nil {
@@ -142,6 +154,9 @@ func (s *Service) UpdateAttribute(ctx context.Context, d dto.UpdateAttributeDTO,
 	}
 
 	s.invalidateFilterableAttributesCache(ctx)
+	if err := s.RefreshFilterableAttributes(ctx); err != nil {
+		s.logger.Errorw("failed to refresh product_variants filterable attributes", "error", err)
+	}
 
 	err = s.IndexAttribute(attribute)
 	if err != nil {
@@ -160,6 +175,9 @@ func (s *Service) DeleteAttribute(ctx context.Context, id uuid.UUID) error {
 	}
 
 	s.invalidateFilterableAttributesCache(ctx)
+	if err := s.RefreshFilterableAttributes(ctx); err != nil {
+		s.logger.Errorw("failed to refresh product_variants filterable attributes", "error", err)
+	}
 	return nil
 }
 
@@ -169,6 +187,54 @@ func (s *Service) invalidateFilterableAttributesCache(ctx context.Context) {
 	if err := s.storage.KeyValue().Delete(ctx, constant.CacheKeyFilterableAttributes); err != nil {
 		s.logger.Warn("failed to invalidate filterable attributes cache", "error", err)
 	}
+}
+
+// RefreshFilterableAttributes pushes the current set of filterable attribute
+// slugs to the live product_variants index's settings (Meili
+// UpdateFilterableAttributes), without a full reindex. Call it after
+// anything that can change which attributes are filterable: CreateAttribute,
+// UpdateAttribute, DeleteAttribute, or SyncAttributesFromKafka (a brand-new
+// attribute slug from a Kafka payload defaults to filterable — see
+// attributes.sql's GetOrCreate).
+//
+// Meili recomputes facets over the whole collection on a settings update, so
+// a cheap fingerprint guard in the key/value store skips the call when the
+// filterable set hasn't actually changed — otherwise this would hit Meili on
+// every single attribute write.
+func (s *Service) RefreshFilterableAttributes(ctx context.Context) error {
+	rows, err := s.storage.Attributes().GetFilterableAttributes(ctx)
+	if err != nil {
+		return fmt.Errorf("attribute: get filterable attributes: %w", err)
+	}
+	slugs := make([]string, 0, len(rows))
+	for _, r := range rows {
+		slugs = append(slugs, r.Slug)
+	}
+
+	sorted := append([]string{}, slugs...)
+	sort.Strings(sorted)
+	fingerprint := strings.Join(sorted, ",")
+
+	kv := s.storage.KeyValue()
+	if cached, err := kv.Get(ctx, constant.CacheKeyProductVariantsFilterableAttributesPushed); err == nil {
+		if cached.String() == fingerprint {
+			return nil
+		}
+	} else if !errors.Is(err, key_value.ErrEntryNotFound) {
+		s.logger.Warnw("failed to read pushed filterable attributes marker", "error", err)
+	}
+
+	full := append(append([]string{}, constant.ProductVariantStaticFilterableAttributes...), slugs...)
+	if err := s.searchService.UpdateSettings(constant.ProductVariantsIndex, searchtypes.IndexOptions{
+		FilterableAttributes: full,
+	}); err != nil {
+		return fmt.Errorf("attribute: update product_variants filterable attributes: %w", err)
+	}
+
+	if err := kv.Set(ctx, constant.CacheKeyProductVariantsFilterableAttributesPushed, fingerprint, 0); err != nil {
+		s.logger.Warnw("failed to persist pushed filterable attributes marker", "error", err)
+	}
+	return nil
 }
 
 func (s *Service) SearchAttributes(ctx context.Context, q string, d dto.GetDTO) (*base.FindResponseWithFullPagination[*models.Attribute], error) {

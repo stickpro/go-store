@@ -13,6 +13,7 @@ import (
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/order"
+	"github.com/stickpro/go-store/internal/service/payment"
 	"github.com/stickpro/go-store/internal/service/shipping"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 
@@ -166,6 +167,77 @@ func (h *Handler) updateOrder(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(order_response.NewAdminFromDTO(o)))
 }
 
+// refundOrder cancels/refunds the order's latest confirmed payment at the
+// provider and, once the provider confirms it, moves the order to "refunded".
+//
+//	@Summary		Refund order
+//	@Description	Cancels/refunds the order's latest confirmed payment at the acquirer. Omit `amount` to refund in full. 409 if the latest payment attempt was never confirmed (nothing to refund).
+//	@Tags			Admin Order
+//	@Accept			json
+//	@Produce		json
+//	@Param			number	path		int										true	"Order number"
+//	@Param			request	body		order_request.AdminRefundOrderRequest	false	"Refund amount; omit for a full refund"
+//	@Success		200		{object}	response.Result[order_response.AdminOrderResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		409		{object}	apierror.Errors
+//	@Router			/v1/admin/orders/{number}/refund [post]
+//	@Security		BearerAuth
+func (h *Handler) refundOrder(c fiber.Ctx) error {
+	number, err := parseOrderNumber(c)
+	if err != nil {
+		return err
+	}
+
+	req := &order_request.AdminRefundOrderRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	admin, ok := c.Locals("user").(*models.User)
+	if !ok {
+		return apierror.New().AddError(errors.New("undefined user")).SetHttpCode(fiber.StatusUnauthorized)
+	}
+
+	o, err := h.services.OrderService.GetByNumberAdmin(c.Context(), number)
+	if err != nil {
+		return h.orderError(err)
+	}
+
+	p, err := h.services.PaymentService.Cancel(c.Context(), o.ID, req.Amount)
+	if err != nil {
+		return h.paymentError(err)
+	}
+
+	result := o
+	if payment.Status(p.Status) == payment.StatusRefunded {
+		result, err = h.services.OrderService.UpdateStatus(c.Context(), number, dto.OrderStatusUpdateDTO{
+			Status: constant.OrderRefunded.String(),
+			Actor:  constant.OrderActorAdmin + ":" + admin.ID.String(),
+		})
+		if err != nil {
+			return h.orderError(err)
+		}
+	}
+
+	return c.JSON(response.OkByData(order_response.NewAdminFromDTO(result)))
+}
+
+// paymentError maps payment-service errors to HTTP responses. Mirrors the
+// customer-facing handler's paymentError (internal/delivery/http/handlers/payment.go).
+func (h *Handler) paymentError(err error) error {
+	switch {
+	case errors.Is(err, payment.ErrProviderNotFound):
+		return apierror.New().AddError(errors.New("unknown payment provider")).SetHttpCode(fiber.StatusUnprocessableEntity)
+	case errors.Is(err, payment.ErrNotFound):
+		return apierror.New().AddError(errors.New("payment not found")).SetHttpCode(fiber.StatusNotFound)
+	case errors.Is(err, payment.ErrNotConfirmed):
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusConflict)
+	default:
+		return h.handleError(err, "payment")
+	}
+}
+
 // orderError maps order-service errors to HTTP responses. Mirrors the
 // customer-facing handler's orderError (internal/delivery/http/handlers/order.go).
 func (h *Handler) orderError(err error) error {
@@ -206,4 +278,5 @@ func (h *Handler) initOrderRoutes(v1 fiber.Router) {
 	o.Get("/:number", h.getOrder)
 	o.Patch("/:number", h.updateOrder)
 	o.Patch("/:number/status", h.updateOrderStatus)
+	o.Post("/:number/refund", h.refundOrder)
 }

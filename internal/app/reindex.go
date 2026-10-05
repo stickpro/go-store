@@ -28,7 +28,8 @@ func AllReindexTargets() ReindexTarget {
 
 // Reindex boots the storage + service layer, drops and rebuilds the selected search
 // indexes from the database, then tears everything down. Used by the `search reindex`
-// console command; the same rebuild also runs automatically on every server start.
+// console command. Server start only creates an index if it's missing (see
+// app.Run's initIndexer call) — run this by hand to force a full rebuild.
 func Reindex(ctx context.Context, conf *config.Config, l logger.Logger, target ReindexTarget) error {
 	st, err := storage.InitStore(ctx, conf)
 	if err != nil {

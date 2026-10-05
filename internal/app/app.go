@@ -63,7 +63,14 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 
 	srv := server.InitServer(conf, services, l)
 
-	initIndexer(ctx, services, l, true)
+	// false: only create an index when it doesn't exist yet (first boot
+	// against a fresh Meili instance). Documents and filterable-attribute
+	// settings now stay current incrementally (see product.Service's
+	// IndexProductVariants / attribute.Service's RefreshFilterableAttributes),
+	// so a full drop+rebuild on every restart is no longer needed — run
+	// `console search reindex --products` by hand if the index ever needs to
+	// be rebuilt from scratch.
+	initIndexer(ctx, services, l, false)
 
 	consumer, err := kafka.NewConsumer(conf.Kafka, l)
 	if err != nil {

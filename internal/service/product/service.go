@@ -41,6 +41,9 @@ type IProductService interface { //nolint:interfacebloat
 
 	// Indexing
 	CreateProductVariantIndex(ctx context.Context, reindex bool) error
+	// IndexProductVariants incrementally re-pushes every variant of productID
+	// to the live index, without a full reindex. See indexing.go.
+	IndexProductVariants(ctx context.Context, productID uuid.UUID) error
 
 	// Related products
 	IRelatedProduct
@@ -255,6 +258,10 @@ func (s *Service) UpdateProduct(ctx context.Context, d dto.UpdateProductDTO) (*m
 		return nil, err
 	}
 
+	// Price/manufacturer/stock_status live on the product row but are embedded
+	// in every one of its variants' search documents.
+	s.reindexProductBestEffort(ctx, prd.ID, "update product")
+
 	return prd, nil
 }
 
@@ -314,6 +321,9 @@ func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttribute
 	if err != nil {
 		return err
 	}
+
+	s.reindexProductBestEffort(ctx, d.ProductID, "sync product attributes")
+
 	return nil
 }
 

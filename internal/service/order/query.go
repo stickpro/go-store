@@ -34,6 +34,36 @@ func (s *Service) GetByNumber(ctx context.Context, userID uuid.UUID, number int6
 	return s.assemble(ctx, o)
 }
 
+// GetByID returns an order by its internal id, with no ownership check. Only
+// meant for callers that already hold id as a capability — see GetForPayment.
+func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*dto.OrderDTO, error) {
+	o, err := s.storage.Orders().Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("order: get by id: %w", err)
+	}
+	return s.assemble(ctx, o)
+}
+
+// GetForPayment resolves an order to start/inspect a payment attempt against.
+// id (orders.id, a random UUID handed to the caller once, in the checkout
+// response) is itself the capability that authorizes a guest request —
+// unlike order_number, it isn't sequential/guessable. An authenticated
+// request is additionally checked against the account that owns the order,
+// same as GetByNumber.
+func (s *Service) GetForPayment(ctx context.Context, owner dto.Owner, id uuid.UUID) (*dto.OrderDTO, error) {
+	o, err := s.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if owner.UserID != nil && (o.UserID == nil || *o.UserID != *owner.UserID) {
+		return nil, ErrForbidden
+	}
+	return o, nil
+}
+
 // GetByNumberAdmin returns an order by number for the admin panel, without
 // GetByNumber's ownership check (guest orders included).
 func (s *Service) GetByNumberAdmin(ctx context.Context, number int64) (*dto.OrderDTO, error) {

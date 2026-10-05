@@ -6,6 +6,14 @@ const (
 	// metadata. Invalidated by the attribute service on any attribute mutation.
 	CacheKeyFilterableAttributes = "attributes:filterable"
 
+	// CacheKeyProductVariantsFilterableAttributesPushed holds a fingerprint of
+	// the filterable attribute slugs last pushed to the product_variants
+	// index's settings (see attribute.Service.RefreshFilterableAttributes).
+	// Meili recomputes facets over the whole collection on a settings update,
+	// so this guards against pushing on every attribute write when the set
+	// hasn't actually changed.
+	CacheKeyProductVariantsFilterableAttributesPushed = "product_variants:filterable_attributes_pushed"
+
 	// CacheKeyCDEKDeliveryPoints caches the full CDEK delivery points (offices +
 	// postomats) list. Repopulated once a day by the CDEK cache refresher.
 	CacheKeyCDEKDeliveryPoints = "cdek:delivery_points"

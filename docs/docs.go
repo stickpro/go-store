@@ -543,6 +543,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/admin/orders/{number}/refund": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancels/refunds the order's latest confirmed payment at the acquirer. Omit ` + "`" + `amount` + "`" + ` to refund in full. 409 if the latest payment attempt was never confirmed (nothing to refund).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Order"
+                ],
+                "summary": "Refund order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order number",
+                        "name": "number",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Refund amount; omit for a full refund",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/AdminRefundOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-AdminOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/admin/orders/{number}/status": {
             "patch": {
                 "security": [
@@ -3532,6 +3595,113 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/orders/{id}/payment": {
+            "get": {
+                "description": "The most recent payment attempt for the order (a customer may retry after a failed/expired attempt). ` + "`" + `id` + "`" + ` is the order's ` + "`" + `id` + "`" + `, not its ` + "`" + `number` + "`" + ` — see POST on the same path.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment"
+                ],
+                "summary": "Get payment status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-PaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Starts a payment attempt for the order at the chosen provider and returns a PaymentURL to redirect the customer to. ` + "`" + `id` + "`" + ` is the order's ` + "`" + `id` + "`" + ` field from the checkout response — not its human-facing ` + "`" + `number` + "`" + `: unlike the sequential number, it isn't guessable, which is what lets a guest checkout (no account) start payment for its own order here.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment"
+                ],
+                "summary": "Start payment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Provider choice",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/InitPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-PaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/orders/{number}": {
             "get": {
                 "security": [
@@ -3583,6 +3753,54 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIErrors"
                         }
+                    }
+                }
+            }
+        },
+        "/v1/payments/methods": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment"
+                ],
+                "summary": "List payment methods",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-array_PaymentMethodResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/payments/{provider}/notification": {
+            "post": {
+                "description": "Provider webhook (T-Bank Notification API). Verifies the payload's signature and, on a confirmed payment, moves the order to \"paid\" (or \"refunded\" on a reversal). Not for browser/API clients — called by the provider only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Payment"
+                ],
+                "summary": "Payment webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider code, e.g. tbank",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -5302,6 +5520,14 @@ const docTemplate = `{
                 }
             }
         },
+        "AdminRefundOrderRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                }
+            }
+        },
         "AdminUpdateOrderRequest": {
             "type": "object",
             "properties": {
@@ -6802,6 +7028,21 @@ const docTemplate = `{
                 }
             }
         },
+        "InitPaymentRequest": {
+            "type": "object",
+            "required": [
+                "provider"
+            ],
+            "properties": {
+                "provider": {
+                    "description": "Provider selects the acquirer, e.g. \"tbank\". More values are added as\nmore providers are wired up.",
+                    "type": "string",
+                    "enum": [
+                        "tbank"
+                    ]
+                }
+            }
+        },
         "JSONResponse-AdminOrderResponse": {
             "type": "object",
             "properties": {
@@ -7034,6 +7275,20 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/OrderResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-PaymentResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/PaymentResponse"
                 },
                 "message": {
                     "type": "string"
@@ -7499,6 +7754,23 @@ const docTemplate = `{
                 }
             }
         },
+        "JSONResponse-array_PaymentMethodResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PaymentMethodResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-array_ProductVariantResponse": {
             "type": "object",
             "properties": {
@@ -7839,6 +8111,56 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tariff_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "PaymentMethodResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "description": "cash | online",
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "PaymentResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "payment_url": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }

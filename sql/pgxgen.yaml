@@ -330,6 +330,18 @@ schemas:
                             - remember_token
                             - deleted_at
                             - created_at
+        payments:
+          primary_column: id
+          crud:
+            methods:
+              create:
+                returning: '*'
+                skip_columns:
+                  - id
+                  - updated_at
+                column_values:
+                  created_at: now()
+              delete: {}
         attribute_values:
             primary_column: id
         category_paths:

@@ -62,5 +62,13 @@ func (s *Service) SyncVariantCategories(ctx context.Context, d dto.SyncVariantCa
 	if err != nil {
 		return err
 	}
+
+	variant, err := s.storage.ProductVariants().Get(ctx, d.VariantID)
+	if err != nil {
+		s.logger.Errorw("product: load variant after category sync", "variant_id", d.VariantID, "error", err)
+		return nil
+	}
+	s.reindexProductBestEffort(ctx, variant.ProductID, "sync variant categories")
+
 	return nil
 }

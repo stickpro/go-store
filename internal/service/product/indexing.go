@@ -2,11 +2,11 @@ package product
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
-	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_product_attribute_values"
 	"github.com/stickpro/go-store/internal/tools"
@@ -37,7 +37,7 @@ func (s *Service) CreateProductVariantIndex(ctx context.Context, reindex bool) e
 	indexOptions := searchtypes.IndexOptions{
 		SearchableAttributes: []string{"name", "description", "meta_keyword", "model"},
 		FilterableAttributes: append(
-			[]string{"price", "category_id", "category_ids", "manufacturer_id", "is_enable", "stock_status", "model"},
+			append([]string{}, constant.ProductVariantStaticFilterableAttributes...),
 			filterableAttrs...,
 		),
 		SortableAttributes: []string{"price", "created_at", "name", "sort_order", "viewed"},
@@ -89,9 +89,56 @@ func (s *Service) CreateProductVariantIndex(ctx context.Context, reindex bool) e
 	return nil
 }
 
-func (s *Service) IndexVariant(ctx context.Context, variant *models.ProductVariant, product *models.Product) error {
-	doc := s.buildVariantDocument(ctx, variant, product)
-	return s.searchService.UpsertDocument(constant.ProductVariantsIndex, []map[string]any{doc})
+// reindexProductBestEffort calls IndexProductVariants and only logs a
+// failure — the write to Postgres that triggered it has already succeeded,
+// and search is an eventually-consistent side system: failing the caller's
+// request (or, for the Kafka path, redelivering the message forever) over a
+// Meili hiccup would be worse than a document going briefly stale.
+func (s *Service) reindexProductBestEffort(ctx context.Context, productID uuid.UUID, reason string) {
+	if err := s.IndexProductVariants(ctx, productID); err != nil {
+		s.logger.Errorw("product: reindex after "+reason, "product_id", productID, "error", err)
+	}
+}
+
+// IndexProductVariants re-pushes every variant of productID to the live
+// product_variants index — a single document for a single variant change
+// isn't enough on its own, since price/manufacturer/stock_status come from
+// the product row and are embedded in every one of its variants' documents,
+// and attribute values are keyed by product too. Called after anything that
+// can change a variant's search document: the product's own fields, a
+// variant's own fields, its attribute values, or its extra categories.
+// A no-op (not an error) for a product with no variants yet.
+func (s *Service) IndexProductVariants(ctx context.Context, productID uuid.UUID) error {
+	product, err := s.storage.Products().GetByID(ctx, productID)
+	if err != nil {
+		return fmt.Errorf("product: get product for index: %w", err)
+	}
+
+	variants, err := s.storage.ProductVariants().GetByProductID(ctx, productID)
+	if err != nil {
+		return fmt.Errorf("product: list variants for index: %w", err)
+	}
+	if len(variants) == 0 {
+		return nil
+	}
+
+	enriched := make([]*dto.EnrichedVariantDTO, 0, len(variants))
+	for _, v := range variants {
+		enriched = append(enriched, &dto.EnrichedVariantDTO{
+			ProductVariant: v,
+			PriceRetail:    product.PriceRetail,
+			PriceBusiness:  product.PriceBusiness,
+			PriceWholesale: product.PriceWholesale,
+			ManufacturerID: product.ManufacturerID,
+			StockStatus:    product.StockStatus,
+		})
+	}
+
+	docs := s.buildVariantDocuments(ctx, enriched)
+	if err := s.searchService.UpsertDocument(constant.ProductVariantsIndex, docs); err != nil {
+		return fmt.Errorf("product: upsert variant documents: %w", err)
+	}
+	return nil
 }
 
 func (s *Service) buildVariantDocuments(ctx context.Context, variants []*dto.EnrichedVariantDTO) []map[string]any {
@@ -116,27 +163,6 @@ func (s *Service) buildVariantDocuments(ctx context.Context, variants []*dto.Enr
 	}
 
 	return docs
-}
-
-func (s *Service) buildVariantDocument(ctx context.Context, variant *models.ProductVariant, product *models.Product) map[string]any {
-	enriched := &dto.EnrichedVariantDTO{
-		ProductVariant: variant,
-		PriceRetail:    product.PriceRetail,
-		PriceBusiness:  product.PriceBusiness,
-		PriceWholesale: product.PriceWholesale,
-		ManufacturerID: product.ManufacturerID,
-		StockStatus:    product.StockStatus,
-	}
-
-	s.attachCategoryIDs(ctx, []*dto.EnrichedVariantDTO{enriched})
-	s.attachMainImage(ctx, []*dto.EnrichedVariantDTO{enriched})
-
-	attrs, err := s.storage.ProductAttributeValues().GetByProductID(ctx, product.ID)
-	if err != nil {
-		s.logger.Warn("Failed to get attributes for product", "product_id", product.ID, "error", err)
-	}
-
-	return s.variantToDocument(enriched, attrs)
 }
 
 func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*repository_product_attribute_values.GetByProductIDRow) map[string]any {

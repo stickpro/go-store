@@ -77,6 +77,11 @@ definitions:
       user_id:
         type: string
     type: object
+  AdminRefundOrderRequest:
+    properties:
+      amount:
+        type: number
+    type: object
   AdminUpdateOrderRequest:
     properties:
       comment:
@@ -1101,6 +1106,18 @@ definitions:
       width:
         type: integer
     type: object
+  InitPaymentRequest:
+    properties:
+      provider:
+        description: |-
+          Provider selects the acquirer, e.g. "tbank". More values are added as
+          more providers are wired up.
+        enum:
+        - tbank
+        type: string
+    required:
+    - provider
+    type: object
   JSONResponse-AdminOrderResponse:
     properties:
       code:
@@ -1251,6 +1268,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/OrderResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-PaymentResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/PaymentResponse'
       message:
         type: string
     type: object
@@ -1550,6 +1576,17 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_PaymentMethodResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/PaymentMethodResponse'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_ProductVariantResponse:
     properties:
       code:
@@ -1773,6 +1810,39 @@ definitions:
       recipient:
         type: string
       tariff_code:
+        type: string
+    type: object
+  PaymentMethodResponse:
+    properties:
+      code:
+        type: string
+      enabled:
+        type: boolean
+      kind:
+        description: cash | online
+        type: string
+      provider:
+        type: string
+      title:
+        type: string
+    type: object
+  PaymentResponse:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      currency:
+        type: string
+      id:
+        type: string
+      order_id:
+        type: string
+      payment_url:
+        type: string
+      provider:
+        type: string
+      status:
         type: string
     type: object
   ProductResponse:
@@ -3062,6 +3132,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Update order
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}/refund:
+    post:
+      consumes:
+      - application/json
+      description: Cancels/refunds the order's latest confirmed payment at the acquirer.
+        Omit `amount` to refund in full. 409 if the latest payment attempt was never
+        confirmed (nothing to refund).
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      - description: Refund amount; omit for a full refund
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/AdminRefundOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Refund order
       tags:
       - Admin Order
   /v1/admin/orders/{number}/status:
@@ -4929,6 +5041,83 @@ paths:
       summary: Create order
       tags:
       - Order
+  /v1/orders/{id}/payment:
+    get:
+      consumes:
+      - application/json
+      description: The most recent payment attempt for the order (a customer may retry
+        after a failed/expired attempt). `id` is the order's `id`, not its `number`
+        — see POST on the same path.
+      parameters:
+      - description: Order id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-PaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get payment status
+      tags:
+      - Payment
+    post:
+      consumes:
+      - application/json
+      description: 'Starts a payment attempt for the order at the chosen provider
+        and returns a PaymentURL to redirect the customer to. `id` is the order''s
+        `id` field from the checkout response — not its human-facing `number`: unlike
+        the sequential number, it isn''t guessable, which is what lets a guest checkout
+        (no account) start payment for its own order here.'
+      parameters:
+      - description: Order id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Provider choice
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/InitPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-PaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Start payment
+      tags:
+      - Payment
   /v1/orders/{number}:
     get:
       consumes:
@@ -5049,6 +5238,39 @@ paths:
       summary: Quick order
       tags:
       - Order
+  /v1/payments/{provider}/notification:
+    post:
+      consumes:
+      - application/json
+      description: Provider webhook (T-Bank Notification API). Verifies the payload's
+        signature and, on a confirmed payment, moves the order to "paid" (or "refunded"
+        on a reversal). Not for browser/API clients — called by the provider only.
+      parameters:
+      - description: Provider code, e.g. tbank
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+      summary: Payment webhook
+      tags:
+      - Payment
+  /v1/payments/methods:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_PaymentMethodResponse'
+      summary: List payment methods
+      tags:
+      - Payment
   /v1/product-review/:
     post:
       consumes:

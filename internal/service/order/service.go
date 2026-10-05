@@ -37,6 +37,12 @@ type IOrderService interface {
 	// GetByNumber returns an order by its human-facing number, scoped to userID
 	// (guest orders are not reachable this way).
 	GetByNumber(ctx context.Context, userID uuid.UUID, number int64) (*dto.OrderDTO, error)
+	// GetByID returns an order by its internal id, with no ownership check.
+	GetByID(ctx context.Context, id uuid.UUID) (*dto.OrderDTO, error)
+	// GetForPayment resolves an order to start/inspect a payment attempt
+	// against; see the implementation comment for why id (not order_number)
+	// is what guest requests are authorized by.
+	GetForPayment(ctx context.Context, owner dto.Owner, id uuid.UUID) (*dto.OrderDTO, error)
 	// ListForUser returns the account's orders, newest first.
 	ListForUser(ctx context.Context, userID uuid.UUID, d dto.GetDTO) (*base.FindResponseWithFullPagination[*dto.OrderDTO], error)
 	// Cancel moves an order to cancelled and restocks it if stock had been

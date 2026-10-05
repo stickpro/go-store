@@ -4,6 +4,11 @@ type ISearchService interface {
 	Search(nameIndex string, query string, limit, offset int64) (*SearchResult, error)
 	SearchWithParams(nameIndex string, params SearchParams) (*SearchResult, error)
 	CreateIndex(nameIndex string, data []map[string]interface{}, opts ...IndexOptions) error
+	// UpdateSettings pushes index settings (filterable/searchable/sortable/
+	// displayed attributes, ranking rules) without touching documents or
+	// recreating the index — unlike CreateIndex with opts, which drops and
+	// rebuilds everything. Only non-empty fields of opts are applied.
+	UpdateSettings(nameIndex string, opts IndexOptions) error
 	CheckIndex(nameIndex string) (bool, error)
 	UpsertDocument(indexName string, doc []map[string]interface{}) error
 	DeleteDocument(indexName string, id string) error

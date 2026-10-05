@@ -26,6 +26,8 @@ type (
 		CDEK           CDEKConfig           `yaml:"cdek"`
 		YandexDelivery YandexDeliveryConfig `yaml:"yandex_delivery"`
 		Pochta         PochtaConfig         `yaml:"pochta"`
+		TBank          TBankConfig          `yaml:"tbank"`
+		Payment        PaymentConfig        `yaml:"payment"`
 	}
 
 	// OrderConfig tunes checkout. Money amounts are decimal strings ("0" disables

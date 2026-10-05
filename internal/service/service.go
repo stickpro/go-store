@@ -14,12 +14,14 @@ import (
 	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/service/media"
 	"github.com/stickpro/go-store/internal/service/order"
+	"github.com/stickpro/go-store/internal/service/payment"
 	"github.com/stickpro/go-store/internal/service/pochta"
 	"github.com/stickpro/go-store/internal/service/product"
 	"github.com/stickpro/go-store/internal/service/review"
 	"github.com/stickpro/go-store/internal/service/search"
 	"github.com/stickpro/go-store/internal/service/search/searchtypes"
 	"github.com/stickpro/go-store/internal/service/shipping"
+	"github.com/stickpro/go-store/internal/service/tbank"
 	"github.com/stickpro/go-store/internal/service/user"
 	"github.com/stickpro/go-store/internal/service/viewed"
 	"github.com/stickpro/go-store/internal/service/yandexdelivery"
@@ -50,6 +52,11 @@ type Services struct {
 	// Delivery, Russian Post). They share the /v1/delivery handler and the
 	// app/tickers refresh loop.
 	Shipping *shipping.Registry
+
+	PaymentService payment.IPaymentService
+	// Payments is every acquiring integration (T-Bank today). Selected by
+	// code at checkout; the webhook route dispatches on the same code.
+	Payments *payment.Registry
 }
 
 func InitService(
@@ -95,6 +102,10 @@ func InitService(
 		cdekService, yandexDeliveryService, pochtaService,
 	)
 
+	tbankService := tbank.New(conf)
+	paymentRegistry := payment.NewRegistry(conf.Payment.ResolvedMethods(), tbankService)
+	paymentService := payment.New(logger, storage, paymentRegistry)
+
 	orderService, err := order.New(conf, logger, storage, cartService, userService, mailService, shippingRegistry, nil)
 	if err != nil {
 		return nil, err
@@ -124,6 +135,9 @@ func InitService(
 		DashboardService:     dashboardService,
 
 		Shipping: shippingRegistry,
+
+		PaymentService: paymentService,
+		Payments:       paymentRegistry,
 	}, nil
 }
 

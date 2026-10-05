@@ -117,3 +117,14 @@ pochta:
   tariff_url: https://tariff.pochta.ru
   tariff_object_code: 27030
   tariff_pack_type: 30
+tbank:
+  enabled: false
+  terminal_key: ""
+  password: ""
+  base_url: https://securepay.tbank.ru/v2
+  notification_url: ""
+  success_url: ""
+  fail_url: ""
+  request_timeout: 15s
+payment:
+  methods: []

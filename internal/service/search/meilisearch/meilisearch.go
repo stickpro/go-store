@@ -25,30 +25,11 @@ func NewMeiliSearchSearchEngine(cfg config.SearchEngine) *SearchEngine {
 func (e *SearchEngine) CreateIndex(nameIndex string, data []map[string]interface{}, opts ...searchtypes.IndexOptions) error {
 	index := e.client.Index(nameIndex)
 
-	if len(opts) > 0 { //nolint:nestif
+	if len(opts) > 0 {
 		if _, err := e.client.DeleteIndex(nameIndex); err != nil {
 			return err
 		}
-
-		settings := &meilisearchSDK.Settings{}
-
-		if len(opts[0].RankingRules) > 0 {
-			settings.RankingRules = opts[0].RankingRules
-		}
-		if len(opts[0].SearchableAttributes) > 0 {
-			settings.SearchableAttributes = opts[0].SearchableAttributes
-		}
-		if len(opts[0].FilterableAttributes) > 0 {
-			settings.FilterableAttributes = opts[0].FilterableAttributes
-		}
-		if len(opts[0].SortableAttributes) > 0 {
-			settings.SortableAttributes = opts[0].SortableAttributes
-		}
-		if len(opts[0].DisplayedAttributes) > 0 {
-			settings.DisplayedAttributes = opts[0].DisplayedAttributes
-		}
-
-		if _, err := index.UpdateSettings(settings); err != nil {
+		if _, err := index.UpdateSettings(settingsFromOptions(opts[0])); err != nil {
 			return fmt.Errorf("failed to update index settings: %w", err)
 		}
 	}
@@ -58,6 +39,37 @@ func (e *SearchEngine) CreateIndex(nameIndex string, data []map[string]interface
 		return fmt.Errorf("failed to add documents: %w", err)
 	}
 	return nil
+}
+
+// UpdateSettings pushes settings to an existing index in place — no delete,
+// no documents touched. Used to keep e.g. filterableAttributes current as
+// new filterable attributes appear, without the full drop+rebuild CreateIndex
+// does with opts.
+func (e *SearchEngine) UpdateSettings(nameIndex string, opts searchtypes.IndexOptions) error {
+	if _, err := e.client.Index(nameIndex).UpdateSettings(settingsFromOptions(opts)); err != nil {
+		return fmt.Errorf("failed to update index settings: %w", err)
+	}
+	return nil
+}
+
+func settingsFromOptions(opts searchtypes.IndexOptions) *meilisearchSDK.Settings {
+	settings := &meilisearchSDK.Settings{}
+	if len(opts.RankingRules) > 0 {
+		settings.RankingRules = opts.RankingRules
+	}
+	if len(opts.SearchableAttributes) > 0 {
+		settings.SearchableAttributes = opts.SearchableAttributes
+	}
+	if len(opts.FilterableAttributes) > 0 {
+		settings.FilterableAttributes = opts.FilterableAttributes
+	}
+	if len(opts.SortableAttributes) > 0 {
+		settings.SortableAttributes = opts.SortableAttributes
+	}
+	if len(opts.DisplayedAttributes) > 0 {
+		settings.DisplayedAttributes = opts.DisplayedAttributes
+	}
+	return settings
 }
 
 func (e *SearchEngine) Search(nameIndex string, query string, limit, offset int64) (*searchtypes.SearchResult, error) {

@@ -109,7 +109,14 @@ func (s *Service) buildOrder(
 	for _, vid := range variantIDs {
 		r, ok := byVariant[vid]
 		if !ok {
-			return nil, nil, &LineError{VariantID: vid, Reason: LineUnavailable}
+			// Variant was deleted from the catalogue after it was added to the
+			// cart. The cart display (cart.Service.enrichCart) already hides
+			// exactly this case silently, so the customer never saw it and has
+			// no way to remove it themselves — failing checkout over it would
+			// be a dead end. Drop it from the order the same way, instead of
+			// a LineError only a disabled-but-still-existing variant (visible
+			// in the cart as available: false) should still raise.
+			continue
 		}
 		qty := requested[vid]
 		if !r.ProductEnabled || !r.VariantEnabled {
@@ -140,6 +147,11 @@ func (s *Service) buildOrder(
 			widthCM:   r.Width,
 			heightCM:  r.Height,
 		})
+	}
+
+	if len(lines) == 0 {
+		// Every raw cart item pointed at a since-deleted variant.
+		return nil, nil, ErrCartEmpty
 	}
 
 	// A quick order carries no delivery choice yet — a manager resolves shipping
