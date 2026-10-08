@@ -117,10 +117,10 @@ func attributeFilterOptions(attrs []filterableAttr, res *searchtypes.SearchResul
 		dist := res.Facets[a.Slug]
 		stat, hasStat := res.FacetStats[a.Slug]
 
-		if a.Type == "number" && !hasStat {
+		if a.Type == constant.AttributeTypeNumber && !hasStat {
 			continue
 		}
-		if a.Type != "number" && len(dist) == 0 {
+		if a.Type != constant.AttributeTypeNumber && len(dist) == 0 {
 			continue
 		}
 
@@ -133,7 +133,7 @@ func attributeFilterOptions(attrs []filterableAttr, res *searchtypes.SearchResul
 			GroupName: a.GroupName,
 		}
 
-		if a.Type == "number" {
+		if a.Type == constant.AttributeTypeNumber {
 			minV, maxV := stat.Min, stat.Max
 			f.Min, f.Max = &minV, &maxV
 		} else {

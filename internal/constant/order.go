@@ -24,10 +24,11 @@ func (s OrderStatus) String() string { return string(s) }
 type PaymentStatus string //	@name	PaymentStatus
 
 const (
-	PaymentUnpaid   PaymentStatus = "unpaid"
-	PaymentPaid     PaymentStatus = "paid"
-	PaymentRefunded PaymentStatus = "refunded"
-	PaymentFailed   PaymentStatus = "failed"
+	PaymentUnpaid            PaymentStatus = "unpaid"
+	PaymentPaid              PaymentStatus = "paid"
+	PaymentPartiallyRefunded PaymentStatus = "partially_refunded"
+	PaymentRefunded          PaymentStatus = "refunded"
+	PaymentFailed            PaymentStatus = "failed"
 )
 
 func (s PaymentStatus) String() string { return string(s) }

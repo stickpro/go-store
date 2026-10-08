@@ -11,6 +11,9 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
+// ProviderCode identifies this carrier in config, rates and delivery points.
+const ProviderCode = "cdek"
+
 // provider is the CDEK (СДЭК) carrier: pickup points via the shared cache
 // engine (embedded *shipping.CachedProvider) plus shipping-cost calculation
 // (see rater.go).
@@ -27,7 +30,7 @@ func New(cfg *config.Config, l logger.Logger, kv key_value.IKeyValue) shipping.P
 	c := newClient(cfg.CDEK, l)
 	return &provider{
 		CachedProvider: shipping.NewCachedProvider(shipping.ProviderConfig{
-			Code:         "cdek",
+			Code:         ProviderCode,
 			Enabled:      cfg.CDEK.Enabled,
 			CacheKey:     constant.CacheKeyCDEKDeliveryPoints,
 			CacheTTL:     cfg.CDEK.DeliveryPointsCacheTTL,
@@ -49,7 +52,7 @@ func toDeliveryPoint(p dto.CDEKDeliveryPointDTO) dto.DeliveryPoint {
 	}
 
 	return dto.DeliveryPoint{
-		Provider:    "cdek",
+		Provider:    ProviderCode,
 		Code:        p.Code,
 		Name:        p.Name,
 		Type:        p.Type,

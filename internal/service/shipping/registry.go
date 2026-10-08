@@ -149,7 +149,7 @@ func (r *Registry) QuoteAll(ctx context.Context, q RateQuery) ([]dto.ShippingRat
 
 	g, gctx := errgroup.WithContext(ctx)
 	for i, p := range r.all {
-		i, code := i, p.Code()
+		code := p.Code()
 		if _, ok := r.Rater(code); !ok {
 			continue
 		}

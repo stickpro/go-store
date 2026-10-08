@@ -119,3 +119,12 @@ SELECT
         WHERE v.is_enable AND p.stock_status = 'OUT_OF_STOCK')                              AS variants_out_of_stock,
     (SELECT count(*) FROM categories)                                                      AS categories,
     (SELECT count(*) FROM collections)                                                     AS collections;
+
+-- name: RestockTrackedProduct :exec
+-- Returns quantity to a product's stock if it still tracks stock (subtract =
+-- true) — the same rule RestockOrderItems applies to a whole order.
+UPDATE products
+SET quantity   = quantity + $2,
+    updated_at = now()
+WHERE id = $1
+  AND subtract = true;

@@ -64,7 +64,7 @@ type VariantListDTO struct {
 	Items      []*VariantCardDTO            `json:"items"`
 	Pagination base.FullPagingData          `json:"pagination"`
 	Facets     map[string]map[string]int64  `json:"facets,omitempty"`
-	FacetStats map[string]CategoryFacetStat `json:"facet_stats,omitempty"` //nolint:tagliatelle
+	FacetStats map[string]CategoryFacetStat `json:"facet_stats,omitempty"`
 }
 
 // CategoryFacetStat is the numeric range of a facet across the current result set.

@@ -59,6 +59,10 @@ linters:
       ignore-comments: true
     gocognit:
       min-complexity: 60
+    goconst:
+      # Meilisearch attribute and SQL column names read better inline than as constants.
+      ignore-string-values:
+        - ^(name|price|created_at)$
     tagliatelle:
       case:
         rules:
@@ -85,6 +89,7 @@ linters:
           - unparam
           - gosec
           - gocyclo
+          - nilnil
         path: (.+)_test\.go$
       - linters:
           - dupl
@@ -103,6 +108,10 @@ linters:
           - tagliatelle
         path: internal/service/tbank/types.go
         text: 'json\(snake\)' # T-Bank's API is PascalCase on the wire (TerminalKey, OrderId, …); these structs mirror it exactly, not our naming
+      - linters:
+          - tagliatelle
+        path: internal/service/(pochta|yandexdelivery)/client.go
+        text: 'json\(snake\)' # carrier APIs are camelCase on the wire; these structs mirror them exactly
       - path: (.+)\.go$
         text: missing type in composite literal
       - path: (.+)\.go$

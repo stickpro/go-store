@@ -40,10 +40,11 @@ type OrdersByStatusResponse struct {
 } //	@name	DashboardOrdersByStatus
 
 type OrdersByPaymentStatusResponse struct {
-	Unpaid   int64 `json:"unpaid"`
-	Paid     int64 `json:"paid"`
-	Refunded int64 `json:"refunded"`
-	Failed   int64 `json:"failed"`
+	Unpaid            int64 `json:"unpaid"`
+	Paid              int64 `json:"paid"`
+	Refunded          int64 `json:"refunded"`
+	PartiallyRefunded int64 `json:"partially_refunded"`
+	Failed            int64 `json:"failed"`
 } //	@name	DashboardOrdersByPaymentStatus
 
 type RevenueResponse struct {
@@ -86,10 +87,11 @@ func NewFromDTO(d *dto.DashboardDTO) *DashboardResponse {
 				Refunded:   d.OrdersByStatus.Refunded,
 			},
 			ByPaymentStatus: OrdersByPaymentStatusResponse{
-				Unpaid:   d.OrdersByPaymentStatus.Unpaid,
-				Paid:     d.OrdersByPaymentStatus.Paid,
-				Refunded: d.OrdersByPaymentStatus.Refunded,
-				Failed:   d.OrdersByPaymentStatus.Failed,
+				Unpaid:            d.OrdersByPaymentStatus.Unpaid,
+				Paid:              d.OrdersByPaymentStatus.Paid,
+				Refunded:          d.OrdersByPaymentStatus.Refunded,
+				PartiallyRefunded: d.OrdersByPaymentStatus.PartiallyRefunded,
+				Failed:            d.OrdersByPaymentStatus.Failed,
 			},
 		},
 		Revenue: RevenueResponse{

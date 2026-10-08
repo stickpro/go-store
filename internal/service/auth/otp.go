@@ -140,7 +140,7 @@ func generateNumericCode(length int) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		b.WriteByte(byte('0' + d.Int64()))
+		b.WriteString(d.String())
 	}
 	return b.String(), nil
 }

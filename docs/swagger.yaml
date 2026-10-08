@@ -30,6 +30,29 @@ definitions:
     - quantity
     - variant_id
     type: object
+  AdminOrderItemsEditResponse:
+    properties:
+      changed:
+        type: boolean
+      order:
+        $ref: '#/definitions/AdminOrderResponse'
+      previous_grand_total:
+        type: number
+      refund_due:
+        type: number
+    type: object
+  AdminOrderLineRequest:
+    properties:
+      quantity:
+        maximum: 100000
+        minimum: 1
+        type: integer
+      variant_id:
+        type: string
+    required:
+    - quantity
+    - variant_id
+    type: object
   AdminOrderResponse:
     properties:
       cancelled_at:
@@ -56,12 +79,16 @@ definitions:
         type: integer
       paid_at:
         type: string
+      paid_total:
+        type: number
       payment_method:
         type: string
       payment_status:
         type: string
       phone:
         type: string
+      refunded_total:
+        type: number
       shipping:
         $ref: '#/definitions/OrderShippingResponse'
       shipping_total:
@@ -76,11 +103,47 @@ definitions:
         type: number
       user_id:
         type: string
+      version:
+        type: integer
+    type: object
+  AdminPreviewOrderItemsRequest:
+    properties:
+      lines:
+        items:
+          $ref: '#/definitions/AdminOrderLineRequest'
+        maxItems: 200
+        minItems: 1
+        type: array
+    required:
+    - lines
     type: object
   AdminRefundOrderRequest:
     properties:
-      amount:
+      full:
+        type: boolean
+      reason:
+        maxLength: 500
+        type: string
+    type: object
+  AdminUpdateOrderItemsRequest:
+    properties:
+      comment:
+        maxLength: 2000
+        type: string
+      expected_grand_total:
         type: number
+      expected_version:
+        type: integer
+      lines:
+        items:
+          $ref: '#/definitions/AdminOrderLineRequest'
+        maxItems: 200
+        minItems: 1
+        type: array
+    required:
+    - expected_grand_total
+    - expected_version
+    - lines
     type: object
   AdminUpdateOrderRequest:
     properties:
@@ -941,6 +1004,8 @@ definitions:
         type: integer
       paid:
         type: integer
+      partially_refunded:
+        type: integer
       refunded:
         type: integer
       unpaid:
@@ -1117,6 +1182,15 @@ definitions:
         type: string
     required:
     - provider
+    type: object
+  JSONResponse-AdminOrderItemsEditResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/AdminOrderItemsEditResponse'
+      message:
+        type: string
     type: object
   JSONResponse-AdminOrderResponse:
     properties:
@@ -1576,6 +1650,17 @@ definitions:
       message:
         type: string
     type: object
+  JSONResponse-array_OrderEditResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/OrderEditResponse'
+        type: array
+      message:
+        type: string
+    type: object
   JSONResponse-array_PaymentMethodResponse:
     properties:
       code:
@@ -1594,6 +1679,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/ProductVariantResponse'
+        type: array
+      message:
+        type: string
+    type: object
+  JSONResponse-array_RefundResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/RefundResponse'
         type: array
       message:
         type: string
@@ -1721,6 +1817,44 @@ definitions:
       width:
         type: integer
     type: object
+  OrderEditLineResponse:
+    properties:
+      line_total:
+        type: number
+      name:
+        type: string
+      quantity:
+        type: integer
+      sku:
+        type: string
+      unit_price:
+        type: number
+      variant_id:
+        type: string
+    type: object
+  OrderEditResponse:
+    properties:
+      actor:
+        type: string
+      comment:
+        type: string
+      created_at:
+        type: string
+      grand_total_after:
+        type: number
+      grand_total_before:
+        type: number
+      id:
+        type: string
+      lines_after:
+        items:
+          $ref: '#/definitions/OrderEditLineResponse'
+        type: array
+      lines_before:
+        items:
+          $ref: '#/definitions/OrderEditLineResponse'
+        type: array
+    type: object
   OrderItemResponse:
     properties:
       image_path:
@@ -1774,6 +1908,8 @@ definitions:
         type: string
       phone:
         type: string
+      refunded_total:
+        type: number
       shipping:
         $ref: '#/definitions/OrderShippingResponse'
       shipping_total:
@@ -1842,6 +1978,8 @@ definitions:
         type: string
       provider:
         type: string
+      refunded_amount:
+        type: number
       status:
         type: string
     type: object
@@ -1985,6 +2123,25 @@ definitions:
         type: array
       product:
         $ref: '#/definitions/ProductResponse'
+    type: object
+  RefundResponse:
+    properties:
+      actor:
+        type: string
+      amount:
+        type: number
+      created_at:
+        type: string
+      id:
+        type: string
+      payment_id:
+        type: string
+      reason:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
     type: object
   ResolveResponse:
     properties:
@@ -3011,6 +3168,7 @@ paths:
       - enum:
         - unpaid
         - paid
+        - partially_refunded
         - refunded
         - failed
         in: query
@@ -3134,20 +3292,165 @@ paths:
       summary: Update order
       tags:
       - Admin Order
-  /v1/admin/orders/{number}/refund:
-    post:
-      consumes:
-      - application/json
-      description: Cancels/refunds the order's latest confirmed payment at the acquirer.
-        Omit `amount` to refund in full. 409 if the latest payment attempt was never
-        confirmed (nothing to refund).
+  /v1/admin/orders/{number}/edits:
+    get:
+      description: Every item edit of the order, newest first, with the full line
+        set and grand total before and after.
       parameters:
       - description: Order number
         in: path
         name: number
         required: true
         type: integer
-      - description: Refund amount; omit for a full refund
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_OrderEditResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: List order item edits
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}/items:
+    put:
+      consumes:
+      - application/json
+      description: 'Replaces the order''s lines with `lines` (the full target set:
+        a line left out is removed). Kept lines keep the price they were sold at;
+        added lines are priced from the catalogue; stock moves by the difference.
+        Allowed while the order is `new`, `pending`, `paid` or `processing` (409 otherwise).
+        For a paid order the total may only go down: `refund_due` in the response
+        is the overpayment to return via POST /refund (409 if the edit would need
+        an extra payment). For an unpaid order whose total changed, the open payment
+        link is voided — the customer starts a new payment for the new total. 409
+        if `expected_version` / `expected_grand_total` no longer match (the order
+        changed since the preview).'
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      - description: Target line set and the preview's version/total
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/AdminUpdateOrderItemsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminOrderItemsEditResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Edit order items
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}/items/preview:
+    post:
+      consumes:
+      - application/json
+      description: Runs the item edit exactly as PUT would (stock, prices, totals,
+        paid-order limit) and rolls it back. `lines` is the full target line set.
+        Use the returned `order.version` and `order.grand_total` as `expected_version`
+        / `expected_grand_total` for the PUT.
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      - description: Target line set
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/AdminPreviewOrderItemsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-AdminOrderItemsEditResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Preview order item edit
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}/refund:
+    post:
+      consumes:
+      - application/json
+      description: 'Refunds the order''s captured payment at the acquirer. The amount
+        is computed, never sent: by default it is the overpayment — what the customer
+        paid above the order''s current `grand_total` (e.g. after items were removed;
+        see `refund_due` of the item edit). That leaves the order''s status and stock
+        alone and sets `payment_status` to `partially_refunded`. With `full: true`
+        everything not yet refunded is returned and the order moves to `refunded`
+        (with restock) when its status allows it. The `Idempotency-Key` header (UUID)
+        is required: retrying with the same key returns the original refund instead
+        of refunding again — on a timeout, retry with the SAME key. 409 if nothing
+        is owed, nothing captured is left, or a refund is still pending at the acquirer;
+        422 if the key was used for another order''s refund or the acquirer declined.'
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      - description: Idempotency key (UUID)
+        in: header
+        name: Idempotency-Key
+        required: true
+        type: string
+      - description: Refund mode and reason
         in: body
         name: request
         schema:
@@ -3171,9 +3474,43 @@ paths:
           description: Conflict
           schema:
             $ref: '#/definitions/APIErrors'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/APIErrors'
       security:
       - BearerAuth: []
       summary: Refund order
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}/refunds:
+    get:
+      description: Every refund attempt for the order, newest first, including pending
+        (outcome not yet known at the acquirer) and failed ones.
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-array_RefundResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: List order refunds
       tags:
       - Admin Order
   /v1/admin/orders/{number}/status:

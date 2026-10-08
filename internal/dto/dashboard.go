@@ -42,10 +42,11 @@ type DashboardOrdersByStatus struct {
 }
 
 type DashboardOrdersByPaymentStatus struct {
-	Unpaid   int64
-	Paid     int64
-	Refunded int64
-	Failed   int64
+	Unpaid            int64
+	Paid              int64
+	Refunded          int64
+	PartiallyRefunded int64
+	Failed            int64
 }
 
 type DashboardCatalog struct {

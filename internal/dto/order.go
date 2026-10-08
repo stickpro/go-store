@@ -255,7 +255,7 @@ func RequestToAdminOrderFilter(req *order_request.AdminListOrdersRequest) (Admin
 
 func parseRFC3339Ptr(v *string) (*time.Time, error) {
 	if v == nil || *v == "" {
-		return nil, nil
+		return nil, nil //nolint:nilnil // an absent bound is not an error
 	}
 	t, err := time.Parse(time.RFC3339, *v)
 	if err != nil {
@@ -392,6 +392,14 @@ type OrderDTO struct {
 	ShippingTotal decimal.Decimal
 	TaxTotal      decimal.Decimal
 	GrandTotal    decimal.Decimal
+	// PaidTotal is what the customer was charged when the order was paid;
+	// GrandTotal may drift below it after an admin item edit.
+	PaidTotal decimal.Decimal
+	// RefundedTotal is money already returned to the customer.
+	RefundedTotal decimal.Decimal
+	// Version is bumped on every change to the order; admin edits send it
+	// back to detect concurrent modification.
+	Version int64
 
 	Comment     *string
 	CreatedAt   time.Time
@@ -430,6 +438,9 @@ func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
 		ShippingTotal: o.ShippingTotal,
 		TaxTotal:      o.TaxTotal,
 		GrandTotal:    o.GrandTotal,
+		PaidTotal:     o.PaidTotal,
+		RefundedTotal: o.RefundedTotal,
+		Version:       o.Version,
 		Comment:       pgtypeutils.DecodeText(o.Comment),
 		CreatedAt:     o.CreatedAt.Time,
 		PaidAt:        timestampPtr(o.PaidAt),

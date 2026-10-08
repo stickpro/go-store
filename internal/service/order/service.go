@@ -21,7 +21,7 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
-type IOrderService interface {
+type IOrderService interface { //nolint:interfacebloat
 	// CreateOrder turns the caller's cart into a persisted order, decrements
 	// stock, clears the cart, and fires the confirmation email + order.created
 	// event. Idempotent when CreateOrderDTO.IdempotencyKey is set.
@@ -62,6 +62,20 @@ type IOrderService interface {
 	// "pending" orders are editable; editing a "new" order confirms it into
 	// "pending". Admin only.
 	UpdateDetails(ctx context.Context, number int64, d dto.OrderDetailsUpdateDTO) (*dto.OrderDTO, error)
+	// RecordRefund brings the order in line with money returned on its
+	// payment; refundedTotal is the running total. A full refund moves the
+	// order to "refunded" (with restock) when its status allows it, otherwise
+	// — and for any partial refund — only payment_status / refunded_total
+	// change. Repeating it for an order already marked refunded is a no-op.
+	RecordRefund(ctx context.Context, orderID uuid.UUID, refundedTotal decimal.Decimal, full bool, actor string) (*dto.OrderDTO, error)
+	// EditItems replaces the order's lines with the given target set (admin
+	// only), moving stock and recomputing totals in one transaction. Allowed
+	// up to "processing"; a paid order's total may only go down, with the
+	// difference reported as RefundDue. DryRun computes the same result
+	// without saving it.
+	EditItems(ctx context.Context, number int64, d dto.OrderItemsEditDTO) (*dto.OrderItemsEditResultDTO, error)
+	// ListEdits returns the order's item-edit audit trail, newest first.
+	ListEdits(ctx context.Context, number int64) ([]*dto.OrderEditDTO, error)
 }
 
 type Service struct {

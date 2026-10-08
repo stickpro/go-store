@@ -5,6 +5,10 @@ SELECT * FROM orders WHERE order_number = $1 LIMIT 1;
 -- Row-locks the order for a status transition. Transaction only.
 SELECT * FROM orders WHERE order_number = $1 LIMIT 1 FOR UPDATE;
 
+-- name: GetByIDForUpdate :one
+-- Row-locks the order by id. Transaction only.
+SELECT * FROM orders WHERE id = $1 LIMIT 1 FOR UPDATE;
+
 -- name: GetByIdempotencyKey :one
 SELECT * FROM orders WHERE idempotency_key = $1 LIMIT 1;
 
@@ -56,6 +60,7 @@ UPDATE orders
 SET status = $2,
     payment_status = 'paid',
     payment_method = $3,
+    paid_total = grand_total,
     paid_at = now(),
     updated_at = now()
 WHERE id = $1
@@ -75,8 +80,22 @@ RETURNING *;
 UPDATE orders
 SET status = 'refunded',
     payment_status = 'refunded',
+    refunded_total = grand_total,
     updated_at = now()
 WHERE id = $1
+RETURNING *;
+
+-- name: SetRefundState :one
+-- Records money returned on an order without touching its fulfilment status:
+-- a partial refund, or a full refund of an order that can't move to
+-- 'refunded' itself (e.g. already cancelled). Only an order that was paid
+-- matches; no row means there was nothing to refund on it.
+UPDATE orders
+SET payment_status = $2,
+    refunded_total = $3,
+    updated_at = now()
+WHERE id = $1
+  AND payment_status IN ('paid', 'partially_refunded')
 RETURNING *;
 
 -- name: ListAdmin :many
@@ -109,7 +128,7 @@ FROM orders o
 JOIN order_items oi ON oi.order_id = o.id
 WHERE o.user_id = sqlc.arg('user_id')::uuid
   AND oi.variant_id = sqlc.arg('variant_id')::uuid
-  AND o.payment_status = 'paid'
+  AND o.payment_status IN ('paid', 'partially_refunded')
   AND o.status NOT IN ('cancelled', 'refunded')
 ORDER BY o.created_at DESC
 LIMIT 1;
@@ -118,7 +137,8 @@ LIMIT 1;
 -- One-shot order snapshot for the admin dashboard. Status / payment buckets and
 -- `total` are all-time (current distribution); `today` and `revenue_today` use
 -- the day-boundary params; `revenue_period` / `paid_orders_period` use the
--- selected range. Revenue sums grand_total of payment_status = 'paid' orders only.
+-- selected range. Revenue is net of refunds: grand_total - refunded_total of
+-- paid and partially refunded orders.
 SELECT
     count(*)                                                                        AS total,
     count(*) FILTER (WHERE created_at >= sqlc.arg('today_from')
@@ -135,15 +155,16 @@ SELECT
     count(*) FILTER (WHERE payment_status = 'unpaid')                               AS payment_unpaid,
     count(*) FILTER (WHERE payment_status = 'paid')                                 AS payment_paid,
     count(*) FILTER (WHERE payment_status = 'refunded')                             AS payment_refunded,
+    count(*) FILTER (WHERE payment_status = 'partially_refunded')                   AS payment_partially_refunded,
     count(*) FILTER (WHERE payment_status = 'failed')                               AS payment_failed,
 
-    coalesce(sum(grand_total) FILTER (WHERE payment_status = 'paid'
+    coalesce(sum(grand_total - refunded_total) FILTER (WHERE payment_status IN ('paid', 'partially_refunded')
                                         AND created_at >= sqlc.arg('today_from')
                                         AND created_at < sqlc.arg('today_to')), 0)::numeric  AS revenue_today,
-    coalesce(sum(grand_total) FILTER (WHERE payment_status = 'paid'
+    coalesce(sum(grand_total - refunded_total) FILTER (WHERE payment_status IN ('paid', 'partially_refunded')
                                         AND created_at >= sqlc.arg('period_from')
                                         AND created_at < sqlc.arg('period_to')), 0)::numeric AS revenue_period,
-    count(*) FILTER (WHERE payment_status = 'paid'
+    count(*) FILTER (WHERE payment_status IN ('paid', 'partially_refunded')
                        AND created_at >= sqlc.arg('period_from')
                        AND created_at < sqlc.arg('period_to'))                      AS paid_orders_period
 FROM orders;
@@ -157,3 +178,12 @@ WHERE status = 'pending'
 ORDER BY created_at
 LIMIT $2
 FOR UPDATE SKIP LOCKED;
+
+-- name: UpdateTotals :one
+-- Rewrites the money columns after an admin item edit.
+UPDATE orders
+SET subtotal    = $2,
+    grand_total = $3,
+    updated_at  = now()
+WHERE id = $1
+RETURNING *;

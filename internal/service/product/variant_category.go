@@ -34,7 +34,7 @@ func (s *Service) GetVariantCategories(ctx context.Context, variantID uuid.UUID)
 	return result, nil
 }
 
-func (s *Service) SyncVariantCategories(ctx context.Context, d dto.SyncVariantCategoriesDTO) error { //nolint:dupl
+func (s *Service) SyncVariantCategories(ctx context.Context, d dto.SyncVariantCategoriesDTO) error {
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
 		err := s.storage.ProductVariantCategories(repository.WithTx(tx)).RemoveAll(ctx, d.VariantID)
 		if err != nil {

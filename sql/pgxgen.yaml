@@ -201,6 +201,9 @@ schemas:
                             - updated_at
                             - paid_at
                             - cancelled_at
+                            - refunded_total
+                            - version
+                            - paid_total
                         column_values:
                             created_at: now()
                     get: {}
@@ -339,9 +342,14 @@ schemas:
                 skip_columns:
                   - id
                   - updated_at
+                  - refunded_amount
                 column_values:
                   created_at: now()
               delete: {}
+        payment_refunds:
+            primary_column: id
+        order_edits:
+            primary_column: id
         attribute_values:
             primary_column: id
         category_paths:

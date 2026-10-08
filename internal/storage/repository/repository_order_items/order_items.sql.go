@@ -9,8 +9,18 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/models"
 )
+
+const deleteByID = `-- name: DeleteByID :exec
+DELETE FROM order_items WHERE id = $1
+`
+
+func (q *Queries) DeleteByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteByID, id)
+	return err
+}
 
 const listByOrderID = `-- name: ListByOrderID :many
 SELECT id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm FROM order_items WHERE order_id = $1 ORDER BY id
@@ -92,4 +102,41 @@ func (q *Queries) ListByOrderIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateQuantity = `-- name: UpdateQuantity :one
+UPDATE order_items
+SET quantity   = $2,
+    line_total = $3
+WHERE id = $1
+RETURNING id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm
+`
+
+type UpdateQuantityParams struct {
+	ID        uuid.UUID       `db:"id" json:"id"`
+	Quantity  int64           `db:"quantity" json:"quantity"`
+	LineTotal decimal.Decimal `db:"line_total" json:"line_total"`
+}
+
+func (q *Queries) UpdateQuantity(ctx context.Context, arg UpdateQuantityParams) (*models.OrderItem, error) {
+	row := q.db.QueryRow(ctx, updateQuantity, arg.ID, arg.Quantity, arg.LineTotal)
+	var i models.OrderItem
+	err := row.Scan(
+		&i.ID,
+		&i.OrderID,
+		&i.ProductID,
+		&i.VariantID,
+		&i.Sku,
+		&i.Name,
+		&i.Slug,
+		&i.ImagePath,
+		&i.UnitPrice,
+		&i.Quantity,
+		&i.LineTotal,
+		&i.WeightKg,
+		&i.LengthCm,
+		&i.WidthCm,
+		&i.HeightCm,
+	)
+	return &i, err
 }

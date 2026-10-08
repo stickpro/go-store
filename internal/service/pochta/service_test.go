@@ -29,7 +29,7 @@ func TestToDeliveryPoint(t *testing.T) {
 	if !got.CardPayment || len(got.WorkTime) != 1 {
 		t.Fatalf("payment/worktime not mapped: %+v", got)
 	}
-	if got.Details["ecom"] != true || got.Details["weight_limit_kg"].(float64) != 20 {
+	if weight, ok := got.Details["weight_limit_kg"].(float64); got.Details["ecom"] != true || !ok || weight != 20 {
 		t.Fatalf("ecom details not mapped: %v", got.Details)
 	}
 }

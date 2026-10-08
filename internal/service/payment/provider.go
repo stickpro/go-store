@@ -40,7 +40,10 @@ type NotificationResult struct {
 	PaymentID         uuid.UUID
 	ProviderPaymentID string
 	Status            Status
-	RawNotification   []byte
+	// Amount is the payment amount the provider reports. It is checked against
+	// the stored amount before a payment is marked confirmed.
+	Amount          decimal.Decimal
+	RawNotification []byte
 	// AckBody is the exact response body the provider expects for a
 	// successful delivery (T-Bank wants the literal string "OK"); the HTTP
 	// handler writes it back verbatim so the provider stops retrying.
@@ -49,6 +52,8 @@ type NotificationResult struct {
 
 // CancelRequest asks the provider to cancel/refund a confirmed payment.
 // Amount is the amount to refund; a zero value means "refund in full".
+// Cancel must wrap an explicit gateway refusal with ErrProviderRejected so the
+// caller can tell it apart from an unknown outcome (timeout, network error).
 type CancelRequest struct {
 	PaymentID         uuid.UUID
 	ProviderPaymentID string

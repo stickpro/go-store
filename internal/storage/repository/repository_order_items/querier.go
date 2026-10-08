@@ -13,8 +13,10 @@ import (
 
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (*models.OrderItem, error)
+	DeleteByID(ctx context.Context, id uuid.UUID) error
 	ListByOrderID(ctx context.Context, orderID uuid.UUID) ([]*models.OrderItem, error)
 	ListByOrderIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*models.OrderItem, error)
+	UpdateQuantity(ctx context.Context, arg UpdateQuantityParams) (*models.OrderItem, error)
 }
 
 var _ Querier = (*Queries)(nil)

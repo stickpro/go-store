@@ -48,7 +48,6 @@ func buildWorkers(
 	})
 
 	for _, provider := range services.Shipping.All() {
-		provider := provider
 		add(provider.Code()+"_delivery_points_cache", provider.Enabled(), func(ctx context.Context) {
 			provider.RunCacheRefresher(ctx)
 		})

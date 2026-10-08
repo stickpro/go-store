@@ -68,14 +68,19 @@ type Processor interface {
 	Probe(src []byte) (width, height int, err error)
 }
 
-var startup sync.Once
+var (
+	startup    sync.Once
+	errStartup error
+)
 
-// Startup boots libvips. Safe to call multiple times; the first call wins.
-func Startup() {
+// Startup boots libvips. Safe to call multiple times; the first call wins and
+// its error is returned to every caller.
+func Startup() error {
 	startup.Do(func() {
 		vips.LoggingSettings(nil, vips.LogLevelError)
-		vips.Startup(nil)
+		errStartup = vips.Startup(nil)
 	})
+	return errStartup
 }
 
 // Shutdown releases libvips resources. Call once on process exit.
@@ -84,7 +89,7 @@ func Shutdown() { vips.Shutdown() }
 // New returns a libvips-backed processor. maxSourcePixels caps the source area
 // (width*height) as a decompression-bomb guard; 0 disables the check.
 func New(maxSourcePixels int) Processor {
-	Startup()
+	_ = Startup() // a boot failure is surfaced by the explicit Startup call in app.Run
 	return &processor{maxSourcePixels: maxSourcePixels}
 }
 
@@ -104,7 +109,7 @@ func trimVipsStack(err error) string {
 func (p *processor) Probe(src []byte) (int, int, error) {
 	cfg, _, err := image.DecodeConfig(bytes.NewReader(src))
 	if err != nil {
-		return 0, 0, fmt.Errorf("%w: %v", ErrUnsupportedFormat, err)
+		return 0, 0, fmt.Errorf("%w: %w", ErrUnsupportedFormat, err)
 	}
 	return cfg.Width, cfg.Height, nil
 }

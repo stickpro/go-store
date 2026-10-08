@@ -12,13 +12,18 @@ import (
 )
 
 type Querier interface {
+	ApplyRefund(ctx context.Context, arg ApplyRefundParams) (*models.Payment, error)
 	Create(ctx context.Context, arg CreateParams) (*models.Payment, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Payment, error)
+	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*models.Payment, error)
 	GetByProviderPaymentID(ctx context.Context, arg GetByProviderPaymentIDParams) (*models.Payment, error)
 	// Most recent payment attempt for the order (a customer may retry after a
 	// failed/expired attempt, so an order can have more than one row).
 	GetLatestByOrderID(ctx context.Context, orderID uuid.UUID) (*models.Payment, error)
+	// The order's captured payment that still has money left to refund, locked
+	// so concurrent refunds see each other's pending rows.
+	GetRefundableByOrderIDForUpdate(ctx context.Context, orderID uuid.UUID) (*models.Payment, error)
 	ListByOrderID(ctx context.Context, orderID uuid.UUID) ([]*models.Payment, error)
 	// Fills in what the provider's Init call returned: its own payment id, the
 	// URL to redirect the customer to, and the raw response for audit/debugging.

@@ -7,7 +7,7 @@ package product_request
 //   - attr_min.<slug>=<num>  lower bound for number attributes
 //   - attr_max.<slug>=<num>  upper bound for number attributes
 type SearchProductsRequest struct {
-	Query          string  `json:"q" query:"q"`
+	Query          string  `json:"q" query:"q"`               //nolint:tagliatelle // public ?q= search param
 	Category       string  `json:"category" query:"category"` // comma-separated category slugs
 	Page           *uint64 `json:"page" query:"page"`
 	PageSize       *uint64 `json:"page_size" query:"page_size"`

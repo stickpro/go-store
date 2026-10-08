@@ -25,6 +25,18 @@ var (
 	// contact / shipping / payment details (only "new" and "pending" orders are
 	// editable).
 	ErrDetailsLocked = errors.New("order details can no longer be edited")
+	// ErrItemsLocked — the order's lines can no longer be edited: it has
+	// shipped, been closed, or holds lines an edit can't address.
+	ErrItemsLocked = errors.New("order items can no longer be edited")
+	// ErrEditConflict — the order changed since the edit was prepared
+	// (version or resulting total differ from what the caller saw).
+	ErrEditConflict = errors.New("order changed since the edit was prepared")
+	// ErrSurchargeRequired — the edit would raise a paid order's total above
+	// what the customer has paid; that needs an extra payment, which isn't
+	// supported.
+	ErrSurchargeRequired = errors.New("edit would raise the total of a paid order above the amount paid")
+	// ErrNoLines — an item edit would leave the order empty; cancel it instead.
+	ErrNoLines = errors.New("an order needs at least one line; cancel it instead")
 	// ErrShippingAddressRequired — a "new" order cannot be confirmed into
 	// "pending" without a delivery address.
 	ErrShippingAddressRequired = errors.New("shipping address is required to confirm the order")

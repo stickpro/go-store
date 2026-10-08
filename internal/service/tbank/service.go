@@ -74,6 +74,7 @@ func (p *provider) HandleNotification(_ context.Context, raw []byte) (payment.No
 		PaymentID:         paymentID,
 		ProviderPaymentID: n.PaymentId.String(),
 		Status:            mapStatus(n.Status),
+		Amount:            fromKopecks(n.Amount),
 		RawNotification:   raw,
 		// T-Bank stops retrying a webhook only once it gets back exactly "OK".
 		AckBody: "OK",
@@ -83,7 +84,8 @@ func (p *provider) HandleNotification(_ context.Context, raw []byte) (payment.No
 func (p *provider) Cancel(ctx context.Context, r payment.CancelRequest) (payment.CancelResult, error) {
 	resp, raw, err := p.client.cancel(ctx, r.ProviderPaymentID, toKopecks(r.Amount))
 	if err != nil {
-		return payment.CancelResult{}, err
+		// raw is kept even on a rejection so the refund row records why.
+		return payment.CancelResult{RawResponse: raw}, err
 	}
 
 	return payment.CancelResult{
@@ -118,6 +120,11 @@ func toKopecks(amount decimal.Decimal) int64 {
 	return amount.Mul(decimal.NewFromInt(100)).Round(0).IntPart()
 }
 
+// fromKopecks converts T-Bank's integer kopecks back to a decimal ruble amount.
+func fromKopecks(kopecks int64) decimal.Decimal {
+	return decimal.New(kopecks, -2)
+}
+
 // mapStatus normalizes a T-Bank payment status onto payment.Status. Anything
 // not explicitly terminal (AUTHORIZING, FORM_SHOWED, AUTHORIZED, …) is
 // reported as pending — one-stage payments (PayType=O) move straight from
@@ -128,8 +135,10 @@ func mapStatus(s string) payment.Status {
 		return payment.StatusConfirmed
 	case statusRejected, statusDeadlineExpired, statusCanceled:
 		return payment.StatusFailed
-	case statusReversed, statusPartialReversed, statusRefunded, statusPartialRefunded:
+	case statusReversed, statusRefunded:
 		return payment.StatusRefunded
+	case statusPartialReversed, statusPartialRefunded:
+		return payment.StatusPartiallyRefunded
 	default:
 		return payment.StatusPending
 	}

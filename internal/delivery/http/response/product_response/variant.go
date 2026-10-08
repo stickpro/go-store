@@ -33,7 +33,7 @@ type VariantListResponse struct {
 	Items      []VariantCardResponse            `json:"items"`
 	Pagination base.FullPagingData              `json:"pagination"`
 	Facets     map[string]map[string]int64      `json:"facets,omitempty"`
-	FacetStats map[string]dto.CategoryFacetStat `json:"facet_stats,omitempty"` //nolint:tagliatelle
+	FacetStats map[string]dto.CategoryFacetStat `json:"facet_stats,omitempty"`
 } //	@name	VariantListResponse
 
 func NewVariantCard(c *dto.VariantCardDTO) VariantCardResponse {

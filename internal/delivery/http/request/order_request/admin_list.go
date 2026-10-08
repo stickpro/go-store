@@ -8,7 +8,7 @@ type AdminListOrdersRequest struct {
 	Page          *uint64 `json:"page" query:"page"`
 	PageSize      *uint64 `json:"page_size" query:"page_size"`
 	Status        *string `json:"status" query:"status" validate:"omitempty,oneof=new pending paid processing shipped delivered cancelled refunded"`
-	PaymentStatus *string `json:"payment_status" query:"payment_status" validate:"omitempty,oneof=unpaid paid refunded failed"`
+	PaymentStatus *string `json:"payment_status" query:"payment_status" validate:"omitempty,oneof=unpaid paid partially_refunded refunded failed"`
 	// Source filters by acquisition channel: "checkout" or "quick".
 	Source *string    `json:"source" query:"source" validate:"omitempty,oneof=checkout quick"`
 	UserID *uuid.UUID `json:"user_id" query:"user_id"`

@@ -50,7 +50,7 @@ func (p *provider) Quote(ctx context.Context, q shipping.RateQuery) ([]dto.Shipp
 	}
 
 	return []dto.ShippingRate{{
-		Provider:     "pochta",
+		Provider:     ProviderCode,
 		TariffCode:   strconv.Itoa(p.cfg.TariffObjectCode),
 		TariffName:   firstNonEmpty(res.Name, "Почта России"),
 		DeliveryType: "pickup",

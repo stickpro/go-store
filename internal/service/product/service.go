@@ -293,7 +293,7 @@ func (s *Service) GetProductWithMediaByID(ctx context.Context, id uuid.UUID) (*d
 	}, nil
 }
 
-func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error { //nolint:dupl
+func (s *Service) SyncProductAttributes(ctx context.Context, d dto.SyncAttributeProductDTO) error {
 	err := repository.BeginTxFunc(ctx, s.storage.PSQLConn(), pgx.TxOptions{}, func(tx pgx.Tx) error {
 		err := s.storage.ProductAttributeValues(repository.WithTx(tx)).RemoveAll(ctx, d.ProductID)
 		if err != nil {

@@ -196,12 +196,12 @@ func (s *Service) variantToDocument(v *dto.EnrichedVariantDTO, attrs []*reposito
 	for _, attr := range attrs {
 		var fieldValue any
 		switch attr.AttributeType {
-		case "number":
+		case constant.AttributeTypeNumber:
 			if attr.ValueNumeric.Valid {
 				val, _ := attr.ValueNumeric.Decimal.Float64()
 				fieldValue = val
 			}
-		case "boolean":
+		case constant.AttributeTypeBoolean:
 			fieldValue = attr.AttributeValue == "true" || attr.AttributeValue == "1"
 		default:
 			fieldValue = attr.AttributeValue

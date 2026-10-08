@@ -180,7 +180,7 @@ func downloadImage(ctx context.Context, rawURL string) ([]byte, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	resp, err := http.DefaultClient.Do(req) //nolint:gosec // URL validated by ValidatePublicHTTPURL above
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, "", err
 	}

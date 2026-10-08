@@ -19,9 +19,12 @@ type Querier interface {
 	// One-shot order snapshot for the admin dashboard. Status / payment buckets and
 	// `total` are all-time (current distribution); `today` and `revenue_today` use
 	// the day-boundary params; `revenue_period` / `paid_orders_period` use the
-	// selected range. Revenue sums grand_total of payment_status = 'paid' orders only.
+	// selected range. Revenue is net of refunds: grand_total - refunded_total of
+	// paid and partially refunded orders.
 	DashboardOrderStats(ctx context.Context, arg DashboardOrderStatsParams) (*DashboardOrderStatsRow, error)
 	Get(ctx context.Context, id uuid.UUID) (*models.Order, error)
+	// Row-locks the order by id. Transaction only.
+	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*models.Order, error)
 	GetByIdempotencyKey(ctx context.Context, idempotencyKey pgtype.Text) (*models.Order, error)
 	GetByNumber(ctx context.Context, orderNumber int64) (*models.Order, error)
 	// Row-locks the order for a status transition. Transaction only.
@@ -40,11 +43,18 @@ type Querier interface {
 	// Refund also clears the payment status back to 'refunded' (unlike a plain
 	// status transition, which never touches payment_status).
 	MarkRefunded(ctx context.Context, id uuid.UUID) (*models.Order, error)
+	// Records money returned on an order without touching its fulfilment status:
+	// a partial refund, or a full refund of an order that can't move to
+	// 'refunded' itself (e.g. already cancelled). Only an order that was paid
+	// matches; no row means there was nothing to refund on it.
+	SetRefundState(ctx context.Context, arg SetRefundStateParams) (*models.Order, error)
 	// Admin order edit: contact, shipping address + carrier snapshot, payment method,
 	// comment and the money fields that shipping/status changes affect. Item lines and
 	// their prices are never touched here. Transaction only (row must be locked).
 	UpdateDetails(ctx context.Context, arg UpdateDetailsParams) (*models.Order, error)
 	UpdateStatus(ctx context.Context, arg UpdateStatusParams) (*models.Order, error)
+	// Rewrites the money columns after an admin item edit.
+	UpdateTotals(ctx context.Context, arg UpdateTotalsParams) (*models.Order, error)
 }
 
 var _ Querier = (*Queries)(nil)

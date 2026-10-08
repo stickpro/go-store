@@ -456,3 +456,23 @@ func (q *Queries) RestockProduct(ctx context.Context, arg RestockProductParams) 
 	_, err := q.db.Exec(ctx, restockProduct, arg.ID, arg.Quantity)
 	return err
 }
+
+const restockTrackedProduct = `-- name: RestockTrackedProduct :exec
+UPDATE products
+SET quantity   = quantity + $2,
+    updated_at = now()
+WHERE id = $1
+  AND subtract = true
+`
+
+type RestockTrackedProductParams struct {
+	ID       uuid.UUID `db:"id" json:"id"`
+	Quantity int64     `db:"quantity" json:"quantity"`
+}
+
+// Returns quantity to a product's stock if it still tracks stock (subtract =
+// true) — the same rule RestockOrderItems applies to a whole order.
+func (q *Queries) RestockTrackedProduct(ctx context.Context, arg RestockTrackedProductParams) error {
+	_, err := q.db.Exec(ctx, restockTrackedProduct, arg.ID, arg.Quantity)
+	return err
+}

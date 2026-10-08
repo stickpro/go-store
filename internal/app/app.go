@@ -24,7 +24,10 @@ import (
 const workerShutdownTimeout = 25 * time.Second
 
 func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
-	imageprocessor.Startup()
+	if err := imageprocessor.Startup(); err != nil {
+		l.Fatal("failed to start libvips", err)
+		return
+	}
 	defer imageprocessor.Shutdown()
 
 	st, err := storage.InitStore(ctx, conf)

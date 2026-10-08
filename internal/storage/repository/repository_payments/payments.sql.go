@@ -10,11 +10,48 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/models"
 )
 
+const applyRefund = `-- name: ApplyRefund :one
+UPDATE payments
+SET refunded_amount = $2,
+    status          = $3,
+    updated_at      = now()
+WHERE id = $1
+RETURNING id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount
+`
+
+type ApplyRefundParams struct {
+	ID             uuid.UUID       `db:"id" json:"id"`
+	RefundedAmount decimal.Decimal `db:"refunded_amount" json:"refunded_amount"`
+	Status         string          `db:"status" json:"status"`
+}
+
+func (q *Queries) ApplyRefund(ctx context.Context, arg ApplyRefundParams) (*models.Payment, error) {
+	row := q.db.QueryRow(ctx, applyRefund, arg.ID, arg.RefundedAmount, arg.Status)
+	var i models.Payment
+	err := row.Scan(
+		&i.ID,
+		&i.OrderID,
+		&i.Provider,
+		&i.ProviderPaymentID,
+		&i.Status,
+		&i.Amount,
+		&i.Currency,
+		&i.PaymentUrl,
+		&i.RawInitResponse,
+		&i.RawLastNotification,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.RefundedAmount,
+	)
+	return &i, err
+}
+
 const getByID = `-- name: GetByID :one
-SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at FROM payments WHERE id = $1 LIMIT 1
+SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount FROM payments WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Payment, error) {
@@ -33,12 +70,38 @@ func (q *Queries) GetByID(ctx context.Context, id uuid.UUID) (*models.Payment, e
 		&i.RawLastNotification,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RefundedAmount,
+	)
+	return &i, err
+}
+
+const getByIDForUpdate = `-- name: GetByIDForUpdate :one
+SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount FROM payments WHERE id = $1 LIMIT 1 FOR UPDATE
+`
+
+func (q *Queries) GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*models.Payment, error) {
+	row := q.db.QueryRow(ctx, getByIDForUpdate, id)
+	var i models.Payment
+	err := row.Scan(
+		&i.ID,
+		&i.OrderID,
+		&i.Provider,
+		&i.ProviderPaymentID,
+		&i.Status,
+		&i.Amount,
+		&i.Currency,
+		&i.PaymentUrl,
+		&i.RawInitResponse,
+		&i.RawLastNotification,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.RefundedAmount,
 	)
 	return &i, err
 }
 
 const getByProviderPaymentID = `-- name: GetByProviderPaymentID :one
-SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at FROM payments WHERE provider = $1 AND provider_payment_id = $2 LIMIT 1
+SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount FROM payments WHERE provider = $1 AND provider_payment_id = $2 LIMIT 1
 `
 
 type GetByProviderPaymentIDParams struct {
@@ -62,12 +125,13 @@ func (q *Queries) GetByProviderPaymentID(ctx context.Context, arg GetByProviderP
 		&i.RawLastNotification,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RefundedAmount,
 	)
 	return &i, err
 }
 
 const getLatestByOrderID = `-- name: GetLatestByOrderID :one
-SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at FROM payments WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1
+SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount FROM payments WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1
 `
 
 // Most recent payment attempt for the order (a customer may retry after a
@@ -88,12 +152,44 @@ func (q *Queries) GetLatestByOrderID(ctx context.Context, orderID uuid.UUID) (*m
 		&i.RawLastNotification,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RefundedAmount,
+	)
+	return &i, err
+}
+
+const getRefundableByOrderIDForUpdate = `-- name: GetRefundableByOrderIDForUpdate :one
+SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount FROM payments
+WHERE order_id = $1 AND status IN ('confirmed', 'partially_refunded')
+ORDER BY created_at DESC
+LIMIT 1
+FOR UPDATE
+`
+
+// The order's captured payment that still has money left to refund, locked
+// so concurrent refunds see each other's pending rows.
+func (q *Queries) GetRefundableByOrderIDForUpdate(ctx context.Context, orderID uuid.UUID) (*models.Payment, error) {
+	row := q.db.QueryRow(ctx, getRefundableByOrderIDForUpdate, orderID)
+	var i models.Payment
+	err := row.Scan(
+		&i.ID,
+		&i.OrderID,
+		&i.Provider,
+		&i.ProviderPaymentID,
+		&i.Status,
+		&i.Amount,
+		&i.Currency,
+		&i.PaymentUrl,
+		&i.RawInitResponse,
+		&i.RawLastNotification,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.RefundedAmount,
 	)
 	return &i, err
 }
 
 const listByOrderID = `-- name: ListByOrderID :many
-SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at FROM payments WHERE order_id = $1 ORDER BY created_at DESC
+SELECT id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount FROM payments WHERE order_id = $1 ORDER BY created_at DESC
 `
 
 func (q *Queries) ListByOrderID(ctx context.Context, orderID uuid.UUID) ([]*models.Payment, error) {
@@ -118,6 +214,7 @@ func (q *Queries) ListByOrderID(ctx context.Context, orderID uuid.UUID) ([]*mode
 			&i.RawLastNotification,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.RefundedAmount,
 		); err != nil {
 			return nil, err
 		}
@@ -137,7 +234,7 @@ SET provider_payment_id = $2,
     raw_init_response    = $5,
     updated_at           = now()
 WHERE id = $1
-RETURNING id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at
+RETURNING id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount
 `
 
 type UpdateAfterInitParams struct {
@@ -172,6 +269,7 @@ func (q *Queries) UpdateAfterInit(ctx context.Context, arg UpdateAfterInitParams
 		&i.RawLastNotification,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RefundedAmount,
 	)
 	return &i, err
 }
@@ -182,7 +280,7 @@ SET status                = $2,
     raw_last_notification = $3,
     updated_at             = now()
 WHERE id = $1
-RETURNING id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at
+RETURNING id, order_id, provider, provider_payment_id, status, amount, currency, payment_url, raw_init_response, raw_last_notification, created_at, updated_at, refunded_amount
 `
 
 type UpdateStatusParams struct {
@@ -210,6 +308,7 @@ func (q *Queries) UpdateStatus(ctx context.Context, arg UpdateStatusParams) (*mo
 		&i.RawLastNotification,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RefundedAmount,
 	)
 	return &i, err
 }

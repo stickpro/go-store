@@ -86,7 +86,6 @@ func (s *Service) resolveShipping(ctx context.Context, sel dto.ShippingSelection
 		if r.TariffCode != *sel.TariffCode {
 			continue
 		}
-		r := r
 
 		cost := r.Cost
 		if method != nil {
@@ -149,6 +148,6 @@ func int32PtrOrNil(n int) *int32 {
 	if n == 0 {
 		return nil
 	}
-	v := int32(n)
+	v := int32(n) //nolint:gosec // carrier delivery-day counts are tiny
 	return &v
 }

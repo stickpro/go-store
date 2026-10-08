@@ -59,7 +59,7 @@ func (p *provider) Quote(ctx context.Context, q shipping.RateQuery) ([]dto.Shipp
 		}
 
 		rates = append(rates, dto.ShippingRate{
-			Provider:     "cdek",
+			Provider:     ProviderCode,
 			TariffCode:   strconv.Itoa(code),
 			TariffName:   firstNonEmpty(cdekTariffNames[code], "Тариф "+strconv.Itoa(code)),
 			DeliveryType: tariffDeliveryType(code),

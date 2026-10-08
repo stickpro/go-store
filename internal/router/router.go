@@ -62,6 +62,6 @@ func (r *Router) initAPI(app *fiber.App) {
 	handlerV1 := handlers.NewHandler(r.services, r.logger)
 	handlerV1.InitHandler(app)
 
-	adminHandler := admin.NewAdminHandler(r.services)
+	adminHandler := admin.NewAdminHandler(r.services, r.logger)
 	adminHandler.InitAdminHandler(app)
 }

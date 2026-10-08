@@ -53,6 +53,8 @@ type ShippingMethodConfig struct {
 }
 
 // DefaultShippingMethods is used when shipping.methods is empty.
+//
+//nolint:goconst // a literal data table mirroring config.yaml; constants would hide it
 func DefaultShippingMethods() []ShippingMethodConfig {
 	return []ShippingMethodConfig{
 		{Code: "pickup", Title: "Самовывоз", Kind: "self_pickup", Free: true},

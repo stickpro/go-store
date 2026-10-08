@@ -111,7 +111,7 @@ func (s *Service) EnsureImageVariant(ctx context.Context, fileName string) (stri
 		})
 		if perr != nil {
 			if errors.Is(perr, imageprocessor.ErrUnsupportedFormat) || errors.Is(perr, imageprocessor.ErrSourceTooLarge) {
-				return nil, fmt.Errorf("%w: %v", ErrNotResizable, perr)
+				return nil, fmt.Errorf("%w: %w", ErrNotResizable, perr)
 			}
 			return nil, fmt.Errorf("resize: %w", perr)
 		}
@@ -125,7 +125,11 @@ func (s *Service) EnsureImageVariant(ctx context.Context, fileName string) (stri
 	if err != nil {
 		return "", err
 	}
-	return v.(string), nil
+	fsPath, ok := v.(string)
+	if !ok {
+		return "", fmt.Errorf("resize: unexpected singleflight result %T", v)
+	}
+	return fsPath, nil
 }
 
 func (s *Service) readOriginal(ctx context.Context, base string) ([]byte, error) {

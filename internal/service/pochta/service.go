@@ -11,6 +11,9 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
+// ProviderCode identifies this carrier in config, rates and delivery points.
+const ProviderCode = "pochta"
+
 // provider is the Russian Post (Почта России) carrier: pickup points via the
 // shared cache engine (embedded *shipping.CachedProvider) plus shipping-cost
 // calculation through the public tariff calculator (see rater.go).
@@ -26,7 +29,7 @@ func New(cfg *config.Config, l logger.Logger, kv key_value.IKeyValue) shipping.P
 	c := newClient(cfg.Pochta, l)
 	return &provider{
 		CachedProvider: shipping.NewCachedProvider(shipping.ProviderConfig{
-			Code:         "pochta",
+			Code:         ProviderCode,
 			Enabled:      cfg.Pochta.Enabled,
 			CacheKey:     constant.CacheKeyPochtaDeliveryPoints,
 			CacheTTL:     cfg.Pochta.DeliveryPointsCacheTTL,
@@ -40,7 +43,7 @@ func New(cfg *config.Config, l logger.Logger, kv key_value.IKeyValue) shipping.P
 
 func toDeliveryPoint(p dto.PochtaDeliveryPointDTO) dto.DeliveryPoint {
 	return dto.DeliveryPoint{
-		Provider:    "pochta",
+		Provider:    ProviderCode,
 		Code:        p.Code,
 		Name:        p.Name,
 		Type:        p.Type,

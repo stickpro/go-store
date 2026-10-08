@@ -122,10 +122,11 @@ func (s *Service) Overview(ctx context.Context, from, to *time.Time) (*dto.Dashb
 			Refunded:   os.StatusRefunded,
 		},
 		OrdersByPaymentStatus: dto.DashboardOrdersByPaymentStatus{
-			Unpaid:   os.PaymentUnpaid,
-			Paid:     os.PaymentPaid,
-			Refunded: os.PaymentRefunded,
-			Failed:   os.PaymentFailed,
+			Unpaid:            os.PaymentUnpaid,
+			Paid:              os.PaymentPaid,
+			Refunded:          os.PaymentRefunded,
+			PartiallyRefunded: os.PaymentPartiallyRefunded,
+			Failed:            os.PaymentFailed,
 		},
 
 		RevenueToday:      os.RevenueToday,

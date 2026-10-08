@@ -1,6 +1,10 @@
 package tbank
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/shopspring/decimal"
+)
 
 func TestWithOrderParam(t *testing.T) {
 	cases := []struct {
@@ -21,5 +25,14 @@ func TestWithOrderParam(t *testing.T) {
 				t.Errorf("withOrderParam(%q, %d) = %q, want %q", c.raw, c.order, got, c.want)
 			}
 		})
+	}
+}
+
+func TestKopecksRoundTrip(t *testing.T) {
+	for _, s := range []string{"0", "0.01", "150.5", "1499.99", "100000"} {
+		amount := decimal.RequireFromString(s)
+		if got := fromKopecks(toKopecks(amount)); !got.Equal(amount) {
+			t.Errorf("fromKopecks(toKopecks(%s)) = %s", s, got)
+		}
 	}
 }

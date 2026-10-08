@@ -54,7 +54,7 @@ func (h *Handler) initOrderPayment(c fiber.Ctx) error {
 	if err != nil {
 		return h.orderError(err)
 	}
-	if o.PaymentStatus == constant.PaymentPaid.String() {
+	if o.PaymentStatus != constant.PaymentUnpaid.String() && o.PaymentStatus != constant.PaymentFailed.String() {
 		return apierror.New().AddError(errors.New("order is already paid")).SetHttpCode(fiber.StatusConflict)
 	}
 
@@ -121,18 +121,39 @@ func (h *Handler) getOrderPayment(c fiber.Ctx) error {
 //	@Router			/v1/payments/{provider}/notification [post]
 func (h *Handler) paymentNotification(c fiber.Ctx) error {
 	providerCode := c.Params("provider")
+	body := c.Body()
 
-	p, ack, err := h.services.PaymentService.HandleNotification(c.Context(), providerCode, c.Body())
+	// Logged unconditionally, before any parsing/validation: if webhooks
+	// aren't showing up, this line is what tells us whether the request ever
+	// reached the app at all (vs. a firewall/notification_url/DNS problem
+	// upstream of it). Card data here is already masked by the provider
+	// (T-Bank sends Pan like "430000******0000"), so logging the raw body is
+	// safe — drop it to Debug once delivery is confirmed working.
+	h.logger.Infow("payment: notification received",
+		"provider", providerCode,
+		"remote_ip", c.IP(),
+		"body_size", len(body),
+		"body", string(body),
+	)
+
+	p, ack, err := h.services.PaymentService.HandleNotification(c.Context(), providerCode, body)
 	if err != nil {
 		switch {
 		case errors.Is(err, payment.ErrInvalidSignature):
-			h.logger.Warnw("payment: invalid notification signature", "provider", providerCode)
+			h.logger.Warnw("payment: invalid notification signature", "provider", providerCode, "remote_ip", c.IP())
 			return c.Status(fiber.StatusBadRequest).SendString("invalid signature")
 		case errors.Is(err, payment.ErrProviderNotFound):
+			h.logger.Warnw("payment: notification for unknown provider", "provider", providerCode, "remote_ip", c.IP())
 			return c.Status(fiber.StatusNotFound).SendString("unknown provider")
 		case errors.Is(err, payment.ErrNotFound):
 			// Nothing a retry would fix — ack so the provider stops resending it.
 			h.logger.Warnw("payment: notification for unknown payment", "provider", providerCode)
+			return c.SendString(ack)
+		case errors.Is(err, payment.ErrAmountMismatch):
+			// The payment stays unconfirmed and the order unpaid; an admin has
+			// to look at it. Acked, since a resend would carry the same amount.
+			h.logger.Errorw("payment: confirmed amount mismatch, payment left unconfirmed",
+				"provider", providerCode, "payment_id", p.ID, "order_id", p.OrderID, "error", err)
 			return c.SendString(ack)
 		default:
 			h.logger.Errorw("payment: handle notification", "provider", providerCode, "error", err)
@@ -140,47 +161,81 @@ func (h *Handler) paymentNotification(c fiber.Ctx) error {
 		}
 	}
 
+	h.logger.Infow("payment: notification processed",
+		"provider", providerCode,
+		"payment_id", p.ID,
+		"order_id", p.OrderID,
+		"status", p.Status,
+	)
+
 	h.syncOrderWithPayment(c.Context(), p, providerCode)
 
 	return c.SendString(ack)
 }
 
-// syncOrderWithPayment reconciles an order's status with a payment that just
-// reached a terminal state. Called after the webhook has already been
-// acknowledged, so errors here are logged, not surfaced to the provider —
-// an admin can always drive the same transition by hand if this fails.
+// syncOrderWithPayment reconciles an order with a payment that just changed.
+// Called after the webhook has already been acknowledged, so errors here are
+// logged, not surfaced to the provider — an admin can always drive the same
+// transition by hand if this fails.
 func (h *Handler) syncOrderWithPayment(ctx context.Context, p *dto.PaymentDTO, providerCode string) {
-	var target constant.OrderStatus
+	actor := constant.OrderActorPayment + ":" + providerCode
+
 	switch payment.Status(p.Status) {
 	case payment.StatusConfirmed:
-		target = constant.OrderPaid
-	case payment.StatusRefunded:
-		target = constant.OrderRefunded
+		h.markOrderPaid(ctx, p, providerCode, actor)
+	case payment.StatusRefunded, payment.StatusPartiallyRefunded:
+		full := payment.Status(p.Status) == payment.StatusRefunded
+		o, err := h.services.OrderService.RecordRefund(ctx, p.OrderID, p.RefundedAmount, full, actor)
+		if err != nil {
+			h.logger.Warnw("payment: record refund on order", "order_id", p.OrderID, "status", p.Status, "error", err)
+			return
+		}
+		h.logger.Infow("payment: order refund recorded",
+			"order", o.Number, "status", o.Status, "payment_status", o.PaymentStatus, "refunded_total", o.RefundedTotal)
 	default:
-		return
+		// Pending/intermediate status (e.g. T-Bank's AUTHORIZED before it
+		// auto-confirms) — nothing for the order to do yet.
+		h.logger.Infow("payment: notification status needs no order transition",
+			"provider", providerCode, "payment_id", p.ID, "order_id", p.OrderID, "status", p.Status)
 	}
+}
 
+func (h *Handler) markOrderPaid(ctx context.Context, p *dto.PaymentDTO, providerCode, actor string) {
 	o, err := h.services.OrderService.GetByID(ctx, p.OrderID)
 	if err != nil {
 		h.logger.Errorw("payment: load order after notification", "order_id", p.OrderID, "error", err)
 		return
 	}
-	if o.Status == target.String() {
+	if o.Status == constant.OrderPaid.String() {
+		h.logger.Infow("payment: order already in target status, skipping",
+			"order", o.Number, "status", o.Status)
+		return
+	}
+	// The order may have been edited after this payment was started (the old
+	// PaymentURL is voided on edit, but the customer can beat that). Money
+	// taken for a different total must not mark the order paid; an admin
+	// sorts it out — typically a refund and a new payment.
+	if !p.Amount.Equal(o.GrandTotal) {
+		h.logger.Errorw("payment: confirmed amount differs from order total, order left unpaid",
+			"order", o.Number, "payment_id", p.ID, "paid", p.Amount, "grand_total", o.GrandTotal)
 		return
 	}
 
 	method := providerCode
 	if _, err := h.services.OrderService.UpdateStatus(ctx, o.Number, dto.OrderStatusUpdateDTO{
-		Status:        target.String(),
-		Actor:         constant.OrderActorPayment + ":" + providerCode,
+		Status:        constant.OrderPaid.String(),
+		Actor:         actor,
 		PaymentMethod: &method,
 	}); err != nil {
 		if errors.Is(err, order.ErrInvalidTransition) {
-			h.logger.Warnw("payment: order not in a state to sync", "order", o.Number, "from", o.Status, "to", target, "error", err)
+			h.logger.Warnw("payment: order not in a state to sync", "order", o.Number, "from", o.Status, "to", constant.OrderPaid, "error", err)
 			return
 		}
 		h.logger.Errorw("payment: sync order status", "order", o.Number, "error", err)
+		return
 	}
+
+	h.logger.Infow("payment: order status synced", "order", o.Number, "from", o.Status, "to", constant.OrderPaid)
 }
 
 // paymentError maps payment-service errors to HTTP responses.

@@ -3,6 +3,8 @@ package tbank
 import (
 	"fmt"
 	"strings"
+
+	"github.com/stickpro/go-store/internal/service/payment"
 )
 
 // flexString decodes a JSON field that T-Bank sometimes sends as a number and
@@ -44,7 +46,7 @@ func (r initResponse) err() error {
 	if r.Success {
 		return nil
 	}
-	return fmt.Errorf("tbank Init failed: code %s: %s (%s)", r.ErrorCode, r.Message, r.Details)
+	return fmt.Errorf("%w: tbank Init failed: code %s: %s (%s)", payment.ErrProviderRejected, r.ErrorCode, r.Message, r.Details)
 }
 
 type cancelRequest struct {
@@ -70,7 +72,7 @@ func (r cancelResponse) err() error {
 	if r.Success {
 		return nil
 	}
-	return fmt.Errorf("tbank Cancel failed: code %s: %s (%s)", r.ErrorCode, r.Message, r.Details)
+	return fmt.Errorf("%w: tbank Cancel failed: code %s: %s (%s)", payment.ErrProviderRejected, r.ErrorCode, r.Message, r.Details)
 }
 
 // notification is the webhook body T-Bank POSTs on every payment status

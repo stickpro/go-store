@@ -9,15 +9,18 @@ import (
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/tools/apierror"
 	"github.com/stickpro/go-store/pkg/dbutils/pgerror"
+	"github.com/stickpro/go-store/pkg/logger"
 )
 
 type Handler struct {
 	services *service.Services
+	logger   logger.Logger
 }
 
-func NewAdminHandler(services *service.Services) *Handler {
+func NewAdminHandler(services *service.Services, logger logger.Logger) *Handler {
 	return &Handler{
 		services: services,
+		logger:   logger,
 	}
 }
 

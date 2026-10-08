@@ -12,7 +12,6 @@ import (
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/base"
-	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_orders"
 	"github.com/stickpro/go-store/pkg/dbutils"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -204,8 +203,8 @@ func (s *Service) ListForUser(
 }
 
 // assemble loads the line items for a single order and maps it to the DTO.
-func (s *Service) assemble(ctx context.Context, o *models.Order, opts ...repository.Option) (*dto.OrderDTO, error) {
-	its, err := s.storage.OrderItems(opts...).ListByOrderID(ctx, o.ID)
+func (s *Service) assemble(ctx context.Context, o *models.Order) (*dto.OrderDTO, error) {
+	its, err := s.storage.OrderItems().ListByOrderID(ctx, o.ID)
 	if err != nil {
 		return nil, fmt.Errorf("order: list items: %w", err)
 	}

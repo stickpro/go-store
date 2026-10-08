@@ -53,6 +53,7 @@ type OrderResponse struct {
 	ShippingTotal decimal.Decimal       `json:"shipping_total"`
 	TaxTotal      decimal.Decimal       `json:"tax_total"`
 	GrandTotal    decimal.Decimal       `json:"grand_total"`
+	RefundedTotal decimal.Decimal       `json:"refunded_total"`
 	Comment       *string               `json:"comment"`
 	CreatedAt     time.Time             `json:"created_at"`
 	PaidAt        *time.Time            `json:"paid_at"`
@@ -104,6 +105,7 @@ func NewFromDTO(d *dto.OrderDTO) *OrderResponse {
 		ShippingTotal: d.ShippingTotal,
 		TaxTotal:      d.TaxTotal,
 		GrandTotal:    d.GrandTotal,
+		RefundedTotal: d.RefundedTotal,
 		Comment:       d.Comment,
 		CreatedAt:     d.CreatedAt,
 		PaidAt:        d.PaidAt,

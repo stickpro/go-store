@@ -5,11 +5,13 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/request/order_request"
 	"github.com/stickpro/go-store/internal/delivery/http/response"
 	"github.com/stickpro/go-store/internal/delivery/http/response/order_response"
+	"github.com/stickpro/go-store/internal/delivery/http/response/payment_response"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/service/order"
@@ -167,26 +169,153 @@ func (h *Handler) updateOrder(c fiber.Ctx) error {
 	return c.JSON(response.OkByData(order_response.NewAdminFromDTO(o)))
 }
 
-// refundOrder cancels/refunds the order's latest confirmed payment at the
-// provider and, once the provider confirms it, moves the order to "refunded".
+// previewOrderItems computes an item edit without saving it.
 //
-//	@Summary		Refund order
-//	@Description	Cancels/refunds the order's latest confirmed payment at the acquirer. Omit `amount` to refund in full. 409 if the latest payment attempt was never confirmed (nothing to refund).
+//	@Summary		Preview order item edit
+//	@Description	Runs the item edit exactly as PUT would (stock, prices, totals, paid-order limit) and rolls it back. `lines` is the full target line set. Use the returned `order.version` and `order.grand_total` as `expected_version` / `expected_grand_total` for the PUT.
 //	@Tags			Admin Order
 //	@Accept			json
 //	@Produce		json
-//	@Param			number	path		int										true	"Order number"
-//	@Param			request	body		order_request.AdminRefundOrderRequest	false	"Refund amount; omit for a full refund"
-//	@Success		200		{object}	response.Result[order_response.AdminOrderResponse]
+//	@Param			number	path		int											true	"Order number"
+//	@Param			request	body		order_request.AdminPreviewOrderItemsRequest	true	"Target line set"
+//	@Success		200		{object}	response.Result[order_response.AdminOrderItemsEditResponse]
 //	@Failure		400		{object}	apierror.Errors
 //	@Failure		404		{object}	apierror.Errors
 //	@Failure		409		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Router			/v1/admin/orders/{number}/items/preview [post]
+//	@Security		BearerAuth
+func (h *Handler) previewOrderItems(c fiber.Ctx) error {
+	number, err := parseOrderNumber(c)
+	if err != nil {
+		return err
+	}
+
+	req := &order_request.AdminPreviewOrderItemsRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	admin, ok := c.Locals("user").(*models.User)
+	if !ok {
+		return apierror.New().AddError(errors.New("undefined user")).SetHttpCode(fiber.StatusUnauthorized)
+	}
+
+	res, err := h.services.OrderService.EditItems(c.Context(), number,
+		dto.RequestToOrderItemsPreviewDTO(req, constant.OrderActorAdmin+":"+admin.ID.String()))
+	if err != nil {
+		return h.orderError(err)
+	}
+
+	return c.JSON(response.OkByData(order_response.NewItemsEditFromDTO(res)))
+}
+
+// updateOrderItems replaces the order's lines.
+//
+//	@Summary		Edit order items
+//	@Description	Replaces the order's lines with `lines` (the full target set: a line left out is removed). Kept lines keep the price they were sold at; added lines are priced from the catalogue; stock moves by the difference. Allowed while the order is `new`, `pending`, `paid` or `processing` (409 otherwise). For a paid order the total may only go down: `refund_due` in the response is the overpayment to return via POST /refund (409 if the edit would need an extra payment). For an unpaid order whose total changed, the open payment link is voided — the customer starts a new payment for the new total. 409 if `expected_version` / `expected_grand_total` no longer match (the order changed since the preview).
+//	@Tags			Admin Order
+//	@Accept			json
+//	@Produce		json
+//	@Param			number	path		int											true	"Order number"
+//	@Param			request	body		order_request.AdminUpdateOrderItemsRequest	true	"Target line set and the preview's version/total"
+//	@Success		200		{object}	response.Result[order_response.AdminOrderItemsEditResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Failure		409		{object}	apierror.Errors
+//	@Failure		422		{object}	apierror.Errors
+//	@Router			/v1/admin/orders/{number}/items [put]
+//	@Security		BearerAuth
+func (h *Handler) updateOrderItems(c fiber.Ctx) error {
+	number, err := parseOrderNumber(c)
+	if err != nil {
+		return err
+	}
+
+	req := &order_request.AdminUpdateOrderItemsRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return err
+	}
+
+	admin, ok := c.Locals("user").(*models.User)
+	if !ok {
+		return apierror.New().AddError(errors.New("undefined user")).SetHttpCode(fiber.StatusUnauthorized)
+	}
+
+	res, err := h.services.OrderService.EditItems(c.Context(), number,
+		dto.RequestToOrderItemsEditDTO(req, constant.OrderActorAdmin+":"+admin.ID.String()))
+	if err != nil {
+		return h.orderError(err)
+	}
+
+	// An unpaid order's open PaymentURL was issued for the old total. Voiding
+	// it is best-effort: if it fails and the customer pays the old link, the
+	// webhook refuses to mark the order paid for a mismatched amount.
+	unpaid := res.Order.PaymentStatus == constant.PaymentUnpaid.String() || res.Order.PaymentStatus == constant.PaymentFailed.String()
+	if unpaid && !res.PreviousGrandTotal.Equal(res.Order.GrandTotal) {
+		if err := h.services.PaymentService.VoidPending(c.Context(), res.Order.ID); err != nil {
+			h.logger.Errorw("admin: void payment link after item edit", "order", res.Order.Number, "error", err)
+		}
+	}
+
+	return c.JSON(response.OkByData(order_response.NewItemsEditFromDTO(res)))
+}
+
+// listOrderEdits returns the order's item-edit audit trail.
+//
+//	@Summary		List order item edits
+//	@Description	Every item edit of the order, newest first, with the full line set and grand total before and after.
+//	@Tags			Admin Order
+//	@Produce		json
+//	@Param			number	path		int	true	"Order number"
+//	@Success		200		{object}	response.Result[[]order_response.OrderEditResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Router			/v1/admin/orders/{number}/edits [get]
+//	@Security		BearerAuth
+func (h *Handler) listOrderEdits(c fiber.Ctx) error {
+	number, err := parseOrderNumber(c)
+	if err != nil {
+		return err
+	}
+
+	edits, err := h.services.OrderService.ListEdits(c.Context(), number)
+	if err != nil {
+		return h.orderError(err)
+	}
+
+	return c.JSON(response.OkByData(order_response.NewEditList(edits)))
+}
+
+// refundOrder refunds the overpayment (or, with full, everything) from the
+// order's captured payment at the provider, then brings the order in line: a
+// full refund moves it to "refunded" (with restock) when its status allows it,
+// a partial one only updates payment_status / refunded_total.
+//
+//	@Summary		Refund order
+//	@Description	Refunds the order's captured payment at the acquirer. The amount is computed, never sent: by default it is the overpayment — what the customer paid above the order's current `grand_total` (e.g. after items were removed; see `refund_due` of the item edit). That leaves the order's status and stock alone and sets `payment_status` to `partially_refunded`. With `full: true` everything not yet refunded is returned and the order moves to `refunded` (with restock) when its status allows it. The `Idempotency-Key` header (UUID) is required: retrying with the same key returns the original refund instead of refunding again — on a timeout, retry with the SAME key. 409 if nothing is owed, nothing captured is left, or a refund is still pending at the acquirer; 422 if the key was used for another order's refund or the acquirer declined.
+//	@Tags			Admin Order
+//	@Accept			json
+//	@Produce		json
+//	@Param			number			path		int										true	"Order number"
+//	@Param			Idempotency-Key	header		string									true	"Idempotency key (UUID)"
+//	@Param			request			body		order_request.AdminRefundOrderRequest	false	"Refund mode and reason"
+//	@Success		200				{object}	response.Result[order_response.AdminOrderResponse]
+//	@Failure		400				{object}	apierror.Errors
+//	@Failure		404				{object}	apierror.Errors
+//	@Failure		409				{object}	apierror.Errors
+//	@Failure		422				{object}	apierror.Errors
 //	@Router			/v1/admin/orders/{number}/refund [post]
 //	@Security		BearerAuth
 func (h *Handler) refundOrder(c fiber.Ctx) error {
 	number, err := parseOrderNumber(c)
 	if err != nil {
 		return err
+	}
+
+	key := c.Get("Idempotency-Key")
+	if _, err := uuid.Parse(key); err != nil {
+		return apierror.New().AddError(errors.New("Idempotency-Key header must be a UUID")).SetHttpCode(fiber.StatusBadRequest)
 	}
 
 	req := &order_request.AdminRefundOrderRequest{}
@@ -198,33 +327,72 @@ func (h *Handler) refundOrder(c fiber.Ctx) error {
 	if !ok {
 		return apierror.New().AddError(errors.New("undefined user")).SetHttpCode(fiber.StatusUnauthorized)
 	}
+	actor := constant.OrderActorAdmin + ":" + admin.ID.String()
 
 	o, err := h.services.OrderService.GetByNumberAdmin(c.Context(), number)
 	if err != nil {
 		return h.orderError(err)
 	}
 
-	p, err := h.services.PaymentService.Cancel(c.Context(), o.ID, req.Amount)
+	res, err := h.services.PaymentService.Refund(c.Context(), dto.RefundPaymentDTO{
+		OrderID:        o.ID,
+		Full:           req.Full,
+		IdempotencyKey: key,
+		Reason:         req.Reason,
+		Actor:          actor,
+	})
 	if err != nil {
 		return h.paymentError(err)
 	}
 
-	result := o
-	if payment.Status(p.Status) == payment.StatusRefunded {
-		result, err = h.services.OrderService.UpdateStatus(c.Context(), number, dto.OrderStatusUpdateDTO{
-			Status: constant.OrderRefunded.String(),
-			Actor:  constant.OrderActorAdmin + ":" + admin.ID.String(),
-		})
+	// The money has moved at this point: a failure to update the order is
+	// logged and the order returned as it is, rather than reporting the
+	// refund itself as failed.
+	updated, err := h.services.OrderService.RecordRefund(c.Context(), o.ID, res.Payment.RefundedAmount,
+		payment.Status(res.Payment.Status) == payment.StatusRefunded, actor)
+	if err != nil {
+		h.logger.Errorw("admin: refund done but order not updated", "order", o.Number, "refund", res.Refund.ID, "error", err)
+		updated, err = h.services.OrderService.GetByNumberAdmin(c.Context(), number)
 		if err != nil {
 			return h.orderError(err)
 		}
 	}
 
-	return c.JSON(response.OkByData(order_response.NewAdminFromDTO(result)))
+	return c.JSON(response.OkByData(order_response.NewAdminFromDTO(updated)))
 }
 
-// paymentError maps payment-service errors to HTTP responses. Mirrors the
-// customer-facing handler's paymentError (internal/delivery/http/handlers/payment.go).
+// listOrderRefunds returns every refund attempt made for the order.
+//
+//	@Summary		List order refunds
+//	@Description	Every refund attempt for the order, newest first, including pending (outcome not yet known at the acquirer) and failed ones.
+//	@Tags			Admin Order
+//	@Produce		json
+//	@Param			number	path		int	true	"Order number"
+//	@Success		200		{object}	response.Result[[]payment_response.RefundResponse]
+//	@Failure		400		{object}	apierror.Errors
+//	@Failure		404		{object}	apierror.Errors
+//	@Router			/v1/admin/orders/{number}/refunds [get]
+//	@Security		BearerAuth
+func (h *Handler) listOrderRefunds(c fiber.Ctx) error {
+	number, err := parseOrderNumber(c)
+	if err != nil {
+		return err
+	}
+
+	o, err := h.services.OrderService.GetByNumberAdmin(c.Context(), number)
+	if err != nil {
+		return h.orderError(err)
+	}
+
+	refunds, err := h.services.PaymentService.ListRefunds(c.Context(), o.ID)
+	if err != nil {
+		return h.paymentError(err)
+	}
+
+	return c.JSON(response.OkByData(payment_response.NewRefundList(refunds)))
+}
+
+// paymentError maps payment-service errors to HTTP responses.
 func (h *Handler) paymentError(err error) error {
 	switch {
 	case errors.Is(err, payment.ErrProviderNotFound):
@@ -232,7 +400,15 @@ func (h *Handler) paymentError(err error) error {
 	case errors.Is(err, payment.ErrNotFound):
 		return apierror.New().AddError(errors.New("payment not found")).SetHttpCode(fiber.StatusNotFound)
 	case errors.Is(err, payment.ErrNotConfirmed):
-		return apierror.New().AddError(err).SetHttpCode(fiber.StatusConflict)
+		return apierror.New().AddError(errors.New("order has no captured payment left to refund")).SetHttpCode(fiber.StatusConflict)
+	case errors.Is(err, payment.ErrNothingToRefund):
+		return apierror.New().AddError(errors.New("nothing to refund: the customer has paid no more than the order total; send full=true to refund the whole order")).SetHttpCode(fiber.StatusConflict)
+	case errors.Is(err, payment.ErrRefundPending):
+		h.logger.Warnw("admin: refund pending", "error", err)
+		return apierror.New().AddError(errors.New("refund is pending at the acquirer; retry later with the same Idempotency-Key, never a new one")).SetHttpCode(fiber.StatusConflict)
+	case errors.Is(err, payment.ErrIdempotencyConflict),
+		errors.Is(err, payment.ErrRefundRejected):
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusUnprocessableEntity)
 	default:
 		return h.handleError(err, "payment")
 	}
@@ -250,8 +426,12 @@ func (h *Handler) orderError(err error) error {
 		errors.Is(err, order.ErrShippingUnavailable), errors.Is(err, order.ErrShippingMethodUnknown),
 		errors.Is(err, shipping.ErrRatesNotSupported):
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusUnprocessableEntity)
-	case errors.Is(err, order.ErrInvalidTransition), errors.Is(err, order.ErrDetailsLocked):
+	case errors.Is(err, order.ErrInvalidTransition), errors.Is(err, order.ErrDetailsLocked),
+		errors.Is(err, order.ErrItemsLocked), errors.Is(err, order.ErrEditConflict),
+		errors.Is(err, order.ErrSurchargeRequired):
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusConflict)
+	case errors.Is(err, order.ErrNoLines):
+		return apierror.New().AddError(err).SetHttpCode(fiber.StatusUnprocessableEntity)
 	case errors.Is(err, order.ErrNotFound):
 		return apierror.New().AddError(errors.New("order not found")).SetHttpCode(fiber.StatusNotFound)
 	default:
@@ -279,4 +459,8 @@ func (h *Handler) initOrderRoutes(v1 fiber.Router) {
 	o.Patch("/:number", h.updateOrder)
 	o.Patch("/:number/status", h.updateOrderStatus)
 	o.Post("/:number/refund", h.refundOrder)
+	o.Get("/:number/refunds", h.listOrderRefunds)
+	o.Post("/:number/items/preview", h.previewOrderItems)
+	o.Put("/:number/items", h.updateOrderItems)
+	o.Get("/:number/edits", h.listOrderEdits)
 }

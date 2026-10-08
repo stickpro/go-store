@@ -45,6 +45,9 @@ type Querier interface {
 	// would have decremented.
 	RestockOrderItems(ctx context.Context, orderID uuid.UUID) error
 	RestockProduct(ctx context.Context, arg RestockProductParams) error
+	// Returns quantity to a product's stock if it still tracks stock (subtract =
+	// true) — the same rule RestockOrderItems applies to a whole order.
+	RestockTrackedProduct(ctx context.Context, arg RestockTrackedProductParams) error
 	SyncRelatedProducts(ctx context.Context, arg SyncRelatedProductsParams) error
 	Update(ctx context.Context, arg UpdateParams) (*models.Product, error)
 }

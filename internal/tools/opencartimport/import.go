@@ -66,7 +66,7 @@ type Report struct {
 	Errors            []string
 }
 
-func (r *Report) addErr(format string, args ...any) {
+func (r *Report) addErrf(format string, args ...any) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.Errors = append(r.Errors, fmt.Sprintf(format, args...))
@@ -169,7 +169,7 @@ func Run(ctx context.Context, l logger.Logger, services *service.Services, oc *C
 			defer wg.Done()
 			for j := range jobCh {
 				if err := processModelGroup(ctx, l, services, j.model, j.rows, seoKeywords, productCategoryLinks, categoryIDs, state, report, opts.DryRun); err != nil {
-					report.addErr("model %q: %v", j.model, err)
+					report.addErrf("model %q: %v", j.model, err)
 				}
 				if n := processed.Add(1); n%progressEvery == 0 {
 					l.Infow("group processing progress", "processed", n)
@@ -379,7 +379,7 @@ func processModelGroup(
 				SortOrder:       row.SortOrder,
 				IsEnable:        row.Status,
 			}); err != nil {
-				report.addErr("variant %d (slug %s): update: %v", row.ID, existing.Slug, err)
+				report.addErrf("variant %d (slug %s): update: %v", row.ID, existing.Slug, err)
 				continue
 			}
 			report.inc(&report.VariantsUpdated)
@@ -399,7 +399,7 @@ func processModelGroup(
 			SortOrder:       row.SortOrder,
 			IsEnable:        row.Status,
 		}); err != nil {
-			report.addErr("variant %d (slug %s): create: %v", row.ID, slug, err)
+			report.addErrf("variant %d (slug %s): create: %v", row.ID, slug, err)
 			continue
 		}
 		report.inc(&report.VariantsCreated)

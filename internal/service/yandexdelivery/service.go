@@ -9,6 +9,9 @@ import (
 	"github.com/stickpro/go-store/pkg/logger"
 )
 
+// ProviderCode identifies this carrier in config, rates and delivery points.
+const ProviderCode = "yandex_delivery"
+
 // New builds the Yandex Delivery (Яндекс Доставка) provider. It serves pickup
 // points via the shared cache engine but is not a shipping.RateProvider —
 // Yandex cost calculation (Platform offers/create) needs a platform_station_id,
@@ -17,7 +20,7 @@ import (
 func New(cfg *config.Config, l logger.Logger, kv key_value.IKeyValue) shipping.Provider {
 	c := newClient(cfg.YandexDelivery, l)
 	return shipping.NewCachedProvider(shipping.ProviderConfig{
-		Code:         "yandex_delivery",
+		Code:         ProviderCode,
 		Enabled:      cfg.YandexDelivery.Enabled,
 		CacheKey:     constant.CacheKeyYandexDeliveryPoints,
 		CacheTTL:     cfg.YandexDelivery.DeliveryPointsCacheTTL,
@@ -39,7 +42,7 @@ func toDeliveryPoint(p dto.YandexDeliveryPointDTO) dto.DeliveryPoint {
 	}
 
 	return dto.DeliveryPoint{
-		Provider:    "yandex_delivery",
+		Provider:    ProviderCode,
 		Code:        p.Code,
 		Name:        p.Name,
 		Type:        p.Type,

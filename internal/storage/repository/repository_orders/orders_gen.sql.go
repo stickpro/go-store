@@ -17,7 +17,7 @@ import (
 const create = `-- name: Create :one
 INSERT INTO orders (user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
-	RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source
+	RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total
 `
 
 type CreateParams struct {
@@ -112,12 +112,15 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Order, 
 		&i.ShipMinDays,
 		&i.ShipMaxDays,
 		&i.Source,
+		&i.RefundedTotal,
+		&i.Version,
+		&i.PaidTotal,
 	)
 	return &i, err
 }
 
 const get = `-- name: Get :one
-SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source FROM orders WHERE id=$1 LIMIT 1
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total FROM orders WHERE id=$1 LIMIT 1
 `
 
 func (q *Queries) Get(ctx context.Context, id uuid.UUID) (*models.Order, error) {
@@ -156,6 +159,9 @@ func (q *Queries) Get(ctx context.Context, id uuid.UUID) (*models.Order, error) 
 		&i.ShipMinDays,
 		&i.ShipMaxDays,
 		&i.Source,
+		&i.RefundedTotal,
+		&i.Version,
+		&i.PaidTotal,
 	)
 	return &i, err
 }

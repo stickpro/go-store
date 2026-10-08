@@ -145,6 +145,8 @@ func TestMapStatus(t *testing.T) {
 		statusCanceled:        "failed",
 		statusReversed:        "refunded",
 		statusRefunded:        "refunded",
+		statusPartialReversed: "partially_refunded",
+		statusPartialRefunded: "partially_refunded",
 		"NEW":                 "pending",
 		"AUTHORIZED":          "pending",
 	}

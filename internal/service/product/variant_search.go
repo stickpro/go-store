@@ -76,7 +76,7 @@ func (s *Service) SearchVariants(
 		Query:  d.Query,
 		Filter: buildVariantFilter(d, attrTypes),
 		Sort:   variantSortExpression(d.Sort, d.Query),
-		Limit:  int64(pageSize),              //nolint:gosec
+		Limit:  int64(pageSize),
 		Offset: int64((page - 1) * pageSize), //nolint:gosec
 	}
 	if d.WithFacets {
@@ -176,7 +176,8 @@ func (s *Service) filterableAttributeTypes(ctx context.Context) (map[string]stri
 }
 
 func categoryFacetFields(attrTypes map[string]string) []string {
-	fields := []string{"manufacturer_id", "stock_status", "price"}
+	fields := make([]string, 0, 3+len(attrTypes))
+	fields = append(fields, "manufacturer_id", "stock_status", "price")
 	for slug := range attrTypes {
 		fields = append(fields, slug)
 	}
@@ -249,7 +250,7 @@ func buildVariantFilter(
 		}
 
 		switch attrType {
-		case "number":
+		case constant.AttributeTypeNumber:
 			if af.Min != nil {
 				clauses = append(clauses, fmt.Sprintf("%s >= %s", af.Slug, strconv.FormatFloat(*af.Min, 'f', -1, 64)))
 			}
@@ -259,7 +260,7 @@ func buildVariantFilter(
 			if nums := parseFloats(af.Values); len(nums) > 0 {
 				clauses = append(clauses, af.Slug+" IN ["+strings.Join(nums, ", ")+"]")
 			}
-		case "boolean":
+		case constant.AttributeTypeBoolean:
 			if len(af.Values) > 0 {
 				b := af.Values[0] == "true" || af.Values[0] == "1"
 				clauses = append(clauses, fmt.Sprintf("%s = %t", af.Slug, b))

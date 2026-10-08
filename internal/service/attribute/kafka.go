@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_attribute_values"
@@ -23,10 +24,10 @@ var defaultAttributeGroupID = uuid.MustParse("00000000-0000-0000-0000-0000000000
 
 // validAttributeTypes отражает check-constraint attributes_type_check.
 var validAttributeTypes = map[string]struct{}{
-	"select":  {},
-	"number":  {},
-	"boolean": {},
-	"text":    {},
+	constant.AttributeTypeSelect:  {},
+	constant.AttributeTypeNumber:  {},
+	constant.AttributeTypeBoolean: {},
+	constant.AttributeTypeText:    {},
 }
 
 func isValidAttributeItem(item dto.AttributeKafkaItem) bool {
@@ -69,7 +70,7 @@ func (s *Service) SyncAttributesFromKafka(ctx context.Context, productID uuid.UU
 
 		normalized := strings.ToLower(strings.TrimSpace(item.Value))
 		var valueNumeric decimal.NullDecimal
-		if item.Type == "number" {
+		if item.Type == constant.AttributeTypeNumber {
 			if d, err := decimal.NewFromString(item.Value); err == nil {
 				valueNumeric = decimal.NullDecimal{Decimal: d, Valid: true}
 			}
