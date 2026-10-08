@@ -29,13 +29,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Install golangci-lint
+      - name: Install libvips (cgo dependency for govips)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvips-dev
+
+      - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.10.1
-
-      - name: Run linter
-        run: golangci-lint run ./...
 
       - name: Run tests
         run: go test -v ./...
