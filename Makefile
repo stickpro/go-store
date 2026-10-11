@@ -71,6 +71,7 @@ download-geo-cities:
 import-geo: build
 	./.bin/go-store geo import-gar
 	./.bin/go-store geo import-city -f ./storage/geo/city.csv
+	./.bin/go-store geo import-cdek-coords
 	./.bin/go-store search reindex --cities
 
 

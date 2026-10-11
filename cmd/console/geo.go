@@ -8,13 +8,25 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/shopspring/decimal"
+	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/service/cdek"
 	"github.com/stickpro/go-store/internal/tools/garimport"
 	"github.com/stickpro/go-store/pkg/database"
 	"github.com/stickpro/go-store/pkg/logger"
 	"github.com/urfave/cli/v3"
+)
+
+const (
+	cdekCountryCode = "RU"
+	// cdekCoordScale is the number of decimal places kept (~1 cm; CDEK sends 6).
+	cdekCoordScale = 7
+	secondsPerHour = 3600
 )
 
 // hflabsColumns are the city.csv columns of github.com/hflabs/city, in file order.
@@ -49,6 +61,17 @@ ON CONFLICT (fias_id) DO UPDATE SET
     okato           = coalesce(cities.okato, excluded.okato),
     oktmo           = coalesce(cities.oktmo, excluded.oktmo),
     tax_office      = coalesce(cities.tax_office, excluded.tax_office)`
+
+// cdekCoordsSQL fills coordinates (and a missing timezone) of settlements
+// that have none yet; coordinates from another source are never overwritten.
+const cdekCoordsSQL = `
+UPDATE cities c
+SET geo_lat  = t.geo_lat,
+    geo_lon  = t.geo_lon,
+    timezone = coalesce(c.timezone, t.timezone)
+FROM cities_cdek_import t
+WHERE c.fias_id = t.fias_id
+  AND c.geo_lat IS NULL`
 
 func prepareGeoCommands(appName, currentAppVersion string) []*cli.Command {
 	return []*cli.Command{
@@ -143,7 +166,112 @@ func prepareGeoCommands(appName, currentAppVersion string) []*cli.Command {
 				return nil
 			},
 		},
+		{
+			Name: "import-cdek-coords",
+			Description: "fill missing coordinates and timezones in cities from the CDEK locations directory, " +
+				"matched by fias_id; needs the cdek account configured",
+			Action: func(ctx context.Context, cl *cli.Command) error {
+				conf, err := loadConfig(cl.Args().Slice(), cl.StringSlice("configs"))
+				if err != nil {
+					return fmt.Errorf("failed to load config: %w", err)
+				}
+				loggerOpts := append(defaultLoggerOpts(appName, currentAppVersion), logger.WithConfig(conf.Log))
+				l := logger.NewExtended(loggerOpts...)
+				defer func() { _ = l.Sync() }()
+
+				if conf.CDEK.Account == "" || conf.CDEK.SecurePassword == "" {
+					return errors.New("cdek account / secure_password are not configured")
+				}
+				dbClient, err := database.NewPostgresClient(ctx, conf.Postgres.DSN(), conf.Postgres.MinOpenConns, conf.Postgres.MaxOpenConns)
+				if err != nil {
+					return fmt.Errorf("failed to create database client: %w", err)
+				}
+				defer func() { _ = dbClient.Close() }()
+
+				l.Infow("downloading cdek locations directory", "country", cdekCountryCode)
+				cities, err := cdek.FetchCities(ctx, conf.CDEK, l, cdekCountryCode)
+				if err != nil {
+					return fmt.Errorf("fetch cdek cities: %w", err)
+				}
+				rows := cdekCoordRows(cities)
+				updated, err := updateCoordsFromCDEK(ctx, dbClient.DB, rows)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("cdek locations: %d (usable: %d), settlements updated: %d\n", len(cities), len(rows), updated)
+				fmt.Println("run `search reindex --cities` to rebuild the city search index")
+				return nil
+			},
+		},
 	}
+}
+
+// cdekCoordRows keeps the CDEK locations that can be matched (valid fias_guid,
+// non-zero coordinates), one per fias_guid, as (fias_id, lat, lon, timezone).
+func cdekCoordRows(cities []dto.CDEKCityDTO) [][]any {
+	now := time.Now()
+	offsets := make(map[string]*string)
+	seen := make(map[uuid.UUID]bool, len(cities))
+	rows := make([][]any, 0, len(cities))
+	for _, c := range cities {
+		id, err := uuid.Parse(c.FiasGUID)
+		if err != nil || seen[id] || (c.Latitude == 0 && c.Longitude == 0) {
+			continue
+		}
+		seen[id] = true
+
+		tz, ok := offsets[c.TimeZone]
+		if !ok {
+			tz = utcOffset(c.TimeZone, now)
+			offsets[c.TimeZone] = tz
+		}
+		rows = append(rows, []any{
+			id,
+			decimal.NewFromFloat(c.Latitude).Round(cdekCoordScale),
+			decimal.NewFromFloat(c.Longitude).Round(cdekCoordScale),
+			tz,
+		})
+	}
+	return rows
+}
+
+// utcOffset converts an IANA zone name to the "UTC+3" form hflabs uses in
+// cities.timezone; nil when the zone is unknown to the local tz database.
+func utcOffset(zone string, at time.Time) *string {
+	if zone == "" {
+		return nil
+	}
+	loc, err := time.LoadLocation(zone)
+	if err != nil {
+		return nil
+	}
+	_, offset := at.In(loc).Zone()
+	s := fmt.Sprintf("UTC%+d", offset/secondsPerHour)
+	return &s
+}
+
+func updateCoordsFromCDEK(ctx context.Context, pool *pgxpool.Pool, rows [][]any) (int64, error) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	_, err = tx.Exec(ctx, `CREATE TEMP TABLE cities_cdek_import
+		(fias_id uuid PRIMARY KEY, geo_lat numeric(13, 10), geo_lon numeric(13, 10), timezone varchar(50)) ON COMMIT DROP`)
+	if err != nil {
+		return 0, fmt.Errorf("create temp table: %w", err)
+	}
+	columns := []string{"fias_id", "geo_lat", "geo_lon", "timezone"}
+	if _, err := tx.CopyFrom(ctx, pgx.Identifier{"cities_cdek_import"}, columns, pgx.CopyFromRows(rows)); err != nil {
+		return 0, fmt.Errorf("copy cdek locations: %w", err)
+	}
+	tag, err := tx.Exec(ctx, cdekCoordsSQL)
+	if err != nil {
+		return 0, fmt.Errorf("update coordinates: %w", err)
+	}
+	return tag.RowsAffected(), tx.Commit(ctx)
 }
 
 // readHflabsCSV reads city.csv; empty cells become NULLs.

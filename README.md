@@ -30,6 +30,12 @@ Both imports upsert by `fias_id`, so they can be re-run in any order.
 ```shell
 ./.bin/go-store geo import-city -f ./storage/geo/city.csv
  ```
+Fill coordinates and timezones of the remaining settlements from the CDEK locations
+directory (matched by `fias_id`, ~88% coverage; needs the `cdek` account in the config).
+Only rows without coordinates are touched.
+```shell
+./.bin/go-store geo import-cdek-coords
+ ```
 Rebuild the city search index
 ```shell
 ./.bin/go-store search reindex --cities

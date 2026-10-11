@@ -34,3 +34,16 @@ type CDEKDeliveryPointDTO struct {
 	WeightMin float64 `json:"weight_min"`
 	WeightMax float64 `json:"weight_max"`
 }
+
+// CDEKCityDTO is a settlement from the CDEK locations directory
+// (/v2/location/cities). FiasGUID is empty for the few places CDEK hasn't
+// linked to ФИАС.
+type CDEKCityDTO struct {
+	Code      int     `json:"code"`
+	City      string  `json:"city"`
+	FiasGUID  string  `json:"fias_guid"`
+	Region    string  `json:"region"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	TimeZone  string  `json:"time_zone"` // IANA name, e.g. "Asia/Novosibirsk"
+}
