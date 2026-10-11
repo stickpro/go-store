@@ -14,6 +14,7 @@ import (
 
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/messaging/contracts"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_order_edits"
@@ -158,7 +159,10 @@ func (s *Service) EditItems(ctx context.Context, number int64, d dto.OrderItemsE
 			result.Order.Version = o.Version
 			return errDryRun
 		}
-		return nil
+		if !plan.changed() {
+			return nil
+		}
+		return s.enqueueSnapshot(ctx, tx, contracts.OrderEventUpdated, updated, finalItems)
 	})
 	if txErr != nil && !errors.Is(txErr, errDryRun) {
 		return nil, txErr
@@ -351,18 +355,19 @@ func planItemsEdit(
 		}
 
 		line := checkoutLine{
-			productID: r.ProductID,
-			variantID: r.VariantID,
-			sku:       pgtypeutils.DecodeText(r.Sku),
-			name:      r.Name,
-			slug:      strPtr(r.Slug),
-			imagePath: pgtypeutils.DecodeText(r.ImagePath),
-			unitPrice: resolveUnitPrice(buyer, linePricing{r.PriceRetail, r.PriceBusiness, r.PriceWholesale}),
-			quantity:  l.Quantity,
-			weightKG:  r.Weight,
-			lengthCM:  r.Length,
-			widthCM:   r.Width,
-			heightCM:  r.Height,
+			productID:  r.ProductID,
+			variantID:  r.VariantID,
+			externalID: pgtypeutils.DecodeText(r.ExternalID),
+			sku:        pgtypeutils.DecodeText(r.Sku),
+			name:       r.Name,
+			slug:       strPtr(r.Slug),
+			imagePath:  pgtypeutils.DecodeText(r.ImagePath),
+			unitPrice:  resolveUnitPrice(buyer, linePricing{r.PriceRetail, r.PriceBusiness, r.PriceWholesale}),
+			quantity:   l.Quantity,
+			weightKG:   r.Weight,
+			lengthCM:   r.Length,
+			widthCM:    r.Width,
+			heightCM:   r.Height,
 		}
 		plan.add = append(plan.add, line)
 		plan.stockDelta[r.ProductID] += l.Quantity
@@ -386,18 +391,19 @@ func planItemsEdit(
 // as sold.
 func lineFromItem(it *models.OrderItem, quantity int64) checkoutLine {
 	return checkoutLine{
-		productID: it.ProductID.UUID,
-		variantID: it.VariantID.UUID,
-		sku:       pgtypeutils.DecodeText(it.Sku),
-		name:      it.Name,
-		slug:      pgtypeutils.DecodeText(it.Slug),
-		imagePath: pgtypeutils.DecodeText(it.ImagePath),
-		unitPrice: it.UnitPrice,
-		quantity:  quantity,
-		weightKG:  it.WeightKg,
-		lengthCM:  it.LengthCm,
-		widthCM:   it.WidthCm,
-		heightCM:  it.HeightCm,
+		productID:  it.ProductID.UUID,
+		variantID:  it.VariantID.UUID,
+		externalID: pgtypeutils.DecodeText(it.ExternalID),
+		sku:        pgtypeutils.DecodeText(it.Sku),
+		name:       it.Name,
+		slug:       pgtypeutils.DecodeText(it.Slug),
+		imagePath:  pgtypeutils.DecodeText(it.ImagePath),
+		unitPrice:  it.UnitPrice,
+		quantity:   quantity,
+		weightKG:   it.WeightKg,
+		lengthCM:   it.LengthCm,
+		widthCM:    it.WidthCm,
+		heightCM:   it.HeightCm,
 	}
 }
 
@@ -473,20 +479,21 @@ func (s *Service) writeItems(ctx context.Context, tx pgx.Tx, orderID uuid.UUID, 
 	}
 	for _, l := range plan.add {
 		if _, err := q.Create(ctx, repository_order_items.CreateParams{
-			OrderID:   orderID,
-			ProductID: uuid.NullUUID{UUID: l.productID, Valid: true},
-			VariantID: uuid.NullUUID{UUID: l.variantID, Valid: true},
-			Sku:       pgtypeutils.EncodeText(l.sku),
-			Name:      l.name,
-			Slug:      pgtypeutils.EncodeText(l.slug),
-			ImagePath: pgtypeutils.EncodeText(l.imagePath),
-			UnitPrice: l.unitPrice,
-			Quantity:  l.quantity,
-			LineTotal: l.lineTotal(),
-			WeightKg:  l.weightKG,
-			LengthCm:  l.lengthCM,
-			WidthCm:   l.widthCM,
-			HeightCm:  l.heightCM,
+			OrderID:    orderID,
+			ProductID:  uuid.NullUUID{UUID: l.productID, Valid: true},
+			VariantID:  uuid.NullUUID{UUID: l.variantID, Valid: true},
+			ExternalID: pgtypeutils.EncodeText(l.externalID),
+			Sku:        pgtypeutils.EncodeText(l.sku),
+			Name:       l.name,
+			Slug:       pgtypeutils.EncodeText(l.slug),
+			ImagePath:  pgtypeutils.EncodeText(l.imagePath),
+			UnitPrice:  l.unitPrice,
+			Quantity:   l.quantity,
+			LineTotal:  l.lineTotal(),
+			WeightKg:   l.weightKG,
+			LengthCm:   l.lengthCM,
+			WidthCm:    l.widthCM,
+			HeightCm:   l.heightCM,
 		}); err != nil {
 			return fmt.Errorf("order: add line: %w", err)
 		}

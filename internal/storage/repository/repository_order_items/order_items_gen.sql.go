@@ -15,26 +15,27 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO order_items (order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-	RETURNING id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm
+INSERT INTO order_items (order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm, external_id)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+	RETURNING id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm, external_id
 `
 
 type CreateParams struct {
-	OrderID   uuid.UUID       `db:"order_id" json:"order_id"`
-	ProductID uuid.NullUUID   `db:"product_id" json:"product_id"`
-	VariantID uuid.NullUUID   `db:"variant_id" json:"variant_id"`
-	Sku       pgtype.Text     `db:"sku" json:"sku"`
-	Name      string          `db:"name" json:"name"`
-	Slug      pgtype.Text     `db:"slug" json:"slug"`
-	ImagePath pgtype.Text     `db:"image_path" json:"image_path"`
-	UnitPrice decimal.Decimal `db:"unit_price" json:"unit_price"`
-	Quantity  int64           `db:"quantity" json:"quantity"`
-	LineTotal decimal.Decimal `db:"line_total" json:"line_total"`
-	WeightKg  decimal.Decimal `db:"weight_kg" json:"weight_kg"`
-	LengthCm  decimal.Decimal `db:"length_cm" json:"length_cm"`
-	WidthCm   decimal.Decimal `db:"width_cm" json:"width_cm"`
-	HeightCm  decimal.Decimal `db:"height_cm" json:"height_cm"`
+	OrderID    uuid.UUID       `db:"order_id" json:"order_id"`
+	ProductID  uuid.NullUUID   `db:"product_id" json:"product_id"`
+	VariantID  uuid.NullUUID   `db:"variant_id" json:"variant_id"`
+	Sku        pgtype.Text     `db:"sku" json:"sku"`
+	Name       string          `db:"name" json:"name"`
+	Slug       pgtype.Text     `db:"slug" json:"slug"`
+	ImagePath  pgtype.Text     `db:"image_path" json:"image_path"`
+	UnitPrice  decimal.Decimal `db:"unit_price" json:"unit_price"`
+	Quantity   int64           `db:"quantity" json:"quantity"`
+	LineTotal  decimal.Decimal `db:"line_total" json:"line_total"`
+	WeightKg   decimal.Decimal `db:"weight_kg" json:"weight_kg"`
+	LengthCm   decimal.Decimal `db:"length_cm" json:"length_cm"`
+	WidthCm    decimal.Decimal `db:"width_cm" json:"width_cm"`
+	HeightCm   decimal.Decimal `db:"height_cm" json:"height_cm"`
+	ExternalID pgtype.Text     `db:"external_id" json:"external_id"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.OrderItem, error) {
@@ -53,6 +54,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.OrderIt
 		arg.LengthCm,
 		arg.WidthCm,
 		arg.HeightCm,
+		arg.ExternalID,
 	)
 	var i models.OrderItem
 	err := row.Scan(
@@ -71,6 +73,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.OrderIt
 		&i.LengthCm,
 		&i.WidthCm,
 		&i.HeightCm,
+		&i.ExternalID,
 	)
 	return &i, err
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/messaging/contracts"
 	"github.com/stickpro/go-store/internal/messaging/topics"
@@ -13,6 +14,7 @@ import (
 
 type IProducer interface {
 	PublishProductEvent(ctx context.Context, payload contracts.ProductPayload) error
+	PublishOrderEvent(ctx context.Context, orderID uuid.UUID, env contracts.OrderEnvelope) error
 	Close()
 }
 
@@ -43,6 +45,12 @@ func NewProducer(cfg config.KafkaConfig) (*Producer, error) {
 
 func (p *Producer) PublishProductEvent(ctx context.Context, payload contracts.ProductPayload) error {
 	return p.publish(ctx, topics.Products, payload.ExternalID, payload)
+}
+
+// PublishOrderEvent ships an order event to the ERP. The key is the order id,
+// so all events of one order land in one partition, in order.
+func (p *Producer) PublishOrderEvent(ctx context.Context, orderID uuid.UUID, env contracts.OrderEnvelope) error {
+	return p.publish(ctx, topics.Orders, orderID.String(), env)
 }
 
 func (p *Producer) publish(ctx context.Context, topic, key string, v any) error {

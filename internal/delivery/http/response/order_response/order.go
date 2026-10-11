@@ -22,6 +22,10 @@ type OrderShippingResponse struct {
 	PointCode  *string    `json:"point_code"`
 	MinDays    *int32     `json:"min_days"`
 	MaxDays    *int32     `json:"max_days"`
+
+	TrackingNumber   *string `json:"tracking_number"`
+	TrackingProvider *string `json:"tracking_provider"`
+	TrackingURL      *string `json:"tracking_url"`
 } //	@name	OrderShippingResponse
 
 type OrderItemResponse struct {
@@ -98,6 +102,10 @@ func NewFromDTO(d *dto.OrderDTO) *OrderResponse {
 			PointCode:  d.Shipping.PointCode,
 			MinDays:    d.Shipping.MinDays,
 			MaxDays:    d.Shipping.MaxDays,
+
+			TrackingNumber:   d.Shipping.TrackingNumber,
+			TrackingProvider: d.Shipping.TrackingProvider,
+			TrackingURL:      d.Shipping.TrackingURL,
 		},
 		Items:         items,
 		Subtotal:      d.Subtotal,

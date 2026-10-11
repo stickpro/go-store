@@ -11,7 +11,9 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_order_edits"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_order_inbound_events"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_order_items"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_order_outbox"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_order_status_history"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_orders"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_payment_refunds"
@@ -48,6 +50,8 @@ type IRepository interface {
 	OrderItems(opts ...Option) repository_order_items.Querier
 	OrderStatusHistory(opts ...Option) repository_order_status_history.Querier
 	OrderEdits(opts ...Option) repository_order_edits.Querier
+	OrderInboundEvents(opts ...Option) repository_order_inbound_events.Querier
+	OrderOutbox(opts ...Option) repository_order_outbox.Querier
 	Payments(opts ...Option) repository_payments.Querier
 	PaymentRefunds(opts ...Option) repository_payment_refunds.Querier
 }
@@ -73,6 +77,8 @@ type repository struct {
 	orderItems               *repository_order_items.Queries
 	orderStatusHistory       *repository_order_status_history.Queries
 	orderEdits               *repository_order_edits.Queries
+	orderInboundEvents       *repository_order_inbound_events.Queries
+	orderOutbox              *repository_order_outbox.Queries
 	payments                 *repository_payments.Queries
 	paymentRefunds           *repository_payment_refunds.Queries
 }
@@ -99,6 +105,8 @@ func InitRepository(psql *database.PostgresClient, _ key_value.IKeyValue) IRepos
 		orderItems:               repository_order_items.New(psql.DB),
 		orderStatusHistory:       repository_order_status_history.New(psql.DB),
 		orderEdits:               repository_order_edits.New(psql.DB),
+		orderInboundEvents:       repository_order_inbound_events.New(psql.DB),
+		orderOutbox:              repository_order_outbox.New(psql.DB),
 		payments:                 repository_payments.New(psql.DB),
 		paymentRefunds:           repository_payment_refunds.New(psql.DB),
 	}
@@ -278,4 +286,20 @@ func (r *repository) OrderEdits(opts ...Option) repository_order_edits.Querier {
 		return r.orderEdits.WithTx(options.Tx)
 	}
 	return r.orderEdits
+}
+
+func (r *repository) OrderInboundEvents(opts ...Option) repository_order_inbound_events.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.orderInboundEvents.WithTx(options.Tx)
+	}
+	return r.orderInboundEvents
+}
+
+func (r *repository) OrderOutbox(opts ...Option) repository_order_outbox.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.orderOutbox.WithTx(options.Tx)
+	}
+	return r.orderOutbox
 }

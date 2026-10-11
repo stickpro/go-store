@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -19,7 +18,8 @@ import (
 )
 
 // Cancel moves an order to "cancelled" and, if it had decremented stock, returns
-// every line to the catalogue — all in one transaction. Used by the customer,
+// every line to the catalogue, and queues the order.cancelled event — all in
+// one transaction. Used by the customer,
 // the admin panel, and the pending-order expiry worker.
 func (s *Service) Cancel(ctx context.Context, number int64, actor, reason string) (*dto.OrderDTO, error) {
 	var (
@@ -60,6 +60,14 @@ func (s *Service) Cancel(ctx context.Context, number int64, actor, reason string
 			return fmt.Errorf("order: cancel history: %w", err)
 		}
 
+		if err := s.enqueueEvent(ctx, tx, contracts.OrderEventCancelled, updated.ID, contracts.OrderCancelledPayload{
+			OrderID:     updated.ID,
+			Reason:      reason,
+			CancelledAt: updated.CancelledAt.Time,
+		}); err != nil {
+			return err
+		}
+
 		items, err = s.storage.OrderItems(repository.WithTx(tx)).ListByOrderID(ctx, o.ID)
 		if err != nil {
 			return fmt.Errorf("order: load items after cancel: %w", err)
@@ -70,19 +78,5 @@ func (s *Service) Cancel(ctx context.Context, number int64, actor, reason string
 		return nil, txErr
 	}
 
-	result := dto.OrderDTOFromModel(updated, items)
-
-	cancelledAt := time.Now()
-	if result.CancelledAt != nil {
-		cancelledAt = *result.CancelledAt
-	}
-	if err := s.publisher.OrderCancelled(ctx, contracts.OrderCancelledPayload{
-		OrderNumber: result.Number,
-		Reason:      reason,
-		CancelledAt: cancelledAt,
-	}); err != nil {
-		s.logger.Errorw("order: publish order.cancelled", "order", result.Number, "error", err)
-	}
-
-	return result, nil
+	return dto.OrderDTOFromModel(updated, items), nil
 }

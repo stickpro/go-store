@@ -30,12 +30,14 @@ func resolveUnitPrice(u *models.User, p linePricing) decimal.Decimal {
 type checkoutLine struct {
 	productID uuid.UUID
 	variantID uuid.UUID
-	sku       *string
-	name      string
-	slug      *string
-	imagePath *string
-	unitPrice decimal.Decimal
-	quantity  int64
+	// externalID is products.external_id, snapshotted onto the order line.
+	externalID *string
+	sku        *string
+	name       string
+	slug       *string
+	imagePath  *string
+	unitPrice  decimal.Decimal
+	quantity   int64
 
 	// product parcel data (kg / cm), for shipping-cost calculation
 	weightKG decimal.Decimal

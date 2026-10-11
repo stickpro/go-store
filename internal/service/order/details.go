@@ -11,6 +11,7 @@ import (
 
 	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
+	"github.com/stickpro/go-store/internal/messaging/contracts"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage/repository"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_order_status_history"
@@ -98,7 +99,8 @@ func (s *Service) UpdateDetails(ctx context.Context, number int64, d dto.OrderDe
 				return fmt.Errorf("order: edit history: %w", err)
 			}
 		}
-		return nil
+
+		return s.enqueueSnapshot(ctx, tx, contracts.OrderEventUpdated, updated, items)
 	})
 	if txErr != nil {
 		return nil, txErr

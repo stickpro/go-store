@@ -45,7 +45,7 @@ func NewConsumer(cfg config.KafkaConfig, log logger.Logger) (*Consumer, error) {
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(cfg.Brokers...),
 		kgo.ConsumerGroup(cfg.Consumer.GroupID),
-		kgo.ConsumeTopics(topics.Products),
+		kgo.ConsumeTopics(topics.Products, topics.ErpOrders),
 		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
 		kgo.DisableAutoCommit(),
 		kgo.WithLogger(kgoLogger{log: log}),
@@ -66,13 +66,17 @@ func NewConsumer(cfg config.KafkaConfig, log logger.Logger) (*Consumer, error) {
 	log.Infow("kafka consumer: configured",
 		"brokers", cfg.Brokers,
 		"group_id", cfg.Consumer.GroupID,
-		"topic", topics.Products,
+		"topics", []string{topics.Products, topics.ErpOrders},
 	)
 
 	return &Consumer{client: client, logger: log}, nil
 }
 
-func (c *Consumer) Run(ctx context.Context, onProduct HandlerFunc[contracts.ProductPayload]) error {
+func (c *Consumer) Run(
+	ctx context.Context,
+	onProduct HandlerFunc[contracts.ProductPayload],
+	onErpOrder HandlerFunc[contracts.OrderEnvelope],
+) error {
 	for {
 		fetches := c.client.PollFetches(ctx)
 
@@ -102,6 +106,8 @@ func (c *Consumer) Run(ctx context.Context, onProduct HandlerFunc[contracts.Prod
 			switch r.Topic {
 			case topics.Products:
 				err = dispatch(ctx, r.Value, onProduct)
+			case topics.ErpOrders:
+				err = dispatch(ctx, r.Value, onErpOrder)
 			default:
 				c.logger.Warn("kafka consumer: unknown topic", "topic", r.Topic)
 			}

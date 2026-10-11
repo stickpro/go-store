@@ -47,6 +47,7 @@ WHERE pv.id = ANY ($1::uuid[]);
 -- rows sharing a single lock — the caller sums requested quantity per product.
 SELECT p.id          AS product_id,
        p.sku,
+       p.external_id,
        p.price_retail,
        p.price_business,
        p.price_wholesale,

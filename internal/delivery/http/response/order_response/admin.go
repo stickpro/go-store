@@ -9,19 +9,21 @@ import (
 )
 
 // AdminOrderResponse is OrderResponse plus the fields only the admin panel
-// needs: the owning account (absent for guest orders), what was paid, and the
-// version to send back with an item edit.
+// needs: the owning account (absent for guest orders), the ERP document number,
+// what was paid, and the version to send back with an item edit.
 type AdminOrderResponse struct {
 	OrderResponse
-	UserID    *uuid.UUID      `json:"user_id"`
-	PaidTotal decimal.Decimal `json:"paid_total"`
-	Version   int64           `json:"version"`
+	UserID     *uuid.UUID      `json:"user_id"`
+	ExternalID *string         `json:"external_id"`
+	PaidTotal  decimal.Decimal `json:"paid_total"`
+	Version    int64           `json:"version"`
 } //	@name	AdminOrderResponse
 
 func NewAdminFromDTO(d *dto.OrderDTO) *AdminOrderResponse {
 	return &AdminOrderResponse{
 		OrderResponse: *NewFromDTO(d),
 		UserID:        d.UserID,
+		ExternalID:    d.ExternalID,
 		PaidTotal:     d.PaidTotal,
 		Version:       d.Version,
 	}

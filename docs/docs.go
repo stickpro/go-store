@@ -5750,6 +5750,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "external_id": {
+                    "type": "string"
+                },
                 "grand_total": {
                     "type": "number"
                 },
@@ -8560,6 +8563,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tariff_code": {
+                    "type": "string"
+                },
+                "tracking_number": {
+                    "type": "string"
+                },
+                "tracking_provider": {
+                    "type": "string"
+                },
+                "tracking_url": {
                     "type": "string"
                 }
             }

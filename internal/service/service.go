@@ -106,7 +106,7 @@ func InitService(
 	paymentRegistry := payment.NewRegistry(conf.Payment.ResolvedMethods(), tbankService)
 	paymentService := payment.New(logger, storage, paymentRegistry)
 
-	orderService, err := order.New(conf, logger, storage, cartService, userService, mailService, shippingRegistry, nil)
+	orderService, err := order.New(conf, logger, storage, cartService, userService, mailService, shippingRegistry)
 	if err != nil {
 		return nil, err
 	}

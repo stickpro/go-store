@@ -91,6 +91,16 @@ func (s *Service) UpdateStatus(ctx context.Context, number int64, d dto.OrderSta
 			return fmt.Errorf("order: status history: %w", err)
 		}
 
+		if to == constant.OrderPaid {
+			if err := s.enqueueEvent(ctx, tx, contracts.OrderEventPaid, updated.ID, contracts.OrderPaidPayload{
+				OrderID:       updated.ID,
+				PaymentMethod: pgtypeutils.DecodeText(updated.PaymentMethod),
+				PaidAt:        updated.PaidAt.Time,
+			}); err != nil {
+				return err
+			}
+		}
+
 		items, err = s.storage.OrderItems(repository.WithTx(tx)).ListByOrderID(ctx, o.ID)
 		return err
 	})
@@ -98,17 +108,5 @@ func (s *Service) UpdateStatus(ctx context.Context, number int64, d dto.OrderSta
 		return nil, txErr
 	}
 
-	result := dto.OrderDTOFromModel(updated, items)
-
-	if to == constant.OrderPaid {
-		if err := s.publisher.OrderPaid(ctx, contracts.OrderPaidPayload{
-			OrderNumber:   result.Number,
-			PaymentMethod: result.PaymentMethod,
-			PaidAt:        derefOrNow(result.PaidAt),
-		}); err != nil {
-			s.logger.Errorw("order: publish order.paid", "order", result.Number, "error", err)
-		}
-	}
-
-	return result, nil
+	return dto.OrderDTOFromModel(updated, items), nil
 }

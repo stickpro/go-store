@@ -43,11 +43,15 @@ type Querier interface {
 	// Refund also clears the payment status back to 'refunded' (unlike a plain
 	// status transition, which never touches payment_status).
 	MarkRefunded(ctx context.Context, id uuid.UUID) (*models.Order, error)
+	// Remembers the ERP's own document number / GUID for the order.
+	SetExternalID(ctx context.Context, arg SetExternalIDParams) (*models.Order, error)
 	// Records money returned on an order without touching its fulfilment status:
 	// a partial refund, or a full refund of an order that can't move to
 	// 'refunded' itself (e.g. already cancelled). Only an order that was paid
 	// matches; no row means there was nothing to refund on it.
 	SetRefundState(ctx context.Context, arg SetRefundStateParams) (*models.Order, error)
+	// Stores (or replaces) the carrier tracking number reported by the ERP.
+	SetTracking(ctx context.Context, arg SetTrackingParams) (*models.Order, error)
 	// Admin order edit: contact, shipping address + carrier snapshot, payment method,
 	// comment and the money fields that shipping/status changes affect. Item lines and
 	// their prices are never touched here. Transaction only (row must be locked).

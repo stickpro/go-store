@@ -76,17 +76,23 @@ type IOrderService interface { //nolint:interfacebloat
 	EditItems(ctx context.Context, number int64, d dto.OrderItemsEditDTO) (*dto.OrderItemsEditResultDTO, error)
 	// ListEdits returns the order's item-edit audit trail, newest first.
 	ListEdits(ctx context.Context, number int64) ([]*dto.OrderEditDTO, error)
+	// ApplyERPStatus applies a fulfilment status reported by the ERP
+	// (processing / shipped / delivered) through the order state machine.
+	// Idempotent per event id.
+	ApplyERPStatus(ctx context.Context, d dto.OrderERPStatusDTO) error
+	// AssignERPTracking stores the carrier tracking number reported by the
+	// ERP. Idempotent per event id.
+	AssignERPTracking(ctx context.Context, d dto.OrderERPTrackingDTO) error
 }
 
 type Service struct {
-	cfg       *config.Config
-	logger    logger.Logger
-	storage   storage.IStorage
-	cart      cart.ICartService
-	users     user.IUserService
-	mail      mail.IMailService
-	publisher EventPublisher
-	shipping  *shipping.Registry
+	cfg      *config.Config
+	logger   logger.Logger
+	storage  storage.IStorage
+	cart     cart.ICartService
+	users    user.IUserService
+	mail     mail.IMailService
+	shipping *shipping.Registry
 
 	flatShipping     decimal.Decimal
 	freeShippingFrom decimal.Decimal
@@ -100,7 +106,6 @@ func New(
 	userService user.IUserService,
 	mailService mail.IMailService,
 	shippingRegistry *shipping.Registry,
-	publisher EventPublisher,
 ) (*Service, error) {
 	flat, err := decimal.NewFromString(orDefault(cfg.Order.FlatShipping, "0"))
 	if err != nil {
@@ -111,10 +116,6 @@ func New(
 		return nil, fmt.Errorf("order: parse free_shipping_from %q: %w", cfg.Order.FreeShippingFrom, err)
 	}
 
-	if publisher == nil {
-		publisher = NoopPublisher{}
-	}
-
 	return &Service{
 		cfg:              cfg,
 		logger:           l,
@@ -122,7 +123,6 @@ func New(
 		cart:             cartService,
 		users:            userService,
 		mail:             mailService,
-		publisher:        publisher,
 		shipping:         shippingRegistry,
 		flatShipping:     flat,
 		freeShippingFrom: free,

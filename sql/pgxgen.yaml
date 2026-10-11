@@ -204,6 +204,10 @@ schemas:
                             - refunded_total
                             - version
                             - paid_total
+                            - external_id
+                            - tracking_number
+                            - tracking_provider
+                            - tracking_url
                         column_values:
                             created_at: now()
                     get: {}
@@ -349,6 +353,10 @@ schemas:
         payment_refunds:
             primary_column: id
         order_edits:
+            primary_column: id
+        order_inbound_events:
+            primary_column: event_id
+        order_outbox:
             primary_column: id
         attribute_values:
             primary_column: id

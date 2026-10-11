@@ -153,7 +153,7 @@ func (q *Queries) DashboardOrderStats(ctx context.Context, arg DashboardOrderSta
 }
 
 const getByIDForUpdate = `-- name: GetByIDForUpdate :one
-SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total FROM orders WHERE id = $1 LIMIT 1 FOR UPDATE
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url FROM orders WHERE id = $1 LIMIT 1 FOR UPDATE
 `
 
 // Row-locks the order by id. Transaction only.
@@ -196,12 +196,16 @@ func (q *Queries) GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*models.O
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
 
 const getByIdempotencyKey = `-- name: GetByIdempotencyKey :one
-SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total FROM orders WHERE idempotency_key = $1 LIMIT 1
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url FROM orders WHERE idempotency_key = $1 LIMIT 1
 `
 
 func (q *Queries) GetByIdempotencyKey(ctx context.Context, idempotencyKey pgtype.Text) (*models.Order, error) {
@@ -243,12 +247,16 @@ func (q *Queries) GetByIdempotencyKey(ctx context.Context, idempotencyKey pgtype
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
 
 const getByNumber = `-- name: GetByNumber :one
-SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total FROM orders WHERE order_number = $1 LIMIT 1
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url FROM orders WHERE order_number = $1 LIMIT 1
 `
 
 func (q *Queries) GetByNumber(ctx context.Context, orderNumber int64) (*models.Order, error) {
@@ -290,12 +298,16 @@ func (q *Queries) GetByNumber(ctx context.Context, orderNumber int64) (*models.O
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
 
 const getByNumberForUpdate = `-- name: GetByNumberForUpdate :one
-SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total FROM orders WHERE order_number = $1 LIMIT 1 FOR UPDATE
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url FROM orders WHERE order_number = $1 LIMIT 1 FOR UPDATE
 `
 
 // Row-locks the order for a status transition. Transaction only.
@@ -338,6 +350,10 @@ func (q *Queries) GetByNumberForUpdate(ctx context.Context, orderNumber int64) (
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
@@ -370,7 +386,7 @@ func (q *Queries) HasUserPurchasedVariant(ctx context.Context, arg HasUserPurcha
 }
 
 const listAdmin = `-- name: ListAdmin :many
-SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total FROM orders
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url FROM orders
 WHERE ($1::varchar IS NULL OR status = $1)
   AND ($2::varchar IS NULL OR payment_status = $2)
   AND ($3::varchar IS NULL OR source = $3)
@@ -447,6 +463,10 @@ func (q *Queries) ListAdmin(ctx context.Context, arg ListAdminParams) ([]*models
 			&i.RefundedTotal,
 			&i.Version,
 			&i.PaidTotal,
+			&i.ExternalID,
+			&i.TrackingNumber,
+			&i.TrackingProvider,
+			&i.TrackingUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -459,7 +479,7 @@ func (q *Queries) ListAdmin(ctx context.Context, arg ListAdminParams) ([]*models
 }
 
 const listByUser = `-- name: ListByUser :many
-SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total FROM orders
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url FROM orders
 WHERE user_id = $1
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
@@ -516,6 +536,10 @@ func (q *Queries) ListByUser(ctx context.Context, arg ListByUserParams) ([]*mode
 			&i.RefundedTotal,
 			&i.Version,
 			&i.PaidTotal,
+			&i.ExternalID,
+			&i.TrackingNumber,
+			&i.TrackingProvider,
+			&i.TrackingUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -569,7 +593,7 @@ SET status = 'cancelled',
     cancelled_at = now(),
     updated_at = now()
 WHERE id = $1
-RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
 `
 
 func (q *Queries) MarkCancelled(ctx context.Context, id uuid.UUID) (*models.Order, error) {
@@ -611,6 +635,10 @@ func (q *Queries) MarkCancelled(ctx context.Context, id uuid.UUID) (*models.Orde
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
@@ -624,7 +652,7 @@ SET status = $2,
     paid_at = now(),
     updated_at = now()
 WHERE id = $1
-RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
 `
 
 type MarkPaidParams struct {
@@ -672,6 +700,10 @@ func (q *Queries) MarkPaid(ctx context.Context, arg MarkPaidParams) (*models.Ord
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
@@ -683,7 +715,7 @@ SET status = 'refunded',
     refunded_total = grand_total,
     updated_at = now()
 WHERE id = $1
-RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
 `
 
 // Refund also clears the payment status back to 'refunded' (unlike a plain
@@ -727,6 +759,71 @@ func (q *Queries) MarkRefunded(ctx context.Context, id uuid.UUID) (*models.Order
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
+	)
+	return &i, err
+}
+
+const setExternalID = `-- name: SetExternalID :one
+UPDATE orders
+SET external_id = $2,
+    updated_at  = now()
+WHERE id = $1
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
+`
+
+type SetExternalIDParams struct {
+	ID         uuid.UUID   `db:"id" json:"id"`
+	ExternalID pgtype.Text `db:"external_id" json:"external_id"`
+}
+
+// Remembers the ERP's own document number / GUID for the order.
+func (q *Queries) SetExternalID(ctx context.Context, arg SetExternalIDParams) (*models.Order, error) {
+	row := q.db.QueryRow(ctx, setExternalID, arg.ID, arg.ExternalID)
+	var i models.Order
+	err := row.Scan(
+		&i.ID,
+		&i.OrderNumber,
+		&i.UserID,
+		&i.Status,
+		&i.PaymentStatus,
+		&i.PaymentMethod,
+		&i.Currency,
+		&i.Email,
+		&i.Phone,
+		&i.ShipCityID,
+		&i.ShipCityName,
+		&i.ShipAddress,
+		&i.ShipPostcode,
+		&i.ShipRecipient,
+		&i.ShippingMethod,
+		&i.Subtotal,
+		&i.DiscountTotal,
+		&i.ShippingTotal,
+		&i.TaxTotal,
+		&i.GrandTotal,
+		&i.Comment,
+		&i.IdempotencyKey,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PaidAt,
+		&i.CancelledAt,
+		&i.ShipProvider,
+		&i.ShipTariffCode,
+		&i.ShipPointCode,
+		&i.ShipMinDays,
+		&i.ShipMaxDays,
+		&i.Source,
+		&i.RefundedTotal,
+		&i.Version,
+		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
@@ -738,7 +835,7 @@ SET payment_status = $2,
     updated_at = now()
 WHERE id = $1
   AND payment_status IN ('paid', 'partially_refunded')
-RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
 `
 
 type SetRefundStateParams struct {
@@ -790,6 +887,80 @@ func (q *Queries) SetRefundState(ctx context.Context, arg SetRefundStateParams) 
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
+	)
+	return &i, err
+}
+
+const setTracking = `-- name: SetTracking :one
+UPDATE orders
+SET tracking_number   = $2,
+    tracking_provider = $3,
+    tracking_url      = $4,
+    updated_at        = now()
+WHERE id = $1
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
+`
+
+type SetTrackingParams struct {
+	ID               uuid.UUID   `db:"id" json:"id"`
+	TrackingNumber   pgtype.Text `db:"tracking_number" json:"tracking_number"`
+	TrackingProvider pgtype.Text `db:"tracking_provider" json:"tracking_provider"`
+	TrackingUrl      pgtype.Text `db:"tracking_url" json:"tracking_url"`
+}
+
+// Stores (or replaces) the carrier tracking number reported by the ERP.
+func (q *Queries) SetTracking(ctx context.Context, arg SetTrackingParams) (*models.Order, error) {
+	row := q.db.QueryRow(ctx, setTracking,
+		arg.ID,
+		arg.TrackingNumber,
+		arg.TrackingProvider,
+		arg.TrackingUrl,
+	)
+	var i models.Order
+	err := row.Scan(
+		&i.ID,
+		&i.OrderNumber,
+		&i.UserID,
+		&i.Status,
+		&i.PaymentStatus,
+		&i.PaymentMethod,
+		&i.Currency,
+		&i.Email,
+		&i.Phone,
+		&i.ShipCityID,
+		&i.ShipCityName,
+		&i.ShipAddress,
+		&i.ShipPostcode,
+		&i.ShipRecipient,
+		&i.ShippingMethod,
+		&i.Subtotal,
+		&i.DiscountTotal,
+		&i.ShippingTotal,
+		&i.TaxTotal,
+		&i.GrandTotal,
+		&i.Comment,
+		&i.IdempotencyKey,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PaidAt,
+		&i.CancelledAt,
+		&i.ShipProvider,
+		&i.ShipTariffCode,
+		&i.ShipPointCode,
+		&i.ShipMinDays,
+		&i.ShipMaxDays,
+		&i.Source,
+		&i.RefundedTotal,
+		&i.Version,
+		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
@@ -816,7 +987,7 @@ SET status          = $2,
     grand_total     = $19,
     updated_at      = now()
 WHERE id = $1
-RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
 `
 
 type UpdateDetailsParams struct {
@@ -903,6 +1074,10 @@ func (q *Queries) UpdateDetails(ctx context.Context, arg UpdateDetailsParams) (*
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
@@ -912,7 +1087,7 @@ UPDATE orders
 SET status = $2,
     updated_at = now()
 WHERE id = $1
-RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
 `
 
 type UpdateStatusParams struct {
@@ -959,6 +1134,10 @@ func (q *Queries) UpdateStatus(ctx context.Context, arg UpdateStatusParams) (*mo
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }
@@ -969,7 +1148,7 @@ SET subtotal    = $2,
     grand_total = $3,
     updated_at  = now()
 WHERE id = $1
-RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total
+RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
 `
 
 type UpdateTotalsParams struct {
@@ -1018,6 +1197,10 @@ func (q *Queries) UpdateTotals(ctx context.Context, arg UpdateTotalsParams) (*mo
 		&i.RefundedTotal,
 		&i.Version,
 		&i.PaidTotal,
+		&i.ExternalID,
+		&i.TrackingNumber,
+		&i.TrackingProvider,
+		&i.TrackingUrl,
 	)
 	return &i, err
 }

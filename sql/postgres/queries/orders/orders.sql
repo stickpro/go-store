@@ -187,3 +187,21 @@ SET subtotal    = $2,
     updated_at  = now()
 WHERE id = $1
 RETURNING *;
+
+-- name: SetExternalID :one
+-- Remembers the ERP's own document number / GUID for the order.
+UPDATE orders
+SET external_id = $2,
+    updated_at  = now()
+WHERE id = $1
+RETURNING *;
+
+-- name: SetTracking :one
+-- Stores (or replaces) the carrier tracking number reported by the ERP.
+UPDATE orders
+SET tracking_number   = $2,
+    tracking_provider = $3,
+    tracking_url      = $4,
+    updated_at        = now()
+WHERE id = $1
+RETURNING *;

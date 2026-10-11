@@ -23,7 +23,7 @@ func (q *Queries) DeleteByID(ctx context.Context, id uuid.UUID) error {
 }
 
 const listByOrderID = `-- name: ListByOrderID :many
-SELECT id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm FROM order_items WHERE order_id = $1 ORDER BY id
+SELECT id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm, external_id FROM order_items WHERE order_id = $1 ORDER BY id
 `
 
 func (q *Queries) ListByOrderID(ctx context.Context, orderID uuid.UUID) ([]*models.OrderItem, error) {
@@ -51,6 +51,7 @@ func (q *Queries) ListByOrderID(ctx context.Context, orderID uuid.UUID) ([]*mode
 			&i.LengthCm,
 			&i.WidthCm,
 			&i.HeightCm,
+			&i.ExternalID,
 		); err != nil {
 			return nil, err
 		}
@@ -63,7 +64,7 @@ func (q *Queries) ListByOrderID(ctx context.Context, orderID uuid.UUID) ([]*mode
 }
 
 const listByOrderIDs = `-- name: ListByOrderIDs :many
-SELECT id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm FROM order_items
+SELECT id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm, external_id FROM order_items
 WHERE order_id = ANY ($1::uuid[])
 ORDER BY order_id, id
 `
@@ -93,6 +94,7 @@ func (q *Queries) ListByOrderIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]*
 			&i.LengthCm,
 			&i.WidthCm,
 			&i.HeightCm,
+			&i.ExternalID,
 		); err != nil {
 			return nil, err
 		}
@@ -109,7 +111,7 @@ UPDATE order_items
 SET quantity   = $2,
     line_total = $3
 WHERE id = $1
-RETURNING id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm
+RETURNING id, order_id, product_id, variant_id, sku, name, slug, image_path, unit_price, quantity, line_total, weight_kg, length_cm, width_cm, height_cm, external_id
 `
 
 type UpdateQuantityParams struct {
@@ -137,6 +139,7 @@ func (q *Queries) UpdateQuantity(ctx context.Context, arg UpdateQuantityParams) 
 		&i.LengthCm,
 		&i.WidthCm,
 		&i.HeightCm,
+		&i.ExternalID,
 	)
 	return &i, err
 }

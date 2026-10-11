@@ -13,7 +13,7 @@ import (
 )
 
 // buildWorkers assembles every background loop the app runs alongside the
-// HTTP server: the Kafka product consumer, the queue-backed image/mail
+// HTTP server: the Kafka product / ERP order consumer, the order outbox relay, the queue-backed image/mail
 // workers, and the CDEK delivery points cache refresher. Each is supervised
 // independently (see worker.go) so a crash in one doesn't take down the rest,
 // and it gets restarted with backoff instead of killing the process.
@@ -23,6 +23,8 @@ func buildWorkers(
 	q queue.IQueue,
 	consumer *kafka.Consumer,
 	productHandler *handler.ProductHandler,
+	orderHandler *handler.OrderHandler,
+	orderOutbox *queueworker.OrderOutboxRelay,
 	l logger.Logger,
 ) []worker {
 	var workers []worker
@@ -34,9 +36,13 @@ func buildWorkers(
 	}
 
 	add("kafka_consumer", consumer != nil, func(ctx context.Context) {
-		if err := consumer.Run(ctx, productHandler.HandleProduct); err != nil {
+		if err := consumer.Run(ctx, productHandler.HandleProduct, orderHandler.HandleErpOrder); err != nil {
 			l.Error("kafka consumer stopped with error", err)
 		}
+	})
+
+	add("order_outbox_relay", orderOutbox != nil, func(ctx context.Context) {
+		orderOutbox.Run(ctx)
 	})
 
 	add("image_worker", services.MediaService != nil, func(ctx context.Context) {

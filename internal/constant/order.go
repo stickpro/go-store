@@ -51,4 +51,6 @@ const (
 	OrderActorAdmin = "admin"
 	// OrderActorPayment is a prefix: "payment:<provider>".
 	OrderActorPayment = "payment"
+	// OrderActorERP is the ERP (1C) acting through the order exchange.
+	OrderActorERP = "erp"
 )

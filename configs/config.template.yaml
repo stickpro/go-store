@@ -51,6 +51,11 @@ kafka:
     required_acks: all
   consumer:
     group_id: go-store
+  order_outbox:
+    enabled: true
+    interval: 2s
+    batch_size: 100
+    retention: 168h0m0s
 workers:
   image_sync: 3
   mail_send: 2

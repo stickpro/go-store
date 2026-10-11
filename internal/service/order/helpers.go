@@ -1,8 +1,6 @@
 package order
 
 import (
-	"time"
-
 	"github.com/shopspring/decimal"
 )
 
@@ -16,14 +14,6 @@ func strPtr(s string) *string {
 
 // strOrNil is strPtr for values already known to be user input.
 func strOrNil(s string) *string { return strPtr(s) }
-
-// derefOrNow returns *t, or the current time if t is nil.
-func derefOrNow(t *time.Time) time.Time {
-	if t == nil {
-		return time.Now()
-	}
-	return *t
-}
 
 func sumSubtotal(lines []checkoutLine) decimal.Decimal {
 	sum := decimal.Zero

@@ -83,7 +83,7 @@ func (s *Service) CreateOrder(ctx context.Context, d dto.CreateOrderDTO) (*dto.O
 
 // buildOrder does everything that must be atomic: lock product rows, validate
 // and price each line, insert the order + items + first history row, decrement
-// stock.
+// stock, queue the order.created event.
 func (s *Service) buildOrder(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -134,18 +134,19 @@ func (s *Service) buildOrder(
 
 		unit := resolveUnitPrice(d.User, linePricing{r.PriceRetail, r.PriceBusiness, r.PriceWholesale})
 		lines = append(lines, checkoutLine{
-			productID: r.ProductID,
-			variantID: r.VariantID,
-			sku:       pgtypeutils.DecodeText(r.Sku),
-			name:      r.Name,
-			slug:      strPtr(r.Slug),
-			imagePath: pgtypeutils.DecodeText(r.ImagePath),
-			unitPrice: unit,
-			quantity:  qty,
-			weightKG:  r.Weight,
-			lengthCM:  r.Length,
-			widthCM:   r.Width,
-			heightCM:  r.Height,
+			productID:  r.ProductID,
+			variantID:  r.VariantID,
+			externalID: pgtypeutils.DecodeText(r.ExternalID),
+			sku:        pgtypeutils.DecodeText(r.Sku),
+			name:       r.Name,
+			slug:       strPtr(r.Slug),
+			imagePath:  pgtypeutils.DecodeText(r.ImagePath),
+			unitPrice:  unit,
+			quantity:   qty,
+			weightKG:   r.Weight,
+			lengthCM:   r.Length,
+			widthCM:    r.Width,
+			heightCM:   r.Height,
 		})
 	}
 
@@ -179,20 +180,21 @@ func (s *Service) buildOrder(
 	orderItems := make([]*models.OrderItem, 0, len(lines))
 	for _, l := range lines {
 		it, err := s.storage.OrderItems(repository.WithTx(tx)).Create(ctx, repository_order_items.CreateParams{
-			OrderID:   createdOrder.ID,
-			ProductID: uuid.NullUUID{UUID: l.productID, Valid: true},
-			VariantID: uuid.NullUUID{UUID: l.variantID, Valid: true},
-			Sku:       pgtypeutils.EncodeText(l.sku),
-			Name:      l.name,
-			Slug:      pgtypeutils.EncodeText(l.slug),
-			ImagePath: pgtypeutils.EncodeText(l.imagePath),
-			UnitPrice: l.unitPrice,
-			Quantity:  l.quantity,
-			LineTotal: l.lineTotal(),
-			WeightKg:  l.weightKG,
-			LengthCm:  l.lengthCM,
-			WidthCm:   l.widthCM,
-			HeightCm:  l.heightCM,
+			OrderID:    createdOrder.ID,
+			ProductID:  uuid.NullUUID{UUID: l.productID, Valid: true},
+			VariantID:  uuid.NullUUID{UUID: l.variantID, Valid: true},
+			ExternalID: pgtypeutils.EncodeText(l.externalID),
+			Sku:        pgtypeutils.EncodeText(l.sku),
+			Name:       l.name,
+			Slug:       pgtypeutils.EncodeText(l.slug),
+			ImagePath:  pgtypeutils.EncodeText(l.imagePath),
+			UnitPrice:  l.unitPrice,
+			Quantity:   l.quantity,
+			LineTotal:  l.lineTotal(),
+			WeightKg:   l.weightKG,
+			LengthCm:   l.lengthCM,
+			WidthCm:    l.widthCM,
+			HeightCm:   l.heightCM,
 		})
 		if err != nil {
 			return nil, nil, fmt.Errorf("order: insert item: %w", err)
@@ -225,6 +227,10 @@ func (s *Service) buildOrder(
 		Actor:      constant.OrderActorCustomer,
 	}); err != nil {
 		return nil, nil, fmt.Errorf("order: insert history: %w", err)
+	}
+
+	if err := s.enqueueSnapshot(ctx, tx, contracts.OrderEventCreated, createdOrder, orderItems); err != nil {
+		return nil, nil, err
 	}
 
 	return createdOrder, orderItems, nil
@@ -291,34 +297,5 @@ func (s *Service) afterCommit(ctx context.Context, owner dto.Owner, o *dto.Order
 		}); err != nil {
 			s.logger.Errorw("order: enqueue confirmation email", "order", o.Number, "error", err)
 		}
-	}
-
-	if err := s.publisher.OrderCreated(ctx, orderCreatedEvent(o)); err != nil {
-		s.logger.Errorw("order: publish order.created", "order", o.Number, "error", err)
-	}
-}
-
-func orderCreatedEvent(o *dto.OrderDTO) contracts.OrderCreatedPayload {
-	its := make([]contracts.OrderEventItem, 0, len(o.Items))
-	for _, it := range o.Items {
-		its = append(its, contracts.OrderEventItem{
-			VariantID: it.VariantID,
-			Sku:       it.Sku,
-			Name:      it.Name,
-			UnitPrice: it.UnitPrice,
-			Quantity:  it.Quantity,
-			LineTotal: it.LineTotal,
-		})
-	}
-
-	return contracts.OrderCreatedPayload{
-		OrderNumber: o.Number,
-		UserID:      o.UserID,
-		Source:      o.Source,
-		Email:       o.Email,
-		Currency:    o.Currency,
-		GrandTotal:  o.GrandTotal,
-		Items:       its,
-		CreatedAt:   o.CreatedAt,
 	}
 }

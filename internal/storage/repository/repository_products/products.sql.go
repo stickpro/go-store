@@ -326,6 +326,7 @@ func (q *Queries) GetCartItemsByVariantIDs(ctx context.Context, dollar_1 []uuid.
 const getOrderLinesByVariantIDs = `-- name: GetOrderLinesByVariantIDs :many
 SELECT p.id          AS product_id,
        p.sku,
+       p.external_id,
        p.price_retail,
        p.price_business,
        p.price_wholesale,
@@ -357,6 +358,7 @@ FOR UPDATE OF p
 type GetOrderLinesByVariantIDsRow struct {
 	ProductID      uuid.UUID       `db:"product_id" json:"product_id"`
 	Sku            pgtype.Text     `db:"sku" json:"sku"`
+	ExternalID     pgtype.Text     `db:"external_id" json:"external_id"`
 	PriceRetail    decimal.Decimal `db:"price_retail" json:"price_retail"`
 	PriceBusiness  decimal.Decimal `db:"price_business" json:"price_business"`
 	PriceWholesale decimal.Decimal `db:"price_wholesale" json:"price_wholesale"`
@@ -391,6 +393,7 @@ func (q *Queries) GetOrderLinesByVariantIDs(ctx context.Context, dollar_1 []uuid
 		if err := rows.Scan(
 			&i.ProductID,
 			&i.Sku,
+			&i.ExternalID,
 			&i.PriceRetail,
 			&i.PriceBusiness,
 			&i.PriceWholesale,

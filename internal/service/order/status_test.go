@@ -45,3 +45,20 @@ func TestRestocksOn(t *testing.T) {
 		t.Fatal("non-terminal statuses should not restock")
 	}
 }
+
+func TestErpAccepts(t *testing.T) {
+	accepted := map[constant.OrderStatus]bool{
+		constant.OrderProcessing: true,
+		constant.OrderShipped:    true,
+		constant.OrderDelivered:  true,
+	}
+	all := []constant.OrderStatus{
+		constant.OrderNew, constant.OrderPending, constant.OrderPaid, constant.OrderProcessing,
+		constant.OrderShipped, constant.OrderDelivered, constant.OrderCancelled, constant.OrderRefunded,
+	}
+	for _, s := range all {
+		if got := erpAccepts(s); got != accepted[s] {
+			t.Errorf("erpAccepts(%s) = %v, want %v", s, got, accepted[s])
+		}
+	}
+}

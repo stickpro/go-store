@@ -11,6 +11,7 @@ import (
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/messaging/handler"
 	"github.com/stickpro/go-store/internal/messaging/kafka"
+	queueworker "github.com/stickpro/go-store/internal/messaging/worker"
 	"github.com/stickpro/go-store/internal/server"
 	"github.com/stickpro/go-store/internal/service"
 	"github.com/stickpro/go-store/internal/storage"
@@ -83,10 +84,24 @@ func Run(ctx context.Context, conf *config.Config, l logger.Logger) {
 	defer consumer.Close()
 
 	productHandler := handler.NewProductHandler(services.ProductService, services.AttributeService, q, l)
+	orderHandler := handler.NewOrderHandler(services.OrderService, l)
+
+	// Order events for the ERP: only when the exchange is switched on.
+	var orderOutbox *queueworker.OrderOutboxRelay
+	if conf.Kafka.OrderOutbox.Enabled {
+		producer, err := kafka.NewProducer(conf.Kafka)
+		if err != nil {
+			l.Fatal("failed to init kafka producer", err)
+			return
+		}
+		defer producer.Close()
+
+		orderOutbox = queueworker.NewOrderOutboxRelay(st, producer, conf.Kafka.OrderOutbox, l)
+	}
 
 	workerCtx, stopWorkers := context.WithCancel(ctx)
 	defer stopWorkers()
-	workersWG := superviseWorkers(workerCtx, l, buildWorkers(services, conf, q, consumer, productHandler, l)...)
+	workersWG := superviseWorkers(workerCtx, l, buildWorkers(services, conf, q, consumer, productHandler, orderHandler, orderOutbox, l)...)
 
 	serverErrCh := make(chan error, 1)
 	go func() {

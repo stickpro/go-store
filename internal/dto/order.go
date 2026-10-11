@@ -358,23 +358,32 @@ type OrderShippingDTO struct {
 	PointCode  *string
 	MinDays    *int32
 	MaxDays    *int32
+
+	// Tracking as reported by the ERP once the parcel is handed to the carrier.
+	TrackingNumber   *string
+	TrackingProvider *string
+	TrackingURL      *string
 }
 
 type OrderItemDTO struct {
 	ProductID *uuid.UUID
 	VariantID *uuid.UUID
-	Sku       *string
-	Name      string
-	Slug      *string
-	ImagePath *string
-	UnitPrice decimal.Decimal
-	Quantity  int64
-	LineTotal decimal.Decimal
+	// ExternalID is the product's ERP id, snapshotted at checkout.
+	ExternalID *string
+	Sku        *string
+	Name       string
+	Slug       *string
+	ImagePath  *string
+	UnitPrice  decimal.Decimal
+	Quantity   int64
+	LineTotal  decimal.Decimal
 }
 
 type OrderDTO struct {
-	ID            uuid.UUID
-	Number        int64
+	ID     uuid.UUID
+	Number int64
+	// ExternalID is the ERP's own document number / GUID for the order.
+	ExternalID    *string
 	UserID        *uuid.UUID
 	Status        string
 	Source        string
@@ -412,6 +421,7 @@ func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
 	out := &OrderDTO{
 		ID:            o.ID,
 		Number:        o.OrderNumber,
+		ExternalID:    pgtypeutils.DecodeText(o.ExternalID),
 		UserID:        nullUUIDPtr(o.UserID),
 		Status:        o.Status,
 		Source:        o.Source,
@@ -432,6 +442,10 @@ func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
 			PointCode:  pgtypeutils.DecodeText(o.ShipPointCode),
 			MinDays:    pgtypeutils.DecodeInt4(o.ShipMinDays),
 			MaxDays:    pgtypeutils.DecodeInt4(o.ShipMaxDays),
+
+			TrackingNumber:   pgtypeutils.DecodeText(o.TrackingNumber),
+			TrackingProvider: pgtypeutils.DecodeText(o.TrackingProvider),
+			TrackingURL:      pgtypeutils.DecodeText(o.TrackingUrl),
 		},
 		Subtotal:      o.Subtotal,
 		DiscountTotal: o.DiscountTotal,
@@ -450,15 +464,16 @@ func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
 	out.Items = make([]OrderItemDTO, 0, len(items))
 	for _, it := range items {
 		out.Items = append(out.Items, OrderItemDTO{
-			ProductID: nullUUIDPtr(it.ProductID),
-			VariantID: nullUUIDPtr(it.VariantID),
-			Sku:       pgtypeutils.DecodeText(it.Sku),
-			Name:      it.Name,
-			Slug:      pgtypeutils.DecodeText(it.Slug),
-			ImagePath: pgtypeutils.DecodeText(it.ImagePath),
-			UnitPrice: it.UnitPrice,
-			Quantity:  it.Quantity,
-			LineTotal: it.LineTotal,
+			ProductID:  nullUUIDPtr(it.ProductID),
+			VariantID:  nullUUIDPtr(it.VariantID),
+			ExternalID: pgtypeutils.DecodeText(it.ExternalID),
+			Sku:        pgtypeutils.DecodeText(it.Sku),
+			Name:       it.Name,
+			Slug:       pgtypeutils.DecodeText(it.Slug),
+			ImagePath:  pgtypeutils.DecodeText(it.ImagePath),
+			UnitPrice:  it.UnitPrice,
+			Quantity:   it.Quantity,
+			LineTotal:  it.LineTotal,
 		})
 	}
 	return out
@@ -478,4 +493,26 @@ func timestampPtr(v pgtype.Timestamp) *time.Time {
 	}
 	t := v.Time
 	return &t
+}
+
+// OrderERPStatusDTO is a fulfilment status reported by the ERP.
+type OrderERPStatusDTO struct {
+	// EventID identifies the inbound event; a repeated one is skipped.
+	EventID uuid.UUID
+	OrderID uuid.UUID
+	// ExternalID is the ERP's document number / GUID; nil leaves the stored one.
+	ExternalID *string
+	Status     string
+	Comment    *string
+}
+
+// OrderERPTrackingDTO is a carrier tracking number reported by the ERP.
+type OrderERPTrackingDTO struct {
+	// EventID identifies the inbound event; a repeated one is skipped.
+	EventID        uuid.UUID
+	OrderID        uuid.UUID
+	TrackingNumber string
+	// Provider is the carrier code; nil = the carrier picked at checkout.
+	Provider    *string
+	TrackingURL *string
 }
