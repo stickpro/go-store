@@ -12,11 +12,16 @@ import (
 )
 
 const getByCity = `-- name: GetByCity :many
-SELECT id, address, postal_code, country, federal_district, region_type, region, area_type, area, city_type, city, settlement_type, settlement, kladr_id, fias_id, fias_level, capital_marker, okato, oktmo, tax_office, timezone, geo_lat, geo_lon, population, foundation_year FROM cities WHERE city=$1 or region=$1
+SELECT id, address, postal_code, country, federal_district, region_type, region, area_type, area, city_type, city, settlement_type, settlement, kladr_id, fias_id, fias_level, capital_marker, okato, oktmo, tax_office, timezone, geo_lat, geo_lon, population, foundation_year FROM cities
+WHERE (city=$1::text OR region=$1::text) AND settlement IS NULL
+ORDER BY population DESC, fias_level
 `
 
-func (q *Queries) GetByCity(ctx context.Context, city string) ([]*models.City, error) {
-	rows, err := q.db.Query(ctx, getByCity, city)
+// Settlements inside a city carry the parent city name too, so only rows that
+// are a city (or a federal-city region) match; the federal city itself sorts
+// first by fias_level when population is unknown.
+func (q *Queries) GetByCity(ctx context.Context, name string) ([]*models.City, error) {
+	rows, err := q.db.Query(ctx, getByCity, name)
 	if err != nil {
 		return nil, err
 	}

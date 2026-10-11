@@ -12,7 +12,10 @@ import (
 
 type Querier interface {
 	GetAll(ctx context.Context) ([]*models.City, error)
-	GetByCity(ctx context.Context, city string) ([]*models.City, error)
+	// Settlements inside a city carry the parent city name too, so only rows that
+	// are a city (or a federal-city region) match; the federal city itself sorts
+	// first by fias_level when population is unknown.
+	GetByCity(ctx context.Context, name string) ([]*models.City, error)
 	GetCityOrderByPopulation(ctx context.Context) ([]*models.City, error)
 }
 

@@ -13,6 +13,7 @@ import (
 
 const (
 	defaultConfigPath = "configs/config.yaml"
+	dryRunFlag        = "dry-run"
 )
 
 func InitCommands(currentAppVersion, appName, _ string) []*cli.Command {

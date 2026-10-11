@@ -32,7 +32,10 @@ type Service struct {
 	searchService searchtypes.ISearchService
 }
 
-const dbPath = "storage/geo/GeoLite2-City.mmdb"
+const (
+	dbPath             = "storage/geo/GeoLite2-City.mmdb"
+	cityIndexBatchSize = 10000
+)
 
 func New(cfg *config.Config, logger logger.Logger, st storage.IStorage, ss searchtypes.ISearchService) *Service {
 	db, err := geoip2.Open(dbPath)
@@ -165,13 +168,30 @@ func (s *Service) CreateCityIndex(ctx context.Context, reindex bool) error {
 	}
 
 	opts := searchtypes.IndexOptions{
-		SearchableAttributes: []string{"city", "address", "region"},
+		SearchableAttributes: []string{"city", "settlement", "region", "address"},
+		// GAR has ~155k settlements and many share a name with a city
+		// ("Москва" is also a dozen villages): among equally good matches,
+		// cities rank above settlements and bigger cities first.
+		RankingRules: []string{
+			"words", "typo", "proximity", "exactness",
+			"fias_level:asc", "population:desc",
+			"attribute", "sort",
+		},
 	}
 
-	err = s.searchService.CreateIndex(constant.CitiesIndex, data, opts)
-	if err != nil {
-		s.logger.Error("Failed to create city index", "error", err)
-		return err
+	// One request with every settlement would exceed MeiliSearch's payload
+	// limit; only the first batch carries opts (and resets the index).
+	for start := 0; start < len(data); start += cityIndexBatchSize {
+		batch := data[start:min(start+cityIndexBatchSize, len(data))]
+		if start == 0 {
+			err = s.searchService.CreateIndex(constant.CitiesIndex, batch, opts)
+		} else {
+			err = s.searchService.CreateIndex(constant.CitiesIndex, batch)
+		}
+		if err != nil {
+			s.logger.Error("Failed to create city index", "error", err)
+			return err
+		}
 	}
 	s.logger.Debug("Create new index ", constant.CitiesIndex)
 

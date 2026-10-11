@@ -18,7 +18,7 @@ func prepareDescriptionCommands(appName, currentAppVersion string) []*cli.Comman
 				"into Markdown; descriptions that don't look like HTML are left untouched",
 			Flags: []cli.Flag{
 				cfgPathsFlag(),
-				&cli.BoolFlag{Name: "dry-run", Value: true, Usage: "log what would be converted without writing anything"},
+				&cli.BoolFlag{Name: dryRunFlag, Value: true, Usage: "log what would be converted without writing anything"},
 				&cli.IntFlag{Name: "limit", Value: 0, Usage: "scan at most N variants (0 = all); useful for a test run"},
 			},
 			Action: func(ctx context.Context, cl *cli.Command) error {
@@ -32,7 +32,7 @@ func prepareDescriptionCommands(appName, currentAppVersion string) []*cli.Comman
 				defer func() { _ = l.Sync() }()
 
 				opts := descriptionconvert.Options{
-					DryRun: cl.Bool("dry-run"),
+					DryRun: cl.Bool(dryRunFlag),
 					Limit:  cl.Int("limit"),
 				}
 

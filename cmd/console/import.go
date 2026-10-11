@@ -27,7 +27,7 @@ func prepareImportCommands(appName, currentAppVersion string) []*cli.Command {
 				&cli.IntFlag{Name: "oc-language-id", Value: 1, Usage: "OpenCart language_id to read descriptions/SEO URLs for"},
 				&cli.BoolFlag{Name: "only-enabled", Value: true, Usage: "skip disabled OpenCart products"},
 				&cli.IntFlag{Name: "limit", Value: 0, Usage: "process at most N OpenCart model-groups (0 = all); useful for a test run"},
-				&cli.BoolFlag{Name: "dry-run", Usage: "log what would be created/updated without writing anything"},
+				&cli.BoolFlag{Name: dryRunFlag, Usage: "log what would be created/updated without writing anything"},
 				&cli.IntFlag{Name: "workers", Value: 8, Usage: "number of model-groups processed concurrently"},
 			},
 			Action: func(ctx context.Context, cl *cli.Command) error {
@@ -53,7 +53,7 @@ func prepareImportCommands(appName, currentAppVersion string) []*cli.Command {
 				opts := opencartimport.Options{
 					OnlyEnabled: cl.Bool("only-enabled"),
 					Limit:       cl.Int("limit"),
-					DryRun:      cl.Bool("dry-run"),
+					DryRun:      cl.Bool(dryRunFlag),
 					Workers:     cl.Int("workers"),
 				}
 

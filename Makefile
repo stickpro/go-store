@@ -68,6 +68,11 @@ download-geodb:
 download-geo-cities:
 	curl -L -o ./storage/geo/city.csv https://github.com/hflabs/city/raw/refs/heads/master/city.csv
 
+import-geo: build
+	./.bin/go-store geo import-gar
+	./.bin/go-store geo import-city -f ./storage/geo/city.csv
+	./.bin/go-store search reindex --cities
+
 
 # Empty goals trap
 %:
