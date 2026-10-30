@@ -32,7 +32,7 @@ func (h *Handler) getOrderInvoice(c fiber.Ctx) error {
 
 	inv, err := h.services.InvoiceService.GetActive(c.Context(), nil, orderID)
 	if err != nil {
-		return invoiceError(h, err)
+		return h.invoiceError(err)
 	}
 	return c.JSON(response.OkByData(invoice_response.NewFromDTO(inv)))
 }
@@ -57,7 +57,7 @@ func (h *Handler) getOrderInvoicePDF(c fiber.Ctx) error {
 
 	pdf, err := h.services.InvoiceService.RenderPDF(c.Context(), orderID)
 	if err != nil {
-		return invoiceError(h, err)
+		return h.invoiceError(err)
 	}
 	return response.SendPDF(c, pdf.FileName, pdf.Content)
 }
@@ -79,16 +79,13 @@ func (h *Handler) authorizeOrderByID(c fiber.Ctx) (uuid.UUID, error) {
 	return orderID, nil
 }
 
-type errorHandler interface {
-	handleError(err error, domain string) error
-}
-
 // invoiceError maps invoice-service errors to HTTP responses.
-func invoiceError(h errorHandler, err error) error {
+func (h *Handler) invoiceError(err error) error {
 	switch {
 	case errors.Is(err, invoice.ErrNotFound):
 		return apierror.New().AddError(errors.New("order has no active invoice")).SetHttpCode(fiber.StatusNotFound)
 	case errors.Is(err, invoice.ErrRenderUnavailable):
+		h.logger.Errorw("invoice: render pdf", "error", err)
 		return apierror.New().AddError(errors.New("invoice document is temporarily unavailable, retry later")).
 			SetHttpCode(fiber.StatusServiceUnavailable)
 	default:
