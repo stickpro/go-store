@@ -26,6 +26,12 @@ type CreateOrderRequest struct {
 	ShipTariffCode     *string `json:"ship_tariff_code" validate:"omitempty,max=64,required_with=ShipProvider"`
 	ShipPointCode      *string `json:"ship_point_code" validate:"omitempty,max=64"`
 
+	// CustomerType is "individual" (default) or "legal" — a company or a sole
+	// proprietor. "legal" requires legal_entity and unlocks the "invoice"
+	// payment method; a legal buyer may pay by invoice or online only.
+	CustomerType string              `json:"customer_type" validate:"omitempty,oneof=individual legal"`
+	LegalEntity  *LegalEntityRequest `json:"legal_entity" validate:"required_if=CustomerType legal,omitempty"`
+
 	PaymentMethod string  `json:"payment_method" validate:"required,max=32"`
 	Comment       *string `json:"comment" validate:"omitempty,max=2000"`
 
@@ -34,3 +40,15 @@ type CreateOrderRequest struct {
 	// Decimal string, e.g. "1990.00".
 	ExpectedTotal *string `json:"expected_total" validate:"omitempty,numeric"`
 } //	@name	CreateOrderRequest
+
+// LegalEntityRequest is the buyer's requisites for a legal-entity order. A
+// 10-digit INN is a company and needs kpp; a 12-digit INN is a sole
+// proprietor (no kpp). ogrn is 13 digits for a company, 15 (OGRNIP) for a sole
+// proprietor.
+type LegalEntityRequest struct {
+	Name    string  `json:"name" validate:"required,max=255"`
+	INN     string  `json:"inn" validate:"required,inn"`
+	KPP     *string `json:"kpp" validate:"omitempty,kpp"`
+	OGRN    *string `json:"ogrn" validate:"omitempty,ogrn"`
+	Address string  `json:"address" validate:"required,max=512"`
+} //	@name	LegalEntityRequest

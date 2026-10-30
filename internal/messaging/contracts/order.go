@@ -66,6 +66,25 @@ type OrderEventShipping struct {
 	PointCode  *string `json:"point_code,omitempty"`
 }
 
+// OrderEventLegalEntity is the buyer's requisites. A 10-digit INN is a
+// company (KPP set), a 12-digit INN a sole proprietor (no KPP).
+type OrderEventLegalEntity struct {
+	Name    string  `json:"name"`
+	INN     string  `json:"inn"`
+	KPP     *string `json:"kpp,omitempty"`
+	OGRN    *string `json:"ogrn,omitempty"`
+	Address string  `json:"address"`
+}
+
+// OrderEventInvoice is the invoice issued for an order paid by invoice. A new
+// number means the previous invoice was voided (the order changed).
+type OrderEventInvoice struct {
+	Number   string          `json:"number"`
+	Amount   decimal.Decimal `json:"amount"`
+	IssuedAt time.Time       `json:"issued_at"`
+	DueAt    time.Time       `json:"due_at"`
+}
+
 // OrderSnapshotPayload is the whole order as it stands after the change. It is
 // the body of both order.created and order.updated: the receiver overwrites
 // its copy with it rather than applying a delta.
@@ -84,6 +103,13 @@ type OrderSnapshotPayload struct {
 	Status        string  `json:"status"`
 	PaymentStatus string  `json:"payment_status"`
 	PaymentMethod *string `json:"payment_method,omitempty"`
+
+	// CustomerType is "individual" or "legal" (a company or a sole
+	// proprietor). LegalEntity is set for "legal"; Invoice is the active
+	// invoice of an order paid by invoice — the transfer references its number.
+	CustomerType string                 `json:"customer_type"`
+	LegalEntity  *OrderEventLegalEntity `json:"legal_entity,omitempty"`
+	Invoice      *OrderEventInvoice     `json:"invoice,omitempty"`
 
 	Email    string             `json:"email"`
 	Phone    *string            `json:"phone,omitempty"`
@@ -104,7 +130,11 @@ type OrderSnapshotPayload struct {
 type OrderPaidPayload struct {
 	OrderID       uuid.UUID `json:"order_id"`
 	PaymentMethod *string   `json:"payment_method,omitempty"`
-	PaidAt        time.Time `json:"paid_at"`
+	// ProviderPaymentID is the payment's id at the acquirer (e.g. T-Bank
+	// PaymentId), for reconciling with the bank statement. Omitted when the
+	// order was marked paid by hand, without an online payment.
+	ProviderPaymentID *string   `json:"provider_payment_id,omitempty"`
+	PaidAt            time.Time `json:"paid_at"`
 }
 
 type OrderCancelledPayload struct {

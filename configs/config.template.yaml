@@ -133,3 +133,23 @@ tbank:
   request_timeout: 15s
 payment:
   methods: []
+invoice:
+  ttl: 120h0m0s
+  number_prefix: ""
+  vat_rate: ""
+  template_path: ""
+  gotenberg_url: http://localhost:3000
+  render_timeout: 20s
+  seller:
+    name: ""
+    inn: ""
+    kpp: ""
+    ogrn: ""
+    address: ""
+    phone: ""
+    bank_name: ""
+    bik: ""
+    account: ""
+    corr_account: ""
+    director: ""
+    accountant: ""

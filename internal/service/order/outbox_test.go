@@ -46,7 +46,7 @@ func TestOrderSnapshot(t *testing.T) {
 		CreatedAt:     time.Date(2026, 10, 11, 12, 30, 0, 0, time.UTC),
 	}
 
-	data, err := json.Marshal(orderSnapshot(o))
+	data, err := json.Marshal(orderSnapshot(o, nil))
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
 	}

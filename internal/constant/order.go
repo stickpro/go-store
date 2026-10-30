@@ -54,3 +54,12 @@ const (
 	// OrderActorERP is the ERP (1C) acting through the order exchange.
 	OrderActorERP = "erp"
 )
+
+// Buyer type, stored in orders.customer_type.
+const (
+	// CustomerIndividual — a private person (the default).
+	CustomerIndividual = "individual"
+	// CustomerLegal — a legal entity or a sole proprietor; the order carries
+	// its requisites and may be paid by invoice.
+	CustomerLegal = "legal"
+)

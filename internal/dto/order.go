@@ -3,12 +3,14 @@ package dto
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/delivery/http/request/order_request"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/pkg/dbutils/pgtypeutils"
@@ -39,6 +41,11 @@ type CreateOrderDTO struct {
 	ShipProvider       *string
 	ShipTariffCode     *string
 	ShipPointCode      *string
+
+	// CustomerType is constant.CustomerIndividual or constant.CustomerLegal;
+	// LegalEntity is set exactly when it is legal.
+	CustomerType string
+	LegalEntity  *LegalEntityDTO
 
 	PaymentMethod string
 	Comment       *string
@@ -121,6 +128,14 @@ func RequestToCreateQuickOrderDTO(
 // omits the contact email.
 var ErrEmailRequired = errors.New("email is required for guest checkout")
 
+var (
+	// ErrLegalEntityRequired — customer_type is "legal" but legal_entity is missing.
+	ErrLegalEntityRequired = errors.New("legal_entity is required when customer_type is legal")
+	// ErrInvalidLegalEntity — the requisites are inconsistent (kpp / ogrn do not
+	// match the kind of buyer the inn denotes).
+	ErrInvalidLegalEntity = errors.New("invalid legal_entity")
+)
+
 // RequestToCreateOrderDTO builds the checkout input from the HTTP request plus
 // the resolved caller. user is nil for guest checkout.
 func RequestToCreateOrderDTO(req *order_request.CreateOrderRequest, owner Owner, user *models.User) (CreateOrderDTO, error) {
@@ -141,9 +156,16 @@ func RequestToCreateOrderDTO(req *order_request.CreateOrderRequest, owner Owner,
 		expected = &v
 	}
 
+	customerType, legal, err := legalEntityFromRequest(req)
+	if err != nil {
+		return CreateOrderDTO{}, err
+	}
+
 	return CreateOrderDTO{
 		Owner:              owner,
 		User:               user,
+		CustomerType:       customerType,
+		LegalEntity:        legal,
 		Email:              email,
 		Phone:              req.Phone,
 		ShipCityID:         req.ShipCityID,
@@ -160,6 +182,50 @@ func RequestToCreateOrderDTO(req *order_request.CreateOrderRequest, owner Owner,
 		Comment:            req.Comment,
 		ExpectedTotal:      expected,
 	}, nil
+}
+
+// legalEntityFromRequest resolves the buyer type and checks the requisites
+// rules struct tags can't express: kpp is required for a company (10-digit
+// INN) and absent for a sole proprietor (12-digit INN), and ogrn must match
+// the same kind.
+func legalEntityFromRequest(req *order_request.CreateOrderRequest) (string, *LegalEntityDTO, error) {
+	if req.CustomerType != constant.CustomerLegal {
+		return constant.CustomerIndividual, nil, nil
+	}
+	le := req.LegalEntity
+	if le == nil {
+		return "", nil, ErrLegalEntityRequired
+	}
+
+	company := len(le.INN) == 10
+	kpp := nonBlank(le.KPP)
+	ogrn := nonBlank(le.OGRN)
+	switch {
+	case company && kpp == nil:
+		return "", nil, fmt.Errorf("%w: kpp is required for a company (10-digit inn)", ErrInvalidLegalEntity)
+	case !company && kpp != nil:
+		return "", nil, fmt.Errorf("%w: kpp must be empty for a sole proprietor (12-digit inn)", ErrInvalidLegalEntity)
+	case ogrn != nil && company && len(*ogrn) != 13:
+		return "", nil, fmt.Errorf("%w: ogrn of a company must have 13 digits", ErrInvalidLegalEntity)
+	case ogrn != nil && !company && len(*ogrn) != 15:
+		return "", nil, fmt.Errorf("%w: ogrnip of a sole proprietor must have 15 digits", ErrInvalidLegalEntity)
+	}
+
+	return constant.CustomerLegal, &LegalEntityDTO{
+		Name:    strings.TrimSpace(le.Name),
+		INN:     le.INN,
+		KPP:     kpp,
+		OGRN:    ogrn,
+		Address: strings.TrimSpace(le.Address),
+	}, nil
+}
+
+func nonBlank(s *string) *string {
+	if s == nil || strings.TrimSpace(*s) == "" {
+		return nil
+	}
+	v := strings.TrimSpace(*s)
+	return &v
 }
 
 // ShippingSelection groups the delivery-choice fields of the checkout DTO.
@@ -273,6 +339,9 @@ type OrderStatusUpdateDTO struct {
 	Comment *string
 	// PaymentMethod is only applied when Status is "paid".
 	PaymentMethod *string
+	// ProviderPaymentID is the acquirer's payment id; only carried into the
+	// order.paid event when Status is "paid".
+	ProviderPaymentID *string
 }
 
 // OrderDetailsUpdateDTO is the admin order-edit input. Every field is optional —
@@ -391,6 +460,11 @@ type OrderDTO struct {
 	PaymentMethod *string
 	Currency      string
 
+	// CustomerType is constant.CustomerIndividual or constant.CustomerLegal;
+	// LegalEntity is the buyer's requisites snapshot for a legal order.
+	CustomerType string
+	LegalEntity  *LegalEntityDTO
+
 	Email    string
 	Phone    *string
 	Shipping OrderShippingDTO
@@ -416,6 +490,33 @@ type OrderDTO struct {
 	CancelledAt *time.Time
 }
 
+// LegalEntityDTO is a legal-entity buyer's requisites. KPP is nil for a sole
+// proprietor (12-digit INN).
+type LegalEntityDTO struct {
+	Name    string
+	INN     string
+	KPP     *string
+	OGRN    *string
+	Address string
+}
+
+// IsSoleProprietor reports whether the buyer is a sole proprietor (12-digit
+// INN) rather than a company.
+func (l LegalEntityDTO) IsSoleProprietor() bool { return len(l.INN) == 12 }
+
+func legalEntityFromModel(o *models.Order) *LegalEntityDTO {
+	if o.CustomerType != constant.CustomerLegal || !o.LegalName.Valid {
+		return nil
+	}
+	return &LegalEntityDTO{
+		Name:    o.LegalName.String,
+		INN:     o.LegalInn.String,
+		KPP:     pgtypeutils.DecodeText(o.LegalKpp),
+		OGRN:    pgtypeutils.DecodeText(o.LegalOgrn),
+		Address: o.LegalAddress.String,
+	}
+}
+
 // OrderDTOFromModel maps a persisted order plus its line rows into the domain DTO.
 func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
 	out := &OrderDTO{
@@ -428,6 +529,8 @@ func OrderDTOFromModel(o *models.Order, items []*models.OrderItem) *OrderDTO {
 		PaymentStatus: o.PaymentStatus,
 		PaymentMethod: pgtypeutils.DecodeText(o.PaymentMethod),
 		Currency:      o.Currency,
+		CustomerType:  o.CustomerType,
+		LegalEntity:   legalEntityFromModel(o),
 		Email:         o.Email,
 		Phone:         pgtypeutils.DecodeText(o.Phone),
 		Shipping: OrderShippingDTO{

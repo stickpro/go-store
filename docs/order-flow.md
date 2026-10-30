@@ -122,11 +122,15 @@ create table order_status_history (
 var allowed = map[string][]string{
     "pending":    {"paid", "cancelled"},
     "paid":       {"processing", "refunded", "cancelled"},
-    "processing": {"shipped", "cancelled", "refunded"},
-    "shipped":    {"delivered", "refunded"},
-    "delivered":  {"refunded"},
+    "processing": {"shipped", "cancelled"},
+    "shipped":    {"delivered"},
 }
 ```
+
+Возврат (`refunded`) — только из `paid`: после начала сборки товар может быть
+уже в пути к покупателю. Возврат денег через эквайринг (`POST /v1/admin/orders/{number}/refund`):
+полный — для `paid` и `cancelled`; частичный (переплата после правки позиций) — для `paid`,
+`processing`, `cancelled`. Для `shipped` / `delivered` — `409`.
 
 `transition(ctx, tx, order, to, actor, comment)` — проверка перехода, `UPDATE orders`,
 запись в `order_status_history`, возврат доменного события для публикации после коммита.
@@ -226,12 +230,32 @@ FOR UPDATE SKIP LOCKED;
 (`UPDATE products SET quantity = quantity + qty` по позициям, где `subtract=true`),
 publish `order.cancelled`. Окно (30 мин) — в конфиг `WorkersConfig`.
 
+## Юрлица и оплата по счёту
+
+- В оформлении (`POST /v1/orders`) `customer_type: "legal"` + блок `legal_entity`
+  (`name`, `inn`, `kpp`, `ogrn`, `address`). ИНН/КПП/ОГРН проверяются по формату и
+  контрольной сумме; ИНН из 10 цифр — организация (КПП обязателен), из 12 — ИП (без КПП).
+  Реквизиты сохраняются в заказе снимком (`orders.legal_*`).
+- Способ оплаты `kind: invoice` (по умолчанию `code: invoice`) доступен только юрлицу и
+  только когда в конфиге заполнены реквизиты продавца (`invoice.seller`). Юрлицу разрешены
+  `invoice` и онлайн-оплата, физлицу `invoice` запрещён (`422`).
+- Счёт (`invoices`) выпускается в транзакции оформления: номер из `invoice_number_seq`
+  (+ `invoice.number_prefix`), срок оплаты `invoice.ttl`, полный снимок документа в `data`.
+  PDF рендерится из снимка по запросу через Gotenberg (`invoice.gotenberg_url`), шаблон —
+  `internal/service/invoice/templates/invoice.html` или свой (`invoice.template_path`).
+- Пока заказ не оплачен, при любом изменении состава/сумм/реквизитов (`enqueueSnapshot`)
+  счёт сверяется с заказом: если содержимое изменилось — старый аннулируется (`void`),
+  выпускается новый. При отмене неоплаченный счёт аннулируется. Оплаченный счёт не трогается.
+- Эндпоинты: `GET /v1/orders/{id}/invoice`, `GET /v1/orders/{id}/invoice/pdf`,
+  `GET /v1/admin/orders/{number}/invoice`, `GET /v1/admin/orders/{number}/invoice/pdf`.
+- Оплату по счёту подтверждает админ: перевод заказа в `paid`.
+
 ## Kafka-контракты
 
 `internal/messaging/contracts/order.go`:
 
 - `order.created` — `{order_number, user_id?, email, grand_total, currency, items[], created_at}`
-- `order.paid` — `{order_number, paid_at, payment_method}`
+- `order.paid` — `{order_id, paid_at, payment_method?, provider_payment_id?}`
 - `order.cancelled` — `{order_number, reason, cancelled_at}`
 
 Потребители: письма (через mail-очередь), аналитика, синхронизация с ERP/1С.

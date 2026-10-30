@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/shopspring/decimal"
 
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/models"
 	"github.com/stickpro/go-store/internal/storage"
@@ -345,6 +346,9 @@ func (s *Service) reserveRefund(ctx context.Context, d dto.RefundPaymentDTO) (*m
 			}
 			return fmt.Errorf("payment: lock order for refund: %w", err)
 		}
+		if !refundAllowed(constant.OrderStatus(o.Status), d.Full) {
+			return fmt.Errorf("%w: order is %s", ErrOrderNotRefundable, o.Status)
+		}
 
 		// A full refund returns everything; otherwise the customer keeps
 		// paying for what the order still holds and gets only the excess.
@@ -391,6 +395,22 @@ func (s *Service) reserveRefund(ctx context.Context, d dto.RefundPaymentDTO) (*m
 		return nil, nil, err
 	}
 	return p, refund, nil
+}
+
+// refundAllowed reports whether money may go back to the customer for an
+// order in this status. A full refund needs the order out of fulfilment:
+// still "paid" (it then moves to "refunded") or already "cancelled". A
+// partial refund only returns an overpayment after an items edit, which is
+// possible up to "processing". Once shipped, nothing is refunded here.
+func refundAllowed(status constant.OrderStatus, full bool) bool {
+	switch status {
+	case constant.OrderPaid, constant.OrderCancelled:
+		return true
+	case constant.OrderProcessing:
+		return !full
+	default:
+		return false
+	}
 }
 
 // refundAmount is what is owed back: what was captured, minus what is

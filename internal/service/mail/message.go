@@ -61,6 +61,10 @@ type OrderConfirmation struct {
 	Currency    string `json:"currency"`
 	// GrandTotal is pre-formatted (two decimals) so the template stays dumb.
 	GrandTotal string `json:"grand_total"`
+	// InvoiceNumber / InvoiceDueDate are set for an order paid by invoice;
+	// the due date is pre-formatted (DD.MM.YYYY).
+	InvoiceNumber  string `json:"invoice_number,omitempty"`
+	InvoiceDueDate string `json:"invoice_due_date,omitempty"`
 }
 
 func (OrderConfirmation) Kind() string { return KindOrderConfirmation }

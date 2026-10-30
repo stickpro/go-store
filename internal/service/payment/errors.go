@@ -34,6 +34,10 @@ var (
 	// ErrRefundRejected — the provider declined the refund; nothing was
 	// returned to the customer.
 	ErrRefundRejected = errors.New("payment: refund rejected")
+	// ErrOrderNotRefundable — the order's status does not allow this refund:
+	// the goods are shipped/delivered, or a full refund was asked for an
+	// order already in fulfilment.
+	ErrOrderNotRefundable = errors.New("payment: order status does not allow a refund")
 	// ErrIdempotencyConflict — the idempotency key was already used for a
 	// refund of another order.
 	ErrIdempotencyConflict = errors.New("payment: idempotency key reused for a different refund")

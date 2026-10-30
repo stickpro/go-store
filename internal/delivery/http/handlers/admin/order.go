@@ -403,6 +403,8 @@ func (h *Handler) paymentError(err error) error {
 		return apierror.New().AddError(errors.New("order has no captured payment left to refund")).SetHttpCode(fiber.StatusConflict)
 	case errors.Is(err, payment.ErrNothingToRefund):
 		return apierror.New().AddError(errors.New("nothing to refund: the customer has paid no more than the order total; send full=true to refund the whole order")).SetHttpCode(fiber.StatusConflict)
+	case errors.Is(err, payment.ErrOrderNotRefundable):
+		return apierror.New().AddError(errors.New("refund is not allowed in the order's current status: full refund only for paid or cancelled orders, overpayment refund up to processing")).SetHttpCode(fiber.StatusConflict)
 	case errors.Is(err, payment.ErrRefundPending):
 		h.logger.Warnw("admin: refund pending", "error", err)
 		return apierror.New().AddError(errors.New("refund is pending at the acquirer; retry later with the same Idempotency-Key, never a new one")).SetHttpCode(fiber.StatusConflict)
@@ -463,4 +465,6 @@ func (h *Handler) initOrderRoutes(v1 fiber.Router) {
 	o.Post("/:number/items/preview", h.previewOrderItems)
 	o.Put("/:number/items", h.updateOrderItems)
 	o.Get("/:number/edits", h.listOrderEdits)
+	o.Get("/:number/invoice", h.getOrderInvoice)
+	o.Get("/:number/invoice/pdf", h.getOrderInvoicePDF)
 }

@@ -60,6 +60,13 @@ func (s *Service) Cancel(ctx context.Context, number int64, actor, reason string
 			return fmt.Errorf("order: cancel history: %w", err)
 		}
 
+		// An unpaid invoice must not be paid after the order is gone.
+		if s.invoices != nil && updated.PaymentStatus != constant.PaymentPaid.String() {
+			if err := s.invoices.Void(ctx, tx, updated.ID); err != nil {
+				return fmt.Errorf("order: void invoice on cancel: %w", err)
+			}
+		}
+
 		if err := s.enqueueEvent(ctx, tx, contracts.OrderEventCancelled, updated.ID, contracts.OrderCancelledPayload{
 			OrderID:     updated.ID,
 			Reason:      reason,

@@ -223,9 +223,10 @@ func (h *Handler) markOrderPaid(ctx context.Context, p *dto.PaymentDTO, provider
 
 	method := providerCode
 	if _, err := h.services.OrderService.UpdateStatus(ctx, o.Number, dto.OrderStatusUpdateDTO{
-		Status:        constant.OrderPaid.String(),
-		Actor:         actor,
-		PaymentMethod: &method,
+		Status:            constant.OrderPaid.String(),
+		Actor:             actor,
+		PaymentMethod:     &method,
+		ProviderPaymentID: p.ProviderPaymentID,
 	}); err != nil {
 		if errors.Is(err, order.ErrInvalidTransition) {
 			h.logger.Warnw("payment: order not in a state to sync", "order", o.Number, "from", o.Status, "to", constant.OrderPaid, "error", err)

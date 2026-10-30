@@ -17,8 +17,9 @@ type PaymentMethodConfig struct {
 	// Title is the human label shown on the method tab.
 	Title string `yaml:"title"`
 	// Kind: "cash" (settled offline — on delivery/pickup, nothing routed through
-	// an acquirer) or "online" (routed through Provider via POST
-	// /v1/orders/{id}/payment).
+	// an acquirer), "online" (routed through Provider via POST
+	// /v1/orders/{id}/payment) or "invoice" (bank transfer against an invoice
+	// issued at checkout; legal entities only, needs invoice.seller set).
 	Kind string `yaml:"kind"`
 	// Provider is the acquiring provider code ("tbank", …) for an "online"
 	// method; empty for "cash".
@@ -30,6 +31,7 @@ func DefaultPaymentMethods() []PaymentMethodConfig {
 	return []PaymentMethodConfig{
 		{Code: "cash_on_delivery", Title: "Наличными при получении", Kind: "cash"},
 		{Code: "tbank", Title: "Банковской картой онлайн", Kind: "online", Provider: "tbank"},
+		{Code: "invoice", Title: "По счёту (для юрлиц и ИП)", Kind: "invoice"},
 	}
 }
 

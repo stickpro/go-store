@@ -10,6 +10,7 @@ import (
 	"github.com/stickpro/go-store/internal/service/collections"
 	"github.com/stickpro/go-store/internal/service/dashboard"
 	"github.com/stickpro/go-store/internal/service/geo"
+	"github.com/stickpro/go-store/internal/service/invoice"
 	"github.com/stickpro/go-store/internal/service/mail"
 	"github.com/stickpro/go-store/internal/service/manufacturer"
 	"github.com/stickpro/go-store/internal/service/media"
@@ -46,6 +47,7 @@ type Services struct {
 	ViewedService        viewed.IViewedService
 	MailService          mail.IMailService
 	OrderService         order.IOrderService
+	InvoiceService       invoice.IInvoiceService
 	DashboardService     dashboard.IDashboardService
 
 	// Shipping is every cached delivery-points integration (CDEK, Yandex
@@ -103,10 +105,17 @@ func InitService(
 	)
 
 	tbankService := tbank.New(conf)
-	paymentRegistry := payment.NewRegistry(conf.Payment.ResolvedMethods(), tbankService)
+	paymentRegistry := payment.NewRegistry(conf.Payment.ResolvedMethods(), tbankService).
+		WithInvoices(conf.Invoice.Configured())
 	paymentService := payment.New(logger, storage, paymentRegistry)
 
-	orderService, err := order.New(conf, logger, storage, cartService, userService, mailService, shippingRegistry)
+	invoiceService, err := invoice.New(conf, storage)
+	if err != nil {
+		return nil, err
+	}
+
+	orderService, err := order.New(conf, logger, storage, cartService, userService, mailService,
+		shippingRegistry, paymentRegistry, invoiceService)
 	if err != nil {
 		return nil, err
 	}
@@ -132,6 +141,7 @@ func InitService(
 		ViewedService:        viewedService,
 		MailService:          mailService,
 		OrderService:         orderService,
+		InvoiceService:       invoiceService,
 		DashboardService:     dashboardService,
 
 		Shipping: shippingRegistry,

@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stickpro/go-store/internal/tools/apierror"
+	"github.com/stickpro/go-store/pkg/requisites"
 )
 
 var defaultStructValidator *StructValidator
@@ -76,6 +77,7 @@ func newStruckValidator() *StructValidator {
 	_ = enTranslations.RegisterDefaultTranslations(validate, trans)
 
 	registerCustomValidators(validate)
+	registerCustomTranslations(validate, trans)
 
 	return &StructValidator{
 		validate: validate,
@@ -104,8 +106,36 @@ func registerCustomValidators(validate *validator.Validate) {
 		slugRegex := regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 		return slugRegex.MatchString(fl.Field().String())
 	})
+	// Russian company identifiers, checked by format and check digit.
+	_ = validate.RegisterValidation("inn", func(fl validator.FieldLevel) bool {
+		return requisites.IsINN(fl.Field().String())
+	})
+	_ = validate.RegisterValidation("kpp", func(fl validator.FieldLevel) bool {
+		return requisites.IsKPP(fl.Field().String())
+	})
+	_ = validate.RegisterValidation("ogrn", func(fl validator.FieldLevel) bool {
+		return requisites.IsOGRN(fl.Field().String())
+	})
 	// decimal validate
 	validate.RegisterCustomTypeFunc(ValidateDecimalType, decimal.Decimal{})
+}
+
+// registerCustomTranslations gives the custom tags readable messages instead
+// of the raw "failed on the 'inn' tag" fallback.
+func registerCustomTranslations(validate *validator.Validate, trans ut.Translator) {
+	messages := map[string]string{
+		"inn":  "{0} must be a valid INN (10 digits for a company, 12 for a sole proprietor)",
+		"kpp":  "{0} must be a valid KPP (9 characters)",
+		"ogrn": "{0} must be a valid OGRN (13 digits) or OGRNIP (15 digits)",
+	}
+	for tag, msg := range messages {
+		_ = validate.RegisterTranslation(tag, trans,
+			func(ut ut.Translator) error { return ut.Add(tag, msg, true) },
+			func(ut ut.Translator, fe validator.FieldError) string {
+				t, _ := ut.T(tag, fe.Field())
+				return t
+			})
+	}
 }
 
 func ValidateDecimalType(field reflect.Value) interface{} {

@@ -354,6 +354,8 @@ schemas:
             primary_column: id
         order_edits:
             primary_column: id
+        invoices:
+            primary_column: id
         order_inbound_events:
             primary_column: event_id
         order_outbox:

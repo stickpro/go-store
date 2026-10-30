@@ -9,6 +9,8 @@ type Registry struct {
 	byCode    map[string]Provider
 	methods   []Method
 	methodIdx map[string]Method
+	// invoices is whether MethodInvoice can be offered (seller requisites set).
+	invoices bool
 }
 
 // NewRegistry indexes providers by their Code and builds the payment-method
@@ -26,6 +28,13 @@ func NewRegistry(methods []config.PaymentMethodConfig, providers ...Provider) *R
 	}
 
 	return &Registry{byCode: byCode, methods: ms, methodIdx: methodIdx}
+}
+
+// WithInvoices sets whether MethodInvoice entries are available — true once
+// the seller requisites an invoice needs are configured.
+func (r *Registry) WithInvoices(enabled bool) *Registry {
+	r.invoices = enabled
+	return r
 }
 
 // Get returns the provider registered under code, if it exists and is
@@ -53,6 +62,15 @@ func (r *Registry) Method(code string) (Method, bool) {
 	return m, ok
 }
 
+// Available returns the catalogue entry for code if it exists and is enabled.
+func (r *Registry) Available(code string) (Method, bool) {
+	m, ok := r.methodIdx[code]
+	if !ok || !r.methodInfo(m).Enabled {
+		return Method{}, false
+	}
+	return m, true
+}
+
 // Methods returns the payment-method catalogue with per-method availability
 // resolved.
 func (r *Registry) Methods() []MethodInfo {
@@ -64,6 +82,9 @@ func (r *Registry) Methods() []MethodInfo {
 }
 
 func (r *Registry) methodInfo(m Method) MethodInfo {
+	if m.Kind == MethodInvoice {
+		return MethodInfo{Method: m, Enabled: r.invoices}
+	}
 	if m.Kind == MethodCash || m.Provider == "" {
 		return MethodInfo{Method: m, Enabled: true}
 	}

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Счёт на оплату № {{.Number}}</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 12mm 12mm 12mm 18mm;
+    font-family: Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
+    font-size: 9pt;
+    color: #000;
+  }
+  table { border-collapse: collapse; width: 100%; }
+  .bank td { border: 1px solid #000; padding: 2px 4px; vertical-align: top; }
+  .bank .label { font-size: 8pt; }
+  .bank .noborder-bottom { border-bottom: none; }
+  .bank .noborder-top { border-top: none; }
+  h1 {
+    font-size: 14pt;
+    margin: 16px 0 6px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #000;
+  }
+  .parties td { padding: 4px 0; vertical-align: top; }
+  .parties td.k { width: 90px; }
+  .parties td.v { font-weight: bold; }
+  .items { margin-top: 8px; }
+  .items th, .items td { border: 1px solid #000; padding: 3px 4px; }
+  .items th { font-weight: bold; text-align: center; }
+  .items td.num, .items td.c { text-align: center; }
+  .items td.r { text-align: right; white-space: nowrap; }
+  .items { border: 2px solid #000; }
+  .totals { margin-top: 4px; }
+  .totals td { padding: 1px 4px; text-align: right; font-weight: bold; }
+  .totals td.amount { width: 110px; white-space: nowrap; }
+  .summary { margin-top: 8px; }
+  .words { font-weight: bold; margin-top: 2px; }
+  .due {
+    margin-top: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #000;
+  }
+  .signs { margin-top: 20px; }
+  .signs td { padding: 6px 4px 0 0; vertical-align: bottom; }
+  .signs .role { font-weight: bold; width: 110px; }
+  .signs .line { border-bottom: 1px solid #000; width: 140px; }
+  .signs .name { padding-left: 8px; }
+</style>
+</head>
+<body>
+
+<table class="bank">
+  <tr>
+    <td colspan="2" rowspan="2" class="noborder-bottom" style="width:58%">{{.Seller.BankName}}</td>
+    <td style="width:8%">БИК</td>
+    <td style="width:34%" class="noborder-bottom">{{.Seller.BIK}}</td>
+  </tr>
+  <tr>
+    <td rowspan="2">Сч. №</td>
+    <td rowspan="2" class="noborder-top">{{.Seller.CorrAccount}}</td>
+  </tr>
+  <tr>
+    <td colspan="2" class="noborder-top label">Банк получателя</td>
+  </tr>
+  <tr>
+    <td style="width:29%">ИНН {{.Seller.INN}}</td>
+    <td style="width:29%">КПП {{deref .Seller.KPP}}</td>
+    <td rowspan="3">Сч. №</td>
+    <td rowspan="3">{{.Seller.Account}}</td>
+  </tr>
+  <tr>
+    <td colspan="2" class="noborder-bottom">{{.Seller.Name}}</td>
+  </tr>
+  <tr>
+    <td colspan="2" class="noborder-top label">Получатель</td>
+  </tr>
+</table>
+
+<h1>Счёт на оплату № {{.Number}} от {{dateLong .IssuedAt}}</h1>
+
+<table class="parties">
+  <tr>
+    <td class="k">Поставщик<br>(Исполнитель):</td>
+    <td class="v">
+      {{.Seller.Name}}, ИНН {{.Seller.INN}}{{with .Seller.KPP}}, КПП {{.}}{{end}}{{with .Seller.OGRN}}, ОГРН {{.}}{{end}}, {{.Seller.Address}}{{with .Seller.Phone}}, тел.: {{.}}{{end}}
+    </td>
+  </tr>
+  <tr>
+    <td class="k">Покупатель<br>(Заказчик):</td>
+    <td class="v">
+      {{.Buyer.Name}}, ИНН {{.Buyer.INN}}{{with .Buyer.KPP}}, КПП {{.}}{{end}}{{with .Buyer.OGRN}}, ОГРН {{.}}{{end}}, {{.Buyer.Address}}{{with .Buyer.Phone}}, тел.: {{.}}{{end}}
+    </td>
+  </tr>
+  <tr>
+    <td class="k">Основание:</td>
+    <td class="v">Заказ № {{.OrderNumber}}</td>
+  </tr>
+</table>
+
+<table class="items">
+  <thead>
+    <tr>
+      <th style="width:5%">№</th>
+      <th>Товары (работы, услуги)</th>
+      <th style="width:9%">Кол-во</th>
+      <th style="width:6%">Ед.</th>
+      <th style="width:14%">Цена</th>
+      <th style="width:15%">Сумма</th>
+    </tr>
+  </thead>
+  <tbody>
+  {{range .Lines}}
+    <tr>
+      <td class="num">{{.No}}</td>
+      <td>{{.Name}}</td>
+      <td class="r">{{qty .Quantity}}</td>
+      <td class="c">{{.Unit}}</td>
+      <td class="r">{{money .Price}}</td>
+      <td class="r">{{money .Total}}</td>
+    </tr>
+  {{end}}
+  </tbody>
+</table>
+
+<table class="totals">
+  {{if .Discount.IsPositive}}
+  <tr><td>Скидка:</td><td class="amount">{{money .Discount}}</td></tr>
+  {{end}}
+  <tr><td>Итого:</td><td class="amount">{{money .Total}}</td></tr>
+  {{if .VATRate}}
+  <tr><td>В том числе НДС ({{.VATRate.String}}%):</td><td class="amount">{{money .VATAmount}}</td></tr>
+  {{else}}
+  <tr><td>Без налога (НДС)</td><td class="amount">-</td></tr>
+  {{end}}
+  <tr><td>Всего к оплате:</td><td class="amount">{{money .Total}}</td></tr>
+</table>
+
+<div class="summary">
+  Всего наименований {{len .Lines}}, на сумму {{money .Total}} руб.
+  <div class="words">{{.AmountInWords}}</div>
+</div>
+
+<div class="due">
+  Оплатить не позднее {{date .DueAt}}.<br>
+  Оплата данного счёта означает согласие с условиями поставки товара. В назначении платежа укажите номер счёта.
+  Товар отпускается по факту прихода денег на р/с Поставщика.
+</div>
+
+<table class="signs">
+  <tr>
+    <td class="role">Руководитель</td>
+    <td class="line"></td>
+    <td class="name">{{.Seller.Director}}</td>
+    <td class="role" style="padding-left:24px">Бухгалтер</td>
+    <td class="line"></td>
+    <td class="name">{{.Seller.Accountant}}</td>
+  </tr>
+</table>
+
+</body>
+</html>

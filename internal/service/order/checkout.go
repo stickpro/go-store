@@ -29,6 +29,10 @@ import (
 var errDuplicateOrder = errors.New("order: duplicate idempotency key")
 
 func (s *Service) CreateOrder(ctx context.Context, d dto.CreateOrderDTO) (*dto.OrderDTO, error) {
+	if err := s.checkPaymentMethod(d.CustomerType, d.PaymentMethod); err != nil {
+		return nil, err
+	}
+
 	if d.IdempotencyKey != nil && *d.IdempotencyKey != "" {
 		if existing, err := s.storage.Orders().GetByIdempotencyKey(ctx, pgtypeutils.EncodeText(d.IdempotencyKey)); err == nil {
 			return s.assemble(ctx, existing)
@@ -249,7 +253,22 @@ func (s *Service) createParams(d dto.CreateOrderDTO, t orderTotals, sc shippingC
 		cityID = uuid.NullUUID{UUID: *d.ShipCityID, Valid: true}
 	}
 
+	customerType := d.CustomerType
+	if customerType == "" {
+		customerType = constant.CustomerIndividual
+	}
+	var legal dto.LegalEntityDTO
+	if d.LegalEntity != nil {
+		legal = *d.LegalEntity
+	}
+
 	return repository_orders.CreateParams{
+		CustomerType:   customerType,
+		LegalName:      pgtypeutils.EncodeText(strOrNil(legal.Name)),
+		LegalInn:       pgtypeutils.EncodeText(strOrNil(legal.INN)),
+		LegalKpp:       pgtypeutils.EncodeText(legal.KPP),
+		LegalOgrn:      pgtypeutils.EncodeText(legal.OGRN),
+		LegalAddress:   pgtypeutils.EncodeText(strOrNil(legal.Address)),
 		UserID:         userID,
 		Status:         initialStatus(d).String(),
 		Source:         orderSource(d),
@@ -290,11 +309,13 @@ func (s *Service) afterCommit(ctx context.Context, owner dto.Owner, o *dto.Order
 	// manager confirms it) and often no email at all — skip the receipt; the
 	// order.created event notifies the back office instead.
 	if o.Source != constant.OrderSourceQuick && o.Email != "" {
-		if err := s.mail.Enqueue(ctx, o.Email, mail.OrderConfirmation{
+		msg := mail.OrderConfirmation{
 			OrderNumber: o.Number,
 			Currency:    o.Currency,
 			GrandTotal:  o.GrandTotal.StringFixed(2),
-		}); err != nil {
+		}
+		s.addInvoiceToConfirmation(ctx, o, &msg)
+		if err := s.mail.Enqueue(ctx, o.Email, msg); err != nil {
 			s.logger.Errorw("order: enqueue confirmation email", "order", o.Number, "error", err)
 		}
 	}

@@ -223,6 +223,7 @@ func (h *Handler) orderError(err error) error {
 		return apierror.New().AddError(lineErr, apierror.WithField(lineErr.VariantID.String())).
 			SetHttpCode(fiber.StatusUnprocessableEntity)
 	case errors.Is(err, order.ErrCartEmpty), errors.Is(err, dto.ErrEmailRequired),
+		errors.Is(err, order.ErrPaymentMethodNotAllowed),
 		errors.Is(err, order.ErrShippingUnavailable), errors.Is(err, order.ErrShippingMethodUnknown),
 		errors.Is(err, shipping.ErrRatesNotSupported):
 		return apierror.New().AddError(err).SetHttpCode(fiber.StatusUnprocessableEntity)

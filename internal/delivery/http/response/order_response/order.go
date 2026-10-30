@@ -40,14 +40,27 @@ type OrderItemResponse struct {
 	LineTotal decimal.Decimal `json:"line_total"`
 } //	@name	OrderItemResponse
 
+// LegalEntityResponse is the buyer's requisites of a legal-entity order. kpp
+// is null for a sole proprietor (12-digit inn).
+type LegalEntityResponse struct {
+	Name    string  `json:"name"`
+	INN     string  `json:"inn"`
+	KPP     *string `json:"kpp"`
+	OGRN    *string `json:"ogrn"`
+	Address string  `json:"address"`
+} //	@name	LegalEntityResponse
+
 type OrderResponse struct {
-	ID            uuid.UUID             `json:"id"`
-	Number        int64                 `json:"number"`
-	Status        string                `json:"status"`
-	Source        string                `json:"source"`
-	PaymentStatus string                `json:"payment_status"`
-	PaymentMethod *string               `json:"payment_method"`
-	Currency      string                `json:"currency"`
+	ID            uuid.UUID `json:"id"`
+	Number        int64     `json:"number"`
+	Status        string    `json:"status"`
+	Source        string    `json:"source"`
+	PaymentStatus string    `json:"payment_status"`
+	PaymentMethod *string   `json:"payment_method"`
+	Currency      string    `json:"currency"`
+	// CustomerType is "individual" or "legal"; legal_entity is set for "legal".
+	CustomerType  string                `json:"customer_type"`
+	LegalEntity   *LegalEntityResponse  `json:"legal_entity"`
 	Email         string                `json:"email"`
 	Phone         *string               `json:"phone"`
 	Shipping      OrderShippingResponse `json:"shipping"`
@@ -88,6 +101,8 @@ func NewFromDTO(d *dto.OrderDTO) *OrderResponse {
 		PaymentStatus: d.PaymentStatus,
 		PaymentMethod: d.PaymentMethod,
 		Currency:      d.Currency,
+		CustomerType:  d.CustomerType,
+		LegalEntity:   newLegalEntity(d.LegalEntity),
 		Email:         d.Email,
 		Phone:         d.Phone,
 		Shipping: OrderShippingResponse{
@@ -133,4 +148,11 @@ func NewPaginated(
 		Items:      items,
 		Pagination: data.Pagination,
 	}
+}
+
+func newLegalEntity(l *dto.LegalEntityDTO) *LegalEntityResponse {
+	if l == nil {
+		return nil
+	}
+	return &LegalEntityResponse{Name: l.Name, INN: l.INN, KPP: l.KPP, OGRN: l.OGRN, Address: l.Address}
 }

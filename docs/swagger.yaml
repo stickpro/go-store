@@ -63,6 +63,10 @@ definitions:
         type: string
       currency:
         type: string
+      customer_type:
+        description: CustomerType is "individual" or "legal"; legal_entity is set
+          for "legal".
+        type: string
       discount_total:
         type: number
       email:
@@ -77,6 +81,8 @@ definitions:
         items:
           $ref: '#/definitions/OrderItemResponse'
         type: array
+      legal_entity:
+        $ref: '#/definitions/LegalEntityResponse'
       number:
         type: integer
       paid_at:
@@ -812,6 +818,15 @@ definitions:
       comment:
         maxLength: 2000
         type: string
+      customer_type:
+        description: |-
+          CustomerType is "individual" (default) or "legal" — a company or a sole
+          proprietor. "legal" requires legal_entity and unlocks the "invoice"
+          payment method; a legal buyer may pay by invoice or online only.
+        enum:
+        - individual
+        - legal
+        type: string
       delivery_method_code:
         description: |-
           Delivery choice. delivery_method_code (from GET /v1/delivery/methods) is
@@ -829,6 +844,8 @@ definitions:
           order is rejected (price/availability changed since the cart was shown).
           Decimal string, e.g. "1990.00".
         type: string
+      legal_entity:
+        $ref: '#/definitions/LegalEntityRequest'
       payment_method:
         maxLength: 32
         type: string
@@ -1185,6 +1202,25 @@ definitions:
     required:
     - provider
     type: object
+  InvoiceResponse:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      due_at:
+        type: string
+      id:
+        type: string
+      issued_at:
+        type: string
+      number:
+        type: string
+      order_id:
+        type: string
+      status:
+        type: string
+    type: object
   JSONResponse-AdminOrderItemsEditResponse:
     properties:
       code:
@@ -1317,6 +1353,15 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/DashboardResponse'
+      message:
+        type: string
+    type: object
+  JSONResponse-InvoiceResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/InvoiceResponse'
       message:
         type: string
     type: object
@@ -1769,6 +1814,38 @@ definitions:
       message:
         type: string
     type: object
+  LegalEntityRequest:
+    properties:
+      address:
+        maxLength: 512
+        type: string
+      inn:
+        type: string
+      kpp:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      ogrn:
+        type: string
+    required:
+    - address
+    - inn
+    - name
+    type: object
+  LegalEntityResponse:
+    properties:
+      address:
+        type: string
+      inn:
+        type: string
+      kpp:
+        type: string
+      name:
+        type: string
+      ogrn:
+        type: string
+    type: object
   ManufacturerResponse:
     properties:
       created_at:
@@ -1888,6 +1965,10 @@ definitions:
         type: string
       currency:
         type: string
+      customer_type:
+        description: CustomerType is "individual" or "legal"; legal_entity is set
+          for "legal".
+        type: string
       discount_total:
         type: number
       email:
@@ -1900,6 +1981,8 @@ definitions:
         items:
           $ref: '#/definitions/OrderItemResponse'
         type: array
+      legal_entity:
+        $ref: '#/definitions/LegalEntityResponse'
       number:
         type: integer
       paid_at:
@@ -1963,7 +2046,7 @@ definitions:
       enabled:
         type: boolean
       kind:
-        description: cash | online
+        description: cash | online | invoice
         type: string
       provider:
         type: string
@@ -3328,6 +3411,69 @@ paths:
       security:
       - BearerAuth: []
       summary: List order item edits
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}/invoice:
+    get:
+      description: The active invoice of an order with an `invoice` payment method.
+        Reissued automatically when the order's items, totals or buyer change while
+        unpaid; voided on cancel.
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-InvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Get order invoice
+      tags:
+      - Admin Order
+  /v1/admin/orders/{number}/invoice/pdf:
+    get:
+      parameters:
+      - description: Order number
+        in: path
+        name: number
+        required: true
+        type: integer
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/APIErrors'
+      security:
+      - BearerAuth: []
+      summary: Download order invoice
       tags:
       - Admin Order
   /v1/admin/orders/{number}/items:
@@ -5384,6 +5530,68 @@ paths:
           schema:
             $ref: '#/definitions/APIErrors'
       summary: Create order
+      tags:
+      - Order
+  /v1/orders/{id}/invoice:
+    get:
+      description: The active invoice of an order with payment_method of kind `invoice`
+        (legal entities). `id` is the order's `id`, not its `number` — as for the
+        payment endpoints, it authorizes guest requests. Download the document from
+        GET /v1/orders/{id}/invoice/pdf.
+      parameters:
+      - description: Order id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponse-InvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Get order invoice
+      tags:
+      - Order
+  /v1/orders/{id}/invoice/pdf:
+    get:
+      description: The active invoice of an order as a PDF document. `id` is the order's
+        `id`.
+      parameters:
+      - description: Order id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIErrors'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/APIErrors'
+      summary: Download order invoice
       tags:
       - Order
   /v1/orders/{id}/payment:

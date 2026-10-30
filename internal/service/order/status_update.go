@@ -93,9 +93,10 @@ func (s *Service) UpdateStatus(ctx context.Context, number int64, d dto.OrderSta
 
 		if to == constant.OrderPaid {
 			if err := s.enqueueEvent(ctx, tx, contracts.OrderEventPaid, updated.ID, contracts.OrderPaidPayload{
-				OrderID:       updated.ID,
-				PaymentMethod: pgtypeutils.DecodeText(updated.PaymentMethod),
-				PaidAt:        updated.PaidAt.Time,
+				OrderID:           updated.ID,
+				PaymentMethod:     pgtypeutils.DecodeText(updated.PaymentMethod),
+				ProviderPaymentID: d.ProviderPaymentID,
+				PaidAt:            updated.PaidAt.Time,
 			}); err != nil {
 				return err
 			}

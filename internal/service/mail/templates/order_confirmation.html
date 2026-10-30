@@ -8,6 +8,12 @@
 <p style="margin:0 0 24px;font-size:18px;">
   К оплате: <strong>{{.Data.GrandTotal}} {{.Data.Currency}}</strong>
 </p>
+{{if .Data.InvoiceNumber}}
+<p style="margin:0 0 24px;">
+  Выставлен счёт <strong>№{{.Data.InvoiceNumber}}</strong>, оплатить до <strong>{{.Data.InvoiceDueDate}}</strong>.
+  Скачать счёт можно на странице заказа. В назначении платежа укажите номер счёта.
+</p>
+{{end}}
 <p style="margin:0 0 24px;">
   <a href="{{.SiteURL}}" style="display:inline-block;background:#18181b;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
     Перейти в магазин

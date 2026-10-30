@@ -9,7 +9,7 @@ import "github.com/stickpro/go-store/internal/service/payment"
 type PaymentMethodResponse struct {
 	Code     string `json:"code"`
 	Title    string `json:"title"`
-	Kind     string `json:"kind"` // cash | online
+	Kind     string `json:"kind"` // cash | online | invoice
 	Provider string `json:"provider,omitempty"`
 	Enabled  bool   `json:"enabled"`
 } //	@name	PaymentMethodResponse

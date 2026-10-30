@@ -44,14 +44,21 @@ func (s *Service) enqueueEvent(ctx context.Context, tx pgx.Tx, eventType string,
 
 // enqueueSnapshot queues an event carrying the whole order (order.created /
 // order.updated). order and items must be the rows as written by the
-// surrounding transaction.
+// surrounding transaction. Every change to an order's content passes through
+// here, so this is also where the order's invoice is kept in sync with it —
+// regardless of whether the ERP exchange is enabled.
 func (s *Service) enqueueSnapshot(ctx context.Context, tx pgx.Tx, eventType string, o *models.Order, items []*models.OrderItem) error {
-	return s.enqueueEvent(ctx, tx, eventType, o.ID, orderSnapshot(dto.OrderDTOFromModel(o, items)))
+	od := dto.OrderDTOFromModel(o, items)
+	inv, err := s.syncInvoice(ctx, tx, od)
+	if err != nil {
+		return err
+	}
+	return s.enqueueEvent(ctx, tx, eventType, o.ID, orderSnapshot(od, inv))
 }
 
-// orderSnapshot maps an order to the full-snapshot body of the order.created /
-// order.updated events.
-func orderSnapshot(o *dto.OrderDTO) contracts.OrderSnapshotPayload {
+// orderSnapshot maps an order (and its active invoice, if any) to the
+// full-snapshot body of the order.created / order.updated events.
+func orderSnapshot(o *dto.OrderDTO, inv *dto.InvoiceDTO) contracts.OrderSnapshotPayload {
 	its := make([]contracts.OrderEventItem, 0, len(o.Items))
 	for _, it := range o.Items {
 		its = append(its, contracts.OrderEventItem{
@@ -75,6 +82,9 @@ func orderSnapshot(o *dto.OrderDTO) contracts.OrderSnapshotPayload {
 		Status:        o.Status,
 		PaymentStatus: o.PaymentStatus,
 		PaymentMethod: o.PaymentMethod,
+		CustomerType:  o.CustomerType,
+		LegalEntity:   legalEntityEvent(o.LegalEntity),
+		Invoice:       invoiceEvent(inv),
 		Email:         o.Email,
 		Phone:         o.Phone,
 		Shipping: contracts.OrderEventShipping{
@@ -96,5 +106,30 @@ func orderSnapshot(o *dto.OrderDTO) contracts.OrderSnapshotPayload {
 		Items:         its,
 		Comment:       o.Comment,
 		CreatedAt:     o.CreatedAt,
+	}
+}
+
+func legalEntityEvent(l *dto.LegalEntityDTO) *contracts.OrderEventLegalEntity {
+	if l == nil {
+		return nil
+	}
+	return &contracts.OrderEventLegalEntity{
+		Name:    l.Name,
+		INN:     l.INN,
+		KPP:     l.KPP,
+		OGRN:    l.OGRN,
+		Address: l.Address,
+	}
+}
+
+func invoiceEvent(inv *dto.InvoiceDTO) *contracts.OrderEventInvoice {
+	if inv == nil {
+		return nil
+	}
+	return &contracts.OrderEventInvoice{
+		Number:   inv.Number,
+		Amount:   inv.Amount,
+		IssuedAt: inv.IssuedAt,
+		DueAt:    inv.DueAt,
 	}
 }

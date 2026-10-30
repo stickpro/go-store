@@ -28,6 +28,7 @@ type (
 		Pochta         PochtaConfig         `yaml:"pochta"`
 		TBank          TBankConfig          `yaml:"tbank"` //nolint:tagliatelle // "tbank" (not "t_bank") matches the provider code used everywhere else (routes, constants, env vars already deployed); don't rename
 		Payment        PaymentConfig        `yaml:"payment"`
+		Invoice        InvoiceConfig        `yaml:"invoice"`
 	}
 
 	// OrderConfig tunes checkout. Money amounts are decimal strings ("0" disables

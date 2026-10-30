@@ -89,6 +89,7 @@
     "status": "pending",
     "payment_status": "unpaid",
     "payment_method": "card",
+    "customer_type": "individual",
     "email": "buyer@example.com",
     "phone": "+79990001122",
     "shipping": {
@@ -135,6 +136,9 @@
 | `status` | да | Текущий статус заказа. В `order.created` — `pending` или `new` (для `quick`) |
 | `payment_status` | да | `unpaid` / `paid` / `partially_refunded` / `refunded` / `failed` |
 | `payment_method` | нет | Способ оплаты |
+| `customer_type` | да | `individual` — физлицо; `legal` — юрлицо или ИП |
+| `legal_entity` | нет | Реквизиты покупателя-юрлица, есть только при `customer_type = legal`: `name`, `inn`, `kpp`, `ogrn`, `address`. ИНН из 10 цифр — организация (`kpp` заполнен), из 12 — ИП (`kpp` отсутствует). `ogrn` необязателен: 13 цифр у организации, 15 (ОГРНИП) у ИП |
+| `invoice` | нет | Счёт на оплату, если заказ оплачивается по счёту: `number` (номер, который покупатель укажет в назначении платежа), `amount`, `issued_at`, `due_at`. Сайт перевыпускает счёт при изменении заказа до оплаты — тогда в `order.updated` приходит новый `number`, а прежний счёт недействителен |
 | `email` | да | |
 | `phone` | нет | |
 | `shipping.city_name`, `address`, `recipient` | да | Снимок адреса; у `quick`-заказа могут быть пустыми строками |
@@ -147,6 +151,33 @@
 | `items[].name`, `unit_price`, `quantity`, `line_total` | да | Снимок позиции на момент заказа |
 | `comment` | нет | Комментарий покупателя |
 | `created_at` | да | |
+
+Пример заказа юрлица с оплатой по счёту (показаны только отличающиеся поля):
+
+```json
+{
+  "payload": {
+    "payment_method": "invoice",
+    "customer_type": "legal",
+    "legal_entity": {
+      "name": "ООО \"Покупатель\"",
+      "inn": "7736207543",
+      "kpp": "770101001",
+      "ogrn": "1027700229193",
+      "address": "119021, г. Москва, ул. Льва Толстого, д. 16"
+    },
+    "invoice": {
+      "number": "СЧ-1024",
+      "amount": "2930.00",
+      "issued_at": "2026-10-11T09:30:00Z",
+      "due_at": "2026-10-16T09:30:00Z"
+    }
+  }
+}
+```
+
+Оплату по счёту сейчас подтверждает менеджер в админке (перевод заказа в
+`paid`), после чего уходит `order.paid`.
 
 ### `order.updated`
 
@@ -191,11 +222,19 @@
   "occurred_at": "2026-10-11T12:34:10+03:00",
   "payload": {
     "order_id": "8f2f4f0c-3b0e-4f43-9a52-2d1a6b0d9c10",
-    "payment_method": "card",
+    "payment_method": "tbank",
+    "provider_payment_id": "7012345678",
     "paid_at": "2026-10-11T12:34:10+03:00"
   }
 }
 ```
+
+| Поле | Обязательное | Описание |
+|---|---|---|
+| `order_id` | да | ID заказа |
+| `payment_method` | нет | Способ оплаты; при онлайн-оплате — код платёжного провайдера (например, `tbank`) |
+| `provider_payment_id` | нет | ID платежа у эквайера (например, `PaymentId` T-Bank) — для сверки с банковской выпиской. Не передаётся, если заказ отмечен оплаченным вручную, без онлайн-платежа |
+| `paid_at` | да | Время оплаты |
 
 ### `order.cancelled`
 

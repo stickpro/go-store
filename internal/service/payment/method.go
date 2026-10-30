@@ -13,6 +13,10 @@ const (
 	// MethodOnline is routed through Provider: after checkout, the frontend
 	// calls POST /v1/orders/{id}/payment with this method's Provider code.
 	MethodOnline MethodKind = "online"
+	// MethodInvoice is a bank transfer against an invoice the store issues at
+	// checkout. Legal entities and sole proprietors only; the order waits in
+	// "pending" until the transfer is confirmed (by an admin or the ERP).
+	MethodInvoice MethodKind = "invoice"
 )
 
 // Method is one checkout payment option: a stable code the frontend and
@@ -29,7 +33,8 @@ type Method struct {
 type MethodInfo struct {
 	Method
 	// Enabled: false hides the tab. Always true for MethodCash; for
-	// MethodOnline, true only if Provider is registered and enabled.
+	// MethodOnline, true only if Provider is registered and enabled; for
+	// MethodInvoice, true only once the seller requisites are configured.
 	Enabled bool
 }
 

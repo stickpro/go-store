@@ -8,6 +8,7 @@ import (
 	"github.com/stickpro/go-store/internal/storage/repository/repository_category_paths"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_cities"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_collections"
+	"github.com/stickpro/go-store/internal/storage/repository/repository_invoices"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_manufacturers"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_media"
 	"github.com/stickpro/go-store/internal/storage/repository/repository_order_edits"
@@ -54,6 +55,7 @@ type IRepository interface {
 	OrderOutbox(opts ...Option) repository_order_outbox.Querier
 	Payments(opts ...Option) repository_payments.Querier
 	PaymentRefunds(opts ...Option) repository_payment_refunds.Querier
+	Invoices(opts ...Option) repository_invoices.Querier
 }
 
 type repository struct {
@@ -77,6 +79,7 @@ type repository struct {
 	orderItems               *repository_order_items.Queries
 	orderStatusHistory       *repository_order_status_history.Queries
 	orderEdits               *repository_order_edits.Queries
+	invoices                 *repository_invoices.Queries
 	orderInboundEvents       *repository_order_inbound_events.Queries
 	orderOutbox              *repository_order_outbox.Queries
 	payments                 *repository_payments.Queries
@@ -105,6 +108,7 @@ func InitRepository(psql *database.PostgresClient, _ key_value.IKeyValue) IRepos
 		orderItems:               repository_order_items.New(psql.DB),
 		orderStatusHistory:       repository_order_status_history.New(psql.DB),
 		orderEdits:               repository_order_edits.New(psql.DB),
+		invoices:                 repository_invoices.New(psql.DB),
 		orderInboundEvents:       repository_order_inbound_events.New(psql.DB),
 		orderOutbox:              repository_order_outbox.New(psql.DB),
 		payments:                 repository_payments.New(psql.DB),
@@ -302,4 +306,12 @@ func (r *repository) OrderOutbox(opts ...Option) repository_order_outbox.Querier
 		return r.orderOutbox.WithTx(options.Tx)
 	}
 	return r.orderOutbox
+}
+
+func (r *repository) Invoices(opts ...Option) repository_invoices.Querier {
+	options := parseOptions(opts...)
+	if options.Tx != nil {
+		return r.invoices.WithTx(options.Tx)
+	}
+	return r.invoices
 }

@@ -1,4 +1,4 @@
-что -- name: Enqueue :exec
+-- name: Enqueue :exec
 -- Queues an order event for the ERP. Must run in the transaction that makes
 -- the change the event describes.
 INSERT INTO order_outbox (event_id, event_type, schema_version, order_id, payload)

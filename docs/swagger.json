@@ -583,6 +583,103 @@
                 }
             }
         },
+        "/v1/admin/orders/{number}/invoice": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The active invoice of an order with an `invoice` payment method. Reissued automatically when the order's items, totals or buyer change while unpaid; voided on cancel.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Order"
+                ],
+                "summary": "Get order invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order number",
+                        "name": "number",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-InvoiceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/orders/{number}/invoice/pdf": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Admin Order"
+                ],
+                "summary": "Download order invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order number",
+                        "name": "number",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/admin/orders/{number}/items": {
             "put": {
                 "security": [
@@ -3834,6 +3931,94 @@
                 }
             }
         },
+        "/v1/orders/{id}/invoice": {
+            "get": {
+                "description": "The active invoice of an order with payment_method of kind `invoice` (legal entities). `id` is the order's `id`, not its `number` — as for the payment endpoints, it authorizes guest requests. Download the document from GET /v1/orders/{id}/invoice/pdf.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Get order invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/JSONResponse-InvoiceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/orders/{id}/invoice/pdf": {
+            "get": {
+                "description": "The active invoice of an order as a PDF document. `id` is the order's `id`.",
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Download order invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/APIErrors"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/orders/{id}/payment": {
             "get": {
                 "description": "The most recent payment attempt for the order (a customer may retry after a failed/expired attempt). `id` is the order's `id`, not its `number` — see POST on the same path.",
@@ -5737,6 +5922,10 @@
                 "currency": {
                     "type": "string"
                 },
+                "customer_type": {
+                    "description": "CustomerType is \"individual\" or \"legal\"; legal_entity is set for \"legal\".",
+                    "type": "string"
+                },
                 "discount_total": {
                     "type": "number"
                 },
@@ -5757,6 +5946,9 @@
                     "items": {
                         "$ref": "#/definitions/OrderItemResponse"
                     }
+                },
+                "legal_entity": {
+                    "$ref": "#/definitions/LegalEntityResponse"
                 },
                 "number": {
                     "type": "integer"
@@ -6846,6 +7038,14 @@
                     "type": "string",
                     "maxLength": 2000
                 },
+                "customer_type": {
+                    "description": "CustomerType is \"individual\" (default) or \"legal\" — a company or a sole\nproprietor. \"legal\" requires legal_entity and unlocks the \"invoice\"\npayment method; a legal buyer may pay by invoice or online only.",
+                    "type": "string",
+                    "enum": [
+                        "individual",
+                        "legal"
+                    ]
+                },
                 "delivery_method_code": {
                     "description": "Delivery choice. delivery_method_code (from GET /v1/delivery/methods) is\nresolved server-side to a carrier + tariff — the frontend never sends\ntariff codes. ship_provider + ship_tariff_code are the raw fallback\n(ship_tariff_code must be paired with ship_provider). ship_point_code is\nthe chosen pickup point; for courier methods send ship_postcode instead.",
                     "type": "string",
@@ -6857,6 +7057,9 @@
                 "expected_total": {
                     "description": "ExpectedTotal, when set, must equal the server-computed grand total or the\norder is rejected (price/availability changed since the cart was shown).\nDecimal string, e.g. \"1990.00\".",
                     "type": "string"
+                },
+                "legal_entity": {
+                    "$ref": "#/definitions/LegalEntityRequest"
                 },
                 "payment_method": {
                     "type": "string",
@@ -7379,6 +7582,35 @@
                 }
             }
         },
+        "InvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "due_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "issued_at": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "JSONResponse-AdminOrderItemsEditResponse": {
             "type": "object",
             "properties": {
@@ -7583,6 +7815,20 @@
                 },
                 "data": {
                     "$ref": "#/definitions/DashboardResponse"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "JSONResponse-InvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/InvoiceResponse"
                 },
                 "message": {
                     "type": "string"
@@ -8285,6 +8531,53 @@
                 }
             }
         },
+        "LegalEntityRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "inn",
+                "name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 512
+                },
+                "inn": {
+                    "type": "string"
+                },
+                "kpp": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "ogrn": {
+                    "type": "string"
+                }
+            }
+        },
+        "LegalEntityResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "inn": {
+                    "type": "string"
+                },
+                "kpp": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ogrn": {
+                    "type": "string"
+                }
+            }
+        },
         "ManufacturerResponse": {
             "type": "object",
             "properties": {
@@ -8466,6 +8759,10 @@
                 "currency": {
                     "type": "string"
                 },
+                "customer_type": {
+                    "description": "CustomerType is \"individual\" or \"legal\"; legal_entity is set for \"legal\".",
+                    "type": "string"
+                },
                 "discount_total": {
                     "type": "number"
                 },
@@ -8483,6 +8780,9 @@
                     "items": {
                         "$ref": "#/definitions/OrderItemResponse"
                     }
+                },
+                "legal_entity": {
+                    "$ref": "#/definitions/LegalEntityResponse"
                 },
                 "number": {
                     "type": "integer"
@@ -8579,7 +8879,7 @@
                     "type": "boolean"
                 },
                 "kind": {
-                    "description": "cash | online",
+                    "description": "cash | online | invoice",
                     "type": "string"
                 },
                 "provider": {

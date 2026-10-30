@@ -45,6 +45,7 @@ func (h *Handler) InitHandler(api *fiber.App) {
 	h.initSearchRoutes(v1)
 	h.initOrderRoutes(v1)
 	h.initPaymentRoutes(v1)
+	h.initInvoiceRoutes(v1)
 	h.initDeliveryRoutes(v1)
 	h.initSitemapRoutes(v1)
 	h.initResolveRoutes(v1)

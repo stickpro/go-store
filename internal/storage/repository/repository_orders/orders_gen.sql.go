@@ -15,9 +15,9 @@ import (
 )
 
 const create = `-- name: Create :one
-INSERT INTO orders (user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
-	RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url
+INSERT INTO orders (user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, customer_type, legal_name, legal_inn, legal_kpp, legal_ogrn, legal_address)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)
+	RETURNING id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url, customer_type, legal_name, legal_inn, legal_kpp, legal_ogrn, legal_address
 `
 
 type CreateParams struct {
@@ -47,6 +47,12 @@ type CreateParams struct {
 	ShipMinDays    pgtype.Int4     `db:"ship_min_days" json:"ship_min_days"`
 	ShipMaxDays    pgtype.Int4     `db:"ship_max_days" json:"ship_max_days"`
 	Source         string          `db:"source" json:"source"`
+	CustomerType   string          `db:"customer_type" json:"customer_type"`
+	LegalName      pgtype.Text     `db:"legal_name" json:"legal_name"`
+	LegalInn       pgtype.Text     `db:"legal_inn" json:"legal_inn"`
+	LegalKpp       pgtype.Text     `db:"legal_kpp" json:"legal_kpp"`
+	LegalOgrn      pgtype.Text     `db:"legal_ogrn" json:"legal_ogrn"`
+	LegalAddress   pgtype.Text     `db:"legal_address" json:"legal_address"`
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Order, error) {
@@ -77,6 +83,12 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Order, 
 		arg.ShipMinDays,
 		arg.ShipMaxDays,
 		arg.Source,
+		arg.CustomerType,
+		arg.LegalName,
+		arg.LegalInn,
+		arg.LegalKpp,
+		arg.LegalOgrn,
+		arg.LegalAddress,
 	)
 	var i models.Order
 	err := row.Scan(
@@ -119,12 +131,18 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (*models.Order, 
 		&i.TrackingNumber,
 		&i.TrackingProvider,
 		&i.TrackingUrl,
+		&i.CustomerType,
+		&i.LegalName,
+		&i.LegalInn,
+		&i.LegalKpp,
+		&i.LegalOgrn,
+		&i.LegalAddress,
 	)
 	return &i, err
 }
 
 const get = `-- name: Get :one
-SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url FROM orders WHERE id=$1 LIMIT 1
+SELECT id, order_number, user_id, status, payment_status, payment_method, currency, email, phone, ship_city_id, ship_city_name, ship_address, ship_postcode, ship_recipient, shipping_method, subtotal, discount_total, shipping_total, tax_total, grand_total, comment, idempotency_key, created_at, updated_at, paid_at, cancelled_at, ship_provider, ship_tariff_code, ship_point_code, ship_min_days, ship_max_days, source, refunded_total, version, paid_total, external_id, tracking_number, tracking_provider, tracking_url, customer_type, legal_name, legal_inn, legal_kpp, legal_ogrn, legal_address FROM orders WHERE id=$1 LIMIT 1
 `
 
 func (q *Queries) Get(ctx context.Context, id uuid.UUID) (*models.Order, error) {
@@ -170,6 +188,12 @@ func (q *Queries) Get(ctx context.Context, id uuid.UUID) (*models.Order, error) 
 		&i.TrackingNumber,
 		&i.TrackingProvider,
 		&i.TrackingUrl,
+		&i.CustomerType,
+		&i.LegalName,
+		&i.LegalInn,
+		&i.LegalKpp,
+		&i.LegalOgrn,
+		&i.LegalAddress,
 	)
 	return &i, err
 }

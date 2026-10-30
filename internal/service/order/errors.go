@@ -14,6 +14,10 @@ var (
 	// server-computed grand total (price or availability changed since the
 	// customer reviewed the cart).
 	ErrPriceChanged = errors.New("order total changed, review the cart")
+	// ErrPaymentMethodNotAllowed — the payment method does not fit the buyer:
+	// "invoice" for a private person, or a non-invoice/non-online method (or an
+	// unavailable one) for a legal entity.
+	ErrPaymentMethodNotAllowed = errors.New("payment method is not allowed for this customer type")
 	// ErrNotFound — no order matches the lookup.
 	ErrNotFound = errors.New("order not found")
 	// ErrForbidden — the order exists but does not belong to the requester.

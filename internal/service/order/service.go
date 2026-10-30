@@ -13,7 +13,9 @@ import (
 	"github.com/stickpro/go-store/internal/config"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/service/cart"
+	"github.com/stickpro/go-store/internal/service/invoice"
 	"github.com/stickpro/go-store/internal/service/mail"
+	"github.com/stickpro/go-store/internal/service/payment"
 	"github.com/stickpro/go-store/internal/service/shipping"
 	"github.com/stickpro/go-store/internal/service/user"
 	"github.com/stickpro/go-store/internal/storage"
@@ -93,6 +95,8 @@ type Service struct {
 	users    user.IUserService
 	mail     mail.IMailService
 	shipping *shipping.Registry
+	payments *payment.Registry
+	invoices invoice.IInvoiceService
 
 	flatShipping     decimal.Decimal
 	freeShippingFrom decimal.Decimal
@@ -106,6 +110,8 @@ func New(
 	userService user.IUserService,
 	mailService mail.IMailService,
 	shippingRegistry *shipping.Registry,
+	paymentRegistry *payment.Registry,
+	invoiceService invoice.IInvoiceService,
 ) (*Service, error) {
 	flat, err := decimal.NewFromString(orDefault(cfg.Order.FlatShipping, "0"))
 	if err != nil {
@@ -124,6 +130,8 @@ func New(
 		users:            userService,
 		mail:             mailService,
 		shipping:         shippingRegistry,
+		payments:         paymentRegistry,
+		invoices:         invoiceService,
 		flatShipping:     flat,
 		freeShippingFrom: free,
 	}, nil

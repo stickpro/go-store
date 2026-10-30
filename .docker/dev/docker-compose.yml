@@ -59,6 +59,12 @@ services:
       - MEILI_MASTER_KEY=${APP_MEILI__MASTER_KEY}
       - MEILI_NO_ANALYTICS=${APP_NO_ANALYTICS}
 
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: always
+    ports:
+      - "3000:3000"
+
 volumes:
   app_data:
     external: false

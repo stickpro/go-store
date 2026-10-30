@@ -14,7 +14,6 @@ func TestCanTransition(t *testing.T) {
 		{constant.OrderPaid, constant.OrderRefunded},
 		{constant.OrderProcessing, constant.OrderShipped},
 		{constant.OrderShipped, constant.OrderDelivered},
-		{constant.OrderDelivered, constant.OrderRefunded},
 	}
 	for _, c := range ok {
 		if !canTransition(c[0], c[1]) {
@@ -29,6 +28,9 @@ func TestCanTransition(t *testing.T) {
 		{constant.OrderCancelled, constant.OrderPaid},
 		{constant.OrderRefunded, constant.OrderProcessing},
 		{constant.OrderShipped, constant.OrderCancelled},
+		{constant.OrderProcessing, constant.OrderRefunded},
+		{constant.OrderShipped, constant.OrderRefunded},
+		{constant.OrderDelivered, constant.OrderRefunded},
 	}
 	for _, c := range bad {
 		if canTransition(c[0], c[1]) {
