@@ -66,6 +66,13 @@ type OrderEventShipping struct {
 	PointCode  *string `json:"point_code,omitempty"`
 }
 
+// OrderEventIndividual is the buyer's name for an order placed by a private
+// person (CustomerType "individual"). The store collects it as one free-text
+// field at checkout, not separate first/last name.
+type OrderEventIndividual struct {
+	FullName string `json:"full_name"`
+}
+
 // OrderEventLegalEntity is the buyer's requisites. A 10-digit INN is a
 // company (KPP set), a 12-digit INN a sole proprietor (no KPP).
 type OrderEventLegalEntity struct {
@@ -105,9 +112,11 @@ type OrderSnapshotPayload struct {
 	PaymentMethod *string `json:"payment_method,omitempty"`
 
 	// CustomerType is "individual" or "legal" (a company or a sole
-	// proprietor). LegalEntity is set for "legal"; Invoice is the active
-	// invoice of an order paid by invoice — the transfer references its number.
+	// proprietor). Individual is set for "individual", LegalEntity for
+	// "legal"; Invoice is the active invoice of an order paid by invoice —
+	// the transfer references its number.
 	CustomerType string                 `json:"customer_type"`
+	Individual   *OrderEventIndividual  `json:"individual,omitempty"`
 	LegalEntity  *OrderEventLegalEntity `json:"legal_entity,omitempty"`
 	Invoice      *OrderEventInvoice     `json:"invoice,omitempty"`
 

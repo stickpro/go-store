@@ -3,11 +3,13 @@ package order
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
+	"github.com/stickpro/go-store/internal/constant"
 	"github.com/stickpro/go-store/internal/dto"
 	"github.com/stickpro/go-store/internal/messaging/contracts"
 	"github.com/stickpro/go-store/internal/models"
@@ -83,6 +85,7 @@ func orderSnapshot(o *dto.OrderDTO, inv *dto.InvoiceDTO) contracts.OrderSnapshot
 		PaymentStatus: o.PaymentStatus,
 		PaymentMethod: o.PaymentMethod,
 		CustomerType:  o.CustomerType,
+		Individual:    individualEvent(o),
 		LegalEntity:   legalEntityEvent(o.LegalEntity),
 		Invoice:       invoiceEvent(inv),
 		Email:         o.Email,
@@ -107,6 +110,20 @@ func orderSnapshot(o *dto.OrderDTO, inv *dto.InvoiceDTO) contracts.OrderSnapshot
 		Comment:       o.Comment,
 		CreatedAt:     o.CreatedAt,
 	}
+}
+
+// individualEvent carries the buyer's name for an order placed by a private
+// person. The store only ever collects it as the single free-text shipping
+// recipient / quick-order name, so that is what the ERP gets.
+func individualEvent(o *dto.OrderDTO) *contracts.OrderEventIndividual {
+	if o.CustomerType == constant.CustomerLegal {
+		return nil
+	}
+	name := strings.TrimSpace(o.Shipping.Recipient)
+	if name == "" {
+		return nil
+	}
+	return &contracts.OrderEventIndividual{FullName: name}
 }
 
 func legalEntityEvent(l *dto.LegalEntityDTO) *contracts.OrderEventLegalEntity {

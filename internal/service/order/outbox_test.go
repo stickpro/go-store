@@ -58,7 +58,10 @@ func TestOrderSnapshot(t *testing.T) {
 		Status      string `json:"status"`
 		Phone       string `json:"phone"`
 		GrandTotal  string `json:"grand_total"`
-		Shipping    struct {
+		Individual  struct {
+			FullName string `json:"full_name"`
+		} `json:"individual"`
+		Shipping struct {
 			CityName string `json:"city_name"`
 			Provider string `json:"provider"`
 		} `json:"shipping"`
@@ -84,7 +87,45 @@ func TestOrderSnapshot(t *testing.T) {
 	if got.Shipping.CityName != "Москва" || got.Shipping.Provider != "cdek" {
 		t.Errorf("shipping = %+v", got.Shipping)
 	}
+	if got.Individual.FullName != "Иванов Иван" {
+		t.Errorf("individual.full_name = %q, want %q", got.Individual.FullName, "Иванов Иван")
+	}
 	if len(got.Items) != 1 || got.Items[0].ExternalID != ext || got.Items[0].Quantity != 2 {
 		t.Fatalf("items = %+v", got.Items)
+	}
+}
+
+// A legal-entity order carries legal_entity, not individual, even though it
+// shares the same ship_recipient field in storage.
+func TestOrderSnapshot_LegalEntityHasNoIndividual(t *testing.T) {
+	o := &dto.OrderDTO{
+		CustomerType: "legal",
+		LegalEntity: &dto.LegalEntityDTO{
+			Name: "ООО \"Покупатель\"",
+			INN:  "7736207543",
+		},
+		Shipping: dto.OrderShippingDTO{Recipient: "Иванов Иван"},
+	}
+
+	data, err := json.Marshal(orderSnapshot(o, nil))
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+
+	var got struct {
+		Individual  *json.RawMessage `json:"individual"`
+		LegalEntity *struct {
+			Name string `json:"name"`
+		} `json:"legal_entity"`
+	}
+	if err := json.Unmarshal(data, &got); err != nil {
+		t.Fatalf("unmarshal %s: %v", data, err)
+	}
+
+	if got.Individual != nil {
+		t.Errorf("individual = %s, want omitted", *got.Individual)
+	}
+	if got.LegalEntity == nil || got.LegalEntity.Name != "ООО \"Покупатель\"" {
+		t.Errorf("legal_entity = %+v", got.LegalEntity)
 	}
 }

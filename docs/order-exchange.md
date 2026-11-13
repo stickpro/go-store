@@ -90,6 +90,9 @@
     "payment_status": "unpaid",
     "payment_method": "card",
     "customer_type": "individual",
+    "individual": {
+      "full_name": "Иванов Иван"
+    },
     "email": "buyer@example.com",
     "phone": "+79990001122",
     "shipping": {
@@ -137,6 +140,7 @@
 | `payment_status` | да | `unpaid` / `paid` / `partially_refunded` / `refunded` / `failed` |
 | `payment_method` | нет | Способ оплаты |
 | `customer_type` | да | `individual` — физлицо; `legal` — юрлицо или ИП |
+| `individual` | нет | Покупатель-физлицо, есть только при `customer_type = individual`: `full_name` — ФИО одной строкой, как его ввёл покупатель (сайт не хранит имя и фамилию отдельными полями). Отсутствует, если имя не указано (например, незавершённый `quick`-заказ) |
 | `legal_entity` | нет | Реквизиты покупателя-юрлица, есть только при `customer_type = legal`: `name`, `inn`, `kpp`, `ogrn`, `address`. ИНН из 10 цифр — организация (`kpp` заполнен), из 12 — ИП (`kpp` отсутствует). `ogrn` необязателен: 13 цифр у организации, 15 (ОГРНИП) у ИП |
 | `invoice` | нет | Счёт на оплату, если заказ оплачивается по счёту: `number` (номер, который покупатель укажет в назначении платежа), `amount`, `issued_at`, `due_at`. Сайт перевыпускает счёт при изменении заказа до оплаты — тогда в `order.updated` приходит новый `number`, а прежний счёт недействителен |
 | `email` | да | |
