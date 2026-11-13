@@ -81,6 +81,22 @@ func (r *Registry) Methods() []MethodInfo {
 	return out
 }
 
+// MethodsFor returns the payment-method catalogue filtered to the single kind
+// AllowedKind(legal, selfPickup) permits — what the frontend should offer for
+// that combination of customer type and delivery choice. CreateOrder /
+// UpdateDetails enforce the same rule server-side regardless of this list.
+func (r *Registry) MethodsFor(legal, selfPickup bool) []MethodInfo {
+	want := AllowedKind(legal, selfPickup)
+	out := make([]MethodInfo, 0, len(r.methods))
+	for _, m := range r.methods {
+		if m.Kind != want {
+			continue
+		}
+		out = append(out, r.methodInfo(m))
+	}
+	return out
+}
+
 func (r *Registry) methodInfo(m Method) MethodInfo {
 	if m.Kind == MethodInvoice {
 		return MethodInfo{Method: m, Enabled: r.invoices}

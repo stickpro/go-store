@@ -4197,6 +4197,20 @@ const docTemplate = `{
                     "Payment"
                 ],
                 "summary": "List payment methods",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "individual (default) or legal — narrows the list to the method that customer type may use",
+                        "name": "customer_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "delivery method code from GET /v1/delivery/methods — narrows the list to the method that delivery choice allows",
+                        "name": "delivery_method_code",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

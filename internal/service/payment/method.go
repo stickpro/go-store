@@ -38,6 +38,22 @@ type MethodInfo struct {
 	Enabled bool
 }
 
+// AllowedKind is the single payment-method kind a buyer may use for a given
+// combination of customer type and delivery choice: a legal entity pays only
+// by invoice, whatever the delivery method; a private person pays cash only
+// when picking the order up from the store itself (selfPickup), and by card
+// (online) for any other delivery method.
+func AllowedKind(legal, selfPickup bool) MethodKind {
+	switch {
+	case legal:
+		return MethodInvoice
+	case selfPickup:
+		return MethodCash
+	default:
+		return MethodOnline
+	}
+}
+
 func methodsFromConfig(cfgs []config.PaymentMethodConfig) []Method {
 	out := make([]Method, 0, len(cfgs))
 	for _, c := range cfgs {

@@ -36,30 +36,36 @@ func TestCheckPaymentMethod(t *testing.T) {
 	s := &Service{payments: registryWithInvoices(true)}
 	cases := []struct {
 		customer, method string
+		selfPickup       bool
 		ok               bool
 	}{
-		{constant.CustomerLegal, "invoice", true},
-		{constant.CustomerLegal, "tbank", true},
-		{constant.CustomerLegal, "cash_on_delivery", false},
-		{constant.CustomerLegal, "unknown", false},
-		{constant.CustomerIndividual, "invoice", false},
-		{constant.CustomerIndividual, "tbank", true},
-		{constant.CustomerIndividual, "cash_on_delivery", true},
-		{constant.CustomerIndividual, "unknown", true}, // unchanged legacy behaviour
+		// Legal entity: invoice only, whatever the delivery method.
+		{constant.CustomerLegal, "invoice", false, true},
+		{constant.CustomerLegal, "invoice", true, true},
+		{constant.CustomerLegal, "tbank", false, false},
+		{constant.CustomerLegal, "cash_on_delivery", true, false},
+		{constant.CustomerLegal, "unknown", false, false},
+		// Private person: cash only on store self-pickup, card otherwise.
+		{constant.CustomerIndividual, "invoice", false, false},
+		{constant.CustomerIndividual, "tbank", false, true},
+		{constant.CustomerIndividual, "tbank", true, false},
+		{constant.CustomerIndividual, "cash_on_delivery", true, true},
+		{constant.CustomerIndividual, "cash_on_delivery", false, false},
+		{constant.CustomerIndividual, "unknown", false, true}, // unchanged legacy behaviour
 	}
 	for _, c := range cases {
-		err := s.checkPaymentMethod(c.customer, c.method)
+		err := s.checkPaymentMethod(c.customer, c.method, c.selfPickup)
 		if c.ok && err != nil {
-			t.Errorf("%s/%s: unexpected error %v", c.customer, c.method, err)
+			t.Errorf("%s/%s/selfPickup=%v: unexpected error %v", c.customer, c.method, c.selfPickup, err)
 		}
 		if !c.ok && !errors.Is(err, ErrPaymentMethodNotAllowed) {
-			t.Errorf("%s/%s: want ErrPaymentMethodNotAllowed, got %v", c.customer, c.method, err)
+			t.Errorf("%s/%s/selfPickup=%v: want ErrPaymentMethodNotAllowed, got %v", c.customer, c.method, c.selfPickup, err)
 		}
 	}
 
 	// Seller requisites not configured: the invoice method is unavailable.
 	s = &Service{payments: registryWithInvoices(false)}
-	if err := s.checkPaymentMethod(constant.CustomerLegal, "invoice"); !errors.Is(err, ErrPaymentMethodNotAllowed) {
+	if err := s.checkPaymentMethod(constant.CustomerLegal, "invoice", false); !errors.Is(err, ErrPaymentMethodNotAllowed) {
 		t.Errorf("invoice without seller config: want ErrPaymentMethodNotAllowed, got %v", err)
 	}
 }

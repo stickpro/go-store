@@ -254,18 +254,36 @@ func (h *Handler) paymentError(err error) error {
 }
 
 // listPaymentMethods returns the checkout payment-method catalogue: one entry
-// per method tab, "cash" (settled offline) or "online" (routed through an
-// acquirer). Pass the entry's `code` back as payment_method at checkout; for
-// an "online" entry, also pass its `provider` to POST /v1/orders/{id}/payment
-// once the order exists.
+// per method tab, "cash" (settled offline), "online" (routed through an
+// acquirer) or "invoice" (bank transfer, legal entities only). Pass the
+// entry's `code` back as payment_method at checkout; for an "online" entry,
+// also pass its `provider` to POST /v1/orders/{id}/payment once the order
+// exists.
+//
+// With both customer_type and delivery_method_code given, the list is
+// filtered down to the one method a buyer with that customer type and
+// delivery choice may use (see payment.AllowedKind) — re-call this whenever
+// either changes, to keep the checkout form in sync, and drop the current
+// selection if it falls out of the new list. CreateOrder enforces the same
+// rule server-side regardless of what this returns.
 //
 //	@Summary	List payment methods
 //	@Tags		Payment
 //	@Produce	json
-//	@Success	200	{object}	response.Result[[]payment_response.PaymentMethodResponse]
+//	@Param		customer_type			query		string	false	"individual (default) or legal — narrows the list to the method that customer type may use"
+//	@Param		delivery_method_code	query		string	false	"delivery method code from GET /v1/delivery/methods — narrows the list to the method that delivery choice allows"
+//	@Success	200						{object}	response.Result[[]payment_response.PaymentMethodResponse]
 //	@Router		/v1/payments/methods [get]
 func (h *Handler) listPaymentMethods(c fiber.Ctx) error {
-	return c.JSON(response.OkByData(payment_response.NewMethodList(h.services.Payments.Methods())))
+	customerType := c.Query("customer_type")
+	deliveryMethodCode := c.Query("delivery_method_code")
+	if customerType == "" && deliveryMethodCode == "" {
+		return c.JSON(response.OkByData(payment_response.NewMethodList(h.services.Payments.Methods())))
+	}
+
+	legal := customerType == constant.CustomerLegal
+	selfPickup := deliveryMethodCode != "" && h.services.Shipping.IsSelfPickup(deliveryMethodCode)
+	return c.JSON(response.OkByData(payment_response.NewMethodList(h.services.Payments.MethodsFor(legal, selfPickup))))
 }
 
 func (h *Handler) initPaymentRoutes(v1 fiber.Router) {

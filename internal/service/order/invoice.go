@@ -15,23 +15,26 @@ import (
 	"github.com/stickpro/go-store/internal/service/payment"
 )
 
-// checkPaymentMethod enforces which payment methods fit the buyer: a legal
-// entity pays by invoice or online, and only with an available method; the
-// invoice method is for legal entities only. Unknown codes from a private
-// person are let through, as before.
-func (s *Service) checkPaymentMethod(customerType, code string) error {
+// checkPaymentMethod enforces which payment methods fit the buyer and the
+// chosen delivery (see payment.AllowedKind): a legal entity pays only by
+// invoice, whatever the delivery method; a private person pays cash only
+// when picking up from the store itself (selfPickup), and by card (online)
+// for any other delivery method. Unknown codes from a private person are let
+// through, as before — only a legal entity is held to a known method.
+func (s *Service) checkPaymentMethod(customerType, code string, selfPickup bool) error {
 	if s.payments == nil {
 		return nil
 	}
+	legal := customerType == constant.CustomerLegal
 	m, ok := s.payments.Available(code)
-	if customerType == constant.CustomerLegal {
-		if !ok || (m.Kind != payment.MethodInvoice && m.Kind != payment.MethodOnline) {
-			return fmt.Errorf("%w: %q for a legal entity (use an invoice or online method)", ErrPaymentMethodNotAllowed, code)
+	if !ok {
+		if legal {
+			return fmt.Errorf("%w: %q for a legal entity (use the invoice method)", ErrPaymentMethodNotAllowed, code)
 		}
 		return nil
 	}
-	if m, known := s.payments.Method(code); known && m.Kind == payment.MethodInvoice {
-		return fmt.Errorf("%w: %q requires customer_type legal", ErrPaymentMethodNotAllowed, code)
+	if want := payment.AllowedKind(legal, selfPickup); m.Kind != want {
+		return fmt.Errorf("%w: %q does not fit this customer type and delivery method (want %q)", ErrPaymentMethodNotAllowed, code, want)
 	}
 	return nil
 }

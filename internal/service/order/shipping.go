@@ -108,6 +108,17 @@ func (s *Service) resolveShipping(ctx context.Context, sel dto.ShippingSelection
 	return shippingChoice{}, ErrShippingUnavailable
 }
 
+// deliveryIsSelfPickup reports whether methodCode names a store self-pickup
+// method — the only delivery choice a private person may pay for in cash
+// (see payment.AllowedKind). A missing or unrecognised code is not
+// self-pickup, so it falls back to requiring card/online payment.
+func (s *Service) deliveryIsSelfPickup(methodCode *string) bool {
+	if s.shipping == nil || methodCode == nil || *methodCode == "" {
+		return false
+	}
+	return s.shipping.IsSelfPickup(*methodCode)
+}
+
 func toParcelItems(lines []checkoutLine) []shipping.ParcelItem {
 	items := make([]shipping.ParcelItem, len(lines))
 	for i, l := range lines {

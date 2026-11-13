@@ -68,6 +68,14 @@ func (r *Registry) Method(code string) (Method, bool) {
 	return m, ok
 }
 
+// IsSelfPickup reports whether code names a store self-pickup method — the
+// only delivery choice that lets a private person pay in cash (see
+// payment.AllowedKind). An unknown code is not self-pickup.
+func (r *Registry) IsSelfPickup(code string) bool {
+	m, ok := r.Method(code)
+	return ok && m.Kind == MethodSelfPickup
+}
+
 // Methods returns the delivery-method catalogue with per-method availability
 // flags resolved.
 func (r *Registry) Methods() []MethodInfo {

@@ -29,7 +29,7 @@ import (
 var errDuplicateOrder = errors.New("order: duplicate idempotency key")
 
 func (s *Service) CreateOrder(ctx context.Context, d dto.CreateOrderDTO) (*dto.OrderDTO, error) {
-	if err := s.checkPaymentMethod(d.CustomerType, d.PaymentMethod); err != nil {
+	if err := s.checkPaymentMethod(d.CustomerType, d.PaymentMethod, s.deliveryIsSelfPickup(d.DeliveryMethodCode)); err != nil {
 		return nil, err
 	}
 

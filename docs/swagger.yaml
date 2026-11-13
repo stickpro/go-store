@@ -5814,6 +5814,17 @@ paths:
       - Payment
   /v1/payments/methods:
     get:
+      parameters:
+      - description: individual (default) or legal — narrows the list to the method
+          that customer type may use
+        in: query
+        name: customer_type
+        type: string
+      - description: delivery method code from GET /v1/delivery/methods — narrows
+          the list to the method that delivery choice allows
+        in: query
+        name: delivery_method_code
+        type: string
       produces:
       - application/json
       responses:

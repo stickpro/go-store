@@ -75,6 +75,11 @@ func (s *Service) UpdateDetails(ctx context.Context, number int64, d dto.OrderDe
 		params.ShippingTotal = shippingTotal
 		params.GrandTotal = o.Subtotal.Sub(o.DiscountTotal).Add(shippingTotal).Add(o.TaxTotal)
 
+		selfPickup := s.deliveryIsSelfPickup(pgtypeutils.DecodeText(params.ShippingMethod))
+		if err := s.checkPaymentMethod(o.CustomerType, deref(pgtypeutils.DecodeText(params.PaymentMethod)), selfPickup); err != nil {
+			return err
+		}
+
 		to := from
 		if from == constant.OrderNew {
 			to = constant.OrderPending
